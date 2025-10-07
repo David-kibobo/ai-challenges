@@ -1,0 +1,40 @@
+
+# Purge sessions older than now-10s for a given user; return remaining distinct count.
+function purge_old(user, now,   k, ts, idx, cnt) {
+  cnt=0
+  for (k in last_seen) {
+    if (split(k, idx, SUBSEP)==2 && idx[1]==user) {
+      ts = last_seen[k]
+      if (ts < now-10000) delete last_seen[k]
+    }
+  }
+  for (k in last_seen) if (split(k, idx, SUBSEP)==2 && idx[1]==user) cnt++
+  return cnt
+}
+
+# Process only brace-delimited lines; malformed lines are ignored safely.
+# Input must be: cat pipe/events.fifo | awk -f consumer.awk
+/^\{.*\}$/ {
+  if (!has_admin_true($0)) next
+  ts  = json_get($0, "ts") + 0
+  usr = json_get($0, "user")
+  ses = json_get($0, "session")
+  if (ts==0 || usr=="" || ses=="") next
+
+  oldc = purge_old(usr, ts)
+  last_seen[usr SUBSEP ses] = ts
+
+  newc = 0
+  for (k in last_seen) if (split(k, idx, SUBSEP)==2 && idx[1]==usr) newc++
+
+  # Emit ONE alert on threshold crossing (<3 → ≥3) with 3s per-user cooldown
+  sec = int(ts/1000)
+  if (oldc < 3 && newc >= 3) {
+    if (!(usr in last_alert_sec) || sec - last_alert_sec[usr] >= 3) {
+      print "ALERT", usr, newc, "admin-sessions in 10s at", iso8601(ts) >> "alerts.txt"
+      fflush("alerts.txt")
+      last_alert_sec[usr] = sec
+    }
+  }
+}
+root@09078e0953c3:/app#

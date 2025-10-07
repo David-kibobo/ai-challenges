@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The summary.tmp file doesn't exist, which means the producer script didn't finish running properly when called from the run.sh script. Let's check if there are any log files created by the producer script.",
+    "explanation": "I'll check if any log files were created by the producer script.",
+    "commands": [
+        {
+            "keystrokes": "ls -la logs/\n",
+            "is_blocking": true,
+            "timeout_sec": 1
+        }
+    ],
+    "is_task_complete": false
+}

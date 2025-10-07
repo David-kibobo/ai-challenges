@@ -1,0 +1,40 @@
+>     return strftime("%Y-%m-%dT%H:%M:%SZ", ts_sec)
+> }
+>
+> {
+>     # Process each line
+>     if (parse_json($0, data)) {
+>         ts = data["ts"]
+>         user = data["user"]
+>         session = data["session"]
+>         admin = data["admin"]
+>
+>         # Only process admin sessions
+>         if (admin == "true") {
+>             # Clean old sessions first
+>             clean_old_sessions(ts)
+>
+>             # Add this session
+>             user_sessions[user][session] = ts
+>
+>             # Count current sessions for this user
+>             session_count = count_user_sessions(user)
+>
+>             # Check if we need to alert (and haven't alerted recently)
+>             if (session_count >= alert_threshold && !(user in user_last_alert)) {
+>                 iso_time = format_timestamp(ts)
+>                 alert_line = "ALERT " user " " session_count " admin-sessions in 10s at " iso_time
+>                 print alert_line >> "alerts.txt"
+>                 fflush("alerts.txt")
+>                 user_last_alert[user] = ts
+>             }
+>         }
+>     }
+>     # Ignore malformed lines silently
+> }
+>
+> END {
+>     # Final cleanup not needed for this use case
+> }
+> EOF
+root@e0d46a4841cc:/app#

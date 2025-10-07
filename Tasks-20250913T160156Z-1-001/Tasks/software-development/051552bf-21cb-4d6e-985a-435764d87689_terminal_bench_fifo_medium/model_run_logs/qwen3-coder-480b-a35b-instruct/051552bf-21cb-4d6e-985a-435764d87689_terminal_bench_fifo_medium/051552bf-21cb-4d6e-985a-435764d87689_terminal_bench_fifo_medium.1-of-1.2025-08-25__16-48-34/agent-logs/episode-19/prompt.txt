@@ -1,0 +1,40 @@
+> fi
+> if [[ -f "${log_file}.3" ]]; then
+>   rotation_count_min=$((rotation_count_min + 1))
+> fi
+>
+> echo "producer_lines_total=$line_count" > summary.tmp
+> echo "rotations_min=$rotation_count_min" >> summary.tmp
+> EOF
+root@09078e0953c3:/app# ./run.sh; tmux wait -S done
+Starting consumer...
+awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
+Starting producer...
+Stopping processes...
+DONE
+root@09078e0953c3:/app# cat summary.json; tmux wait -S done
+{
+  "producer_lines_total": 0,
+  "alerts": 10,
+  "rotations_min": 0,
+  "parallel": true
+}
+root@09078e0953c3:/app# cat timeline.json; tmux wait -S done
+{
+  "consumer_start_ms": 1756120846984,
+  "producer_start_ms": 1756120847093,
+  "consumer_end_ms": 1756120879108,
+  "producer_end_ms": 1756120878099
+}
+root@09078e0953c3:/app# cat alerts.txt; tmux wait -S done
+ALERT user2 3 admin-sessions in 10s at 2025-08-25T11:20:47Z
+ALERT 赵钱孙 3 admin-sessions in 10s at 2025-08-25T11:20:47Z
+ALERT 李周吴 3 admin-sessions in 10s at 2025-08-25T11:20:47Z
+ALERT admin1 3 admin-sessions in 10s at 2025-08-25T11:20:47Z
+ALERT admin2 3 admin-sessions in 10s at 2025-08-25T11:20:47Z
+ALERT 陈褚卫 3 admin-sessions in 10s at 2025-08-25T11:20:47Z
+ALERT 郑王冯 3 admin-sessions in 10s at 2025-08-25T11:20:48Z
+ALERT 蒋沈韩 3 admin-sessions in 10s at 2025-08-25T11:20:48Z
+ALERT 测试用户 3 admin-sessions in 10s at 2025-08-25T11:20:48Z
+ALERT user1 3 admin-sessions in 10s at 2025-08-25T11:20:49Z
+root@09078e0953c3:/app#

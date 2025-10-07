@@ -1,0 +1,40 @@
+root@9b6e34b0dc97:/app# mkfifo pipe/events.fifo; tmux wait -S done
+root@9b6e34b0dc97:/app# ls -la pipe/; tmux wait -S done
+total 8
+drwxr-xr-x 2 root root 4096 Aug 25 12:20 .
+drwxr-xr-x 1 root root 4096 Aug 25 12:20 ..
+prw-r--r-- 1 root root    0 Aug 25 12:20 events.fifo
+root@9b6e34b0dc97:/app# ./run.sh; tmux wait -S done
+-bash: ./run.sh: Permission denied
+root@9b6e34b0dc97:/app# chmod +x run.sh; tmux wait -S done
+root@9b6e34b0dc97:/app# ./run.sh; tmux wait -S done
+awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
+DONE
+root@9b6e34b0dc97:/app# ls -la; tmux wait -S done
+total 64
+drwxr-xr-x 1 root root 4096 Aug 25 12:21 .
+drwxr-xr-x 1 root root 4096 Aug 25 12:20 ..
+-rw-r--r-- 1 root root  429 Aug 25 12:20 alerts.txt
+-rw-r--r-- 1 root root 1961 Aug 25 12:09 consumer.awk
+-rw-r--r-- 1 root root    4 Aug 25 12:20 consumer.pid
+-rwxr-xr-x 1 root root   81 Aug 25 12:09 consumer.sh
+drwxr-xr-x 2 root root 4096 Aug 25 12:21 logs
+drwxr-xr-x 2 root root 4096 Aug 25 12:20 pipe
+-rw-r--r-- 1 root root    4 Aug 25 12:20 producer.pid
+-rw-r--r-- 1 root root 2159 Aug 25 12:09 producer.py
+-rw-r--r-- 1 root root    3 Aug 25 12:21 producer_lines.txt
+-rw-r--r-- 1 root root    0 Aug 25 12:20 run.lock
+-rwxr-xr-x 1 root root 1865 Aug 25 12:09 run.sh
+-rw-r--r-- 1 root root  103 Aug 25 12:21 summary.json
+-rw-r--r-- 1 root root  140 Aug 25 12:21 timeline.json
+-rw-r--r-- 1 root root  479 Aug 25 12:21 write_json.py
+root@9b6e34b0dc97:/app# cat alerts.txt; tmux wait -S done
+ALERT ユーザ 3 admin-sessions in 10s at 2025-08-25T12:20:50Z
+ALERT dídí 3 admin-sessions in 10s at 2025-08-25T12:20:50Z
+ALERT 🙂user 3 admin-sessions in 10s at 2025-08-25T12:20:50Z
+ALERT 赵钱孙 3 admin-sessions in 10s at 2025-08-25T12:20:51Z
+ALERT bob 3 admin-sessions in 10s at 2025-08-25T12:20:51Z
+ALERT carl 3 admin-sessions in 10s at 2025-08-25T12:20:51Z
+ALERT alice 3 admin-sessions in 10s at 2025-08-25T12:20:52Z
+root@9b6e34b0dc97:/app# cat summary.json; tmux wait -S done
+{"producer_lines_total": 792, "producer_lines": 792, "alerts": 7, "rotations_min": 3, "parallel": true}root@9b6e34b0dc97:/app#

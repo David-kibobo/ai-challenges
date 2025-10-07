@@ -1,0 +1,74 @@
+instruction: |
+  You are inside a Linux container at /app. Your goal is to run a **two-process pipeline** using a **single FIFO** and a **pure-awk consumer** to perform basic streaming log analysis.
+
+  ## What is already provided for you
+  The following files are already present in the container at the root `/app`:
+  - `consumer.awk`: parses NDJSON lines and writes alerts to `alerts.txt`
+  - `producer.py`: emits NDJSON log lines to STDOUT and appends them to rotating files
+  - `run.sh`: the supervisor script that orchestrates everything
+  - `write_json.py`: writes `summary.json` and `timeline.json` based on run metrics
+
+  ## What you need to do
+  1. Create the `pipe/` and `logs/` directories if they don’t exist.
+  2. Create a FIFO file at `pipe/events.fifo` using `mkfifo`.
+  3. Run the supervisor script:
+     ```bash
+     ./run.sh
+     ```
+
+  ## What the pipeline does (already implemented)
+  - The **producer** writes ~1 NDJSON line every 25–30 ms for ~25 seconds, logs them to `logs/events.log`, and handles log rotation (`.1`, `.2`, `.3`).
+  - The **consumer** reads directly from the FIFO and uses `awk` to detect when a user accumulates ≥3 admin sessions in a 10s window. It emits **deduplicated** alerts to `alerts.txt` using `strftime()`.
+
+  ## Log line example (valid line)
+
+  `{"ts": 1720000000123, "session": "abc123", "user": "赵钱孙", "meta": {"admin": true}}`
+
+
+  ## Supervisor behavior
+  - Uses `flock run.lock` to ensure idempotency (only one instance runs)
+  - Starts consumer first, then producer
+  - Cleans up properly on termination
+  - Runs for ~26s before terminating both processes
+  - Writes:
+    - `summary.json`: `{ producer_lines_total, alerts, rotations_min, parallel: true }`
+    - `timeline.json`: `{ consumer_start_ms, producer_start_ms, consumer_end_ms, producer_end_ms }`
+  - Prints `DONE` on success
+
+  ## Easy-level constraints (checked by tests)
+  - **All required files are already available**
+  - Consumer uses **only FIFO + awk** (no file reads, no system())
+  - **Malformed + Unicode** lines must not crash
+  - **Volume**: `producer_lines_total ≥ 600`
+  - **Rotations**: at least `.1` and `.2` exist; one file ≥ 1024 bytes
+  - **Timeline**: consumer starts before producer; overlap ≥ 6s
+  - **Alerts**: ≥2 alerts for ≥1 distinct user (at least one with non-ASCII); spacing between alerts ≥2.0s
+
+descriptions:
+  - key: base
+    description: |
+      Artifacts under /app:
+        - pipe/events.fifo
+        - logs/events.log + rotated (.1, .2, .3)
+        - alerts.txt
+        - summary.json
+        - timeline.json
+
+author_email: you@example.com
+difficulty: easy
+tags:
+  [
+    "fifo",
+    "parallel",
+    "awk-only",
+    "sliding-window",
+    "rotation",
+    "unicode",
+    "idempotency",
+    "truthiness",
+  ]
+test_scripts: ["run-tests.sh"]
+max_agent_timeout_sec: 600
+max_test_timeout_sec: 240
+run_tests_in_same_shell: false
+disable_asciinema: true

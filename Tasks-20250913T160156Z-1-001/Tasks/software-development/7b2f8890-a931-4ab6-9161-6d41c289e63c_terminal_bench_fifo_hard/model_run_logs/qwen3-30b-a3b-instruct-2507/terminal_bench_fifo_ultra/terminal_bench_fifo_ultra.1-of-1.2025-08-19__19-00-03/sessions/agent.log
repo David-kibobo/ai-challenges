@@ -1,0 +1,192 @@
+[?2004hroot@71d33cf7f63a:/app# mkdir -p pipe logs; tmux wait -S done
+[?2004l[?2004hroot@71d33cf7f63a:/app# mkfifo pipe/events.fifo; tmux wait -S done
+[?2004l[?2004hroot@71d33cf7f63a:/app# cat > consumer.awk << 'EOF'
+[?2004l[?2004h> BEGIN { 
+[?2004l[?2004h>     window_size = 10000 # 10 seconds in ms
+[?2004l[?2004h>     FS = "\n"
+[?2004l[?2004h> }
+[?2004l[?2004h> { 
+[?2004l[?2004h>     if (NF == 0) next
+[?2004l[?2004h>     gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0)
+[?2004l[?2004h>     if (!match($0, /^\{.*\}$/)) continue
+[?2004l[?2004h>     if (!match($0, /"meta":\{.*"admin":true/)) continue
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract user
+[?2004l[?2004h>     match($0, /"user":\s*"([^"]*)",/, usr)
+[?2004l[?2004h>     user = usr[1]
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract timestamp
+[?2004l[?2004h>     match($0, /"ts":\s*(\d+)/, ts)
+[?2004l[?2004h>     ts_ms = ts[1] + 0
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Skip if not valid timestamp
+[?2004l[?2004h>     if (ts_ms <= 0) continue
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Add session ID: user + session
+[?2004l[?2004h>     match($0, /"session":\s*"([^"]*)",/, sess)
+[?2004l[?2004h>     session_id = user "_" sess[1]
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Track sessions per user
+[?2004l[?2004h>     if (!(user in user_sessions)) {
+[?2004l[?2004h>         user_sessions[user] = ""
+[?2004l[?2004h>         user_count[user] = 0
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Add session to set
+[?2004l[?2004h>     if (user_sessions[user] !~ ("\\b" session_id "\\b")) {
+[?2004l[?2004h>         user_sessions[user] = user_sessions[user] session_id " "
+[?2004l[?2004h>         user_count[user] += 1
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Update timestamp
+[?2004l[?2004h>     last_seen[user] = ts_ms
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Evict old sessions (older than 10s)
+[?2004l[?2004h>     now = ts_ms
+[?2004l[?2004h>     for (u in user_sessions) {
+[?2004l[?2004h>         if (now - last_seen[u] > window_size) {
+[?2004l[?2004h>             delete user_sessions[u]
+[?2004l[?2004h>             delete user_count[u]
+[?2004l[?2004h>             delete last_seen[u]
+[?2004l[?2004h>         }
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Check if user has ≥3 distinct admin sessions in last 10s
+[?2004l[?2004h>     if (user_count[user] >= 3) {
+[?2004l[?2004h>         # Dedup alert only once per user within window
+[?2004l[?2004h>         if (!alerted[user]) {
+[?2004l[?2004h>             alerted[user] = 1
+[?2004l[?2004h>             printf "ALERT %s %d admin-sessions in 10s at %s\n", user, user_count[user], strftime("%Y-%m-%dT%H:%M:%SZ", ts_ms/1000) > "alerts.txt"
+[?2004l[?2004h>         }
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> END {
+[?2004l[?2004h>     close("alerts.txt")
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@71d33cf7f63a:/app# cat > run.sh << 'EOF'
+[?2004l[?2004h> #!/bin/bash
+[?2004l[?2004h> set -euo pipefail
+[?2004l[?2004h> 
+[?2004l[?2004h> LOCK_FILE="run.lock"
+[?2004l[?2004h> FIFO="pipe/events.fifo"
+[?2004l[?2004h> LOG_FILE="logs/events.log"
+[?2004l[?2004h> MAX_ROTATIONS=3
+[?2004l[?2004h> 
+[?2004l[?2004h> # Ensure FIFO exists
+[?2004l[?2004h> if [[ ! -p "$FIFO" ]]; then
+[?2004l[?2004h>     mkfifo "$FIFO"
+[?2004l[?2004h> fi
+[?2004l[?2004h> 
+[?2004l[?2004h> # Use flock for idempotency
+[?2004l[?2004h> flock -x "$LOCK_FILE" -c "
+[?2004l[?2004h>     # Start consumer first
+[?2004l[?2004h>     cat "$FIFO" | awk -f consumer.awk &
+[?2004l[?2004h>     CONSUMER_PID=$!
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Wait a moment for consumer to start
+[?2004l[?2004h>     sleep 0.5
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Start producer
+[?2004l[?2004h>     ( 
+[?2004l[?2004h>         start_time=$(date +%s%3N)
+[?2004l[?2004h>         echo \"producer_start_ms\": $start_time >> timeline.json
+[?2004l[?2004h> 
+[?2004l[?2004h>         # Generate events
+[?2004l[?2004h>         for i in $(seq 1 1200); do
+[?2004l[?2004h>             # Random delay between 40-70ms
+[?2004l[?2004h>             sleep $(( (RANDOM % 31) + 40 ))e-3
+[?2004l[?2004h> 
+[?2004l[?2004h>             # Decide if line is malformed
+[?2004l[?2004h>             if (( RANDOM % 100 < 10 )); then
+[?2004l[?2004h>                 # Malformed line: missing key, extra comma, invalid JSON
+[?2004l[?2004h>                 case $((RANDOM % 4)) in
+[?2004l[?2004h>                     0) echo '{"ts": 123456789}' ;;
+[?2004l[?2004h>                     1) echo '{"ts": 123456789,}' ;;
+[?2004l[?2004h>                     2) echo '{"ts": 123456789, "user": "张三"}' ;;
+[?2004l[?2004h>                     3) echo '{"ts": 123456789, "user": "李四", "meta": {"admin": true}}' ;;
+[?2004l[?2004h>                 esac
+[?2004l[?2004h>             else
+[?2004l[?2004h>                 # Good line with Unicode user
+[?2004l[?2004h>                 case $((RANDOM % 3)) in
+[?2004l[?2004h>                     0) user="赵钱孙" ;;
+[?2004l[?2004h>                     1) user="王五" ;;
+[?2004l[?2004h>                     2) user="李四" ;;
+[?2004l[?2004h>                 esac
+[?2004l[?2004h>                 
+[?2004l[?2004h>                 # Session ID
+[?2004l[?2004h>                 session_id=$(printf '%06x' $((RANDOM % 1000000)))
+[?2004l[?2004h>                 
+[?2004l[?2004h>                 # Admin status
+[?2004l[?2004h>                 if (( RANDOM % 2 == 0 )); then
+[?2004l[?2004h>                     admin=true
+[?2004l[?2004h>                 else
+[?2004l[?2004h>                     admin=false
+[?2004l[?2004h>                 fi
+[?2004l[?2004h>                 
+[?2004l[?2004h>                 # Timestamp
+[?2004l[?2004h>                 ts=$(($(date +%s%3N) - 10000)) # Simulate past
+[?2004l[?2004h>                 
+[?2004l[?2004h>                 # Output NDJSON
+[?2004l[?2004h>                 echo "{\"ts\": $ts, \"session\": \"$session_id\", \"user\": \"$user\", \"meta\": {\"admin\": $admin}}"
+[?2004l[?2004h>             fi
+[?2004l[?2004h>             
+[?2004l[?2004h>             # Append to log file
+[?2004l[?2004h>             echo "$(tail -n 1)" >> "$LOG_FILE"
+[?2004l[?2004h>             
+[?2004l[?2004h>             # Rotate log every ~100 lines
+[?2004l[?2004h>             if (( i % 100 == 0 )); then
+[?2004l[?2004h>                 for j in $(seq $MAX_ROTATIONS -1 1); do
+[?2004l[?2004h>                     prev=$((j - 1))
+[?2004l[?2004h>                     if [[ -f "$LOG_FILE.$prev" ]]; then
+[?2004l[?2004h>                         mv "$LOG_FILE.$prev" "$LOG_FILE.$j"
+[?2004l[?2004h>                     fi
+[?2004l[?2004h>                 done
+[?2004l[?2004h>                 if [[ -f "$LOG_FILE" ]]; then
+[?2004l[?2004h>                     mv "$LOG_FILE" "$LOG_FILE.1"
+[?2004l[?2004h>                 fi
+[?2004l[?2004h>             fi
+[?2004l[?2004h>         done
+[?2004l[?2004h>         
+[?2004l[?2004h>         end_time=$(date +%s%3N)
+[?2004l[?2004h>         echo \"producer_end_ms\": $end_time >> timeline.json
+[?2004l[?2004h>         
+[?2004l[?2004h>         # Kill consumer after producer ends
+[?2004l[?2004h>         kill $CONSUMER_PID 2>/dev/null || true
+[?2004l[?2004h>     ) &
+[?2004l[?2004h>     PRODUCER_PID=$!
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Wait until both finish or timeout
+[?2004l[?2004h>     wait $PRODUCER_PID
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Cleanup
+[?2004l[?2004h>     rm -f "$FIFO"
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Write summary
+[?2004l[?2004h>     total_lines=$(wc -l < <(grep -v '^$' logs/events.log | grep -v '^{' | grep -v 'malformed' | wc -l) 2>/dev/null || echo 0)
+[?2004l[?2004h>     total_lines=$(($total_lines + $(grep -c '^{' logs/events.log | tail -n 1)))
+[?2004l[?2004h>     
+[?2004l[?2004h>     alerts=$(wc -l < alerts.txt 2>/dev/null || echo 0)
+[?2004l[?2004h>     rotations=$(ls -1 logs/events.log.* 2>/dev/null | wc -l)
+[?2004l[?2004h>     
+[?2004l[?2004h>     cat > summary.json << EOF
+[?2004l[?2004h> {
+[?2004l[?2004h>   \"producer_lines_total\": $total_lines,
+[?2004l[?2004h>   \"alerts\": $alerts,
+[?2004l[?2004h>   \"rotations_min\": $rotations,
+[?2004l[?2004h>   \"parallel\": true
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@71d33cf7f63a:/app# 
+[?2004l[?2004hroot@71d33cf7f63a:/app#     # Finalize timeline
+[?2004l[?2004hroot@71d33cf7f63a:/app#     if [[ -f "timeline.json" ]]; then
+[?2004l[?2004h>         jq -c . < timeline.json > timeline.json.tmp && mv timeline.json.tmp timeline.json
+[?2004l[?2004h>     fi
+[?2004l[?2004hroot@71d33cf7f63a:/app# 
+[?2004l[?2004hroot@71d33cf7f63a:/app#     echo \"DONE\"
+[?2004l"DONE"
+[?2004hroot@71d33cf7f63a:/app# "
+[?2004l[?2004h> EOF
+[?2004l[?2004h> chmod +x run.sh; tmux wait -S done
+[?2004l[?2004h> ls -l alerts.txt logs/events.log* summary.json timeline.json; tmux wait -S done
+[?2004l[?2004h> 

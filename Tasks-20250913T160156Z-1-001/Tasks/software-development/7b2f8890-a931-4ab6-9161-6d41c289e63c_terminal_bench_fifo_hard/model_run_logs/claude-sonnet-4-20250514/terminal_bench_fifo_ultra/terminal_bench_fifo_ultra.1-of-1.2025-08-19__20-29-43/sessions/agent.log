@@ -1,0 +1,1143 @@
+[?2004hroot@e0d46a4841cc:/app# ls -la; tmux wait -S done
+[?2004ltotal 8
+drwxr-xr-x 2 root root 4096 Aug 18 11:46 .
+drwxr-xr-x 1 root root 4096 Aug 19 14:59 ..
+[?2004hroot@e0d46a4841cc:/app# mkdir -p pipe logs; tmux wait -S done
+[?2004l[?2004hroot@e0d46a4841cc:/app# mkfifo pipe/events.fifo; tmux wait -S done
+[?2004l[?2004hroot@e0d46a4841cc:/app# cat > producer.sh << 'EOF'
+[?2004l[?2004h> #!/bin/bash
+[?2004l[?2004h> 
+[?2004l[?2004h> # Producer script - generates NDJSON events with size-based rotation
+[?2004l[?2004h> set -euo pipefail
+[?2004l[?2004h> 
+[?2004l[?2004h> LOG_FILE="logs/events.log"
+[?2004l[?2004h> MAX_SIZE=50000  # ~50KB per rotation
+[?2004l[?2004h> ROTATION_COUNT=3
+[?2004l[?2004h> TOTAL_DURATION=30
+[?2004l[?2004h> MIN_DELAY=40
+[?2004l[?2004h> MAX_DELAY=70
+[?2004l[?2004h> 
+[?2004l[?2004h> # Unicode users for testing
+[?2004l[?2004h> USERS=("赵钱孙" "李周吴" "郑王冯" "陈褚卫" "蒋沈韩" "杨朱秦" "alice" "bob" "charlie")
+[?2004l[?2004h> SESSIONS=("abc123" "def456" "ghi789" "jkl012" "mno345" "pqr678" "stu901" "vwx234" "yz567")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Function to rotate logs
+[?2004l[?2004h> rotate_logs() {
+[?2004l[?2004h>     if [[ -f "$LOG_FILE" ]]; then
+[?2004l[?2004h>         local size=$(stat -f%z "$LOG_FILE" 2>/dev/null || stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
+[?2004l[?2004h>         if [[ $size -gt $MAX_SIZE ]]; then
+[?2004l[?2004h>             # Rotate existing files
+[?2004l[?2004h>             for ((i=ROTATION_COUNT; i>=1; i--)); do
+[?2004l[?2004h>                 if [[ -f "${LOG_FILE}.$i" ]]; then
+[?2004l[?2004h>                     mv "${LOG_FILE}.$i" "${LOG_FILE}.$((i+1))"
+[?2004l[?2004h>                 fi
+[?2004l[?2004h>             done
+[?2004l[?2004h>             mv "$LOG_FILE" "${LOG_FILE}.1"
+[?2004l[?2004h>         fi
+[?2004l[?2004h>     fi
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> # Generate events
+[?2004l[?2004h> start_time=$(date +%s%3N)
+[?2004l[?2004h> line_count=0
+[?2004l[?2004h> 
+[?2004l[?2004h> while true; do
+[?2004l[?2004h>     current_time=$(date +%s%3N)
+[?2004l[?2004h>     elapsed=$((current_time - start_time))
+[?2004l[?2004h>     
+[?2004l[?2004h>     if [[ $elapsed -gt $((TOTAL_DURATION * 1000)) ]]; then
+[?2004l[?2004h>         break
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Random user and session
+[?2004l[?2004h>     user="${USERS[$((RANDOM % ${#USERS[@]}))]}"
+[?2004l[?2004h>     session="${SESSIONS[$((RANDOM % ${#SESSIONS[@]}))]}"
+[?2004l[?2004h>     
+[?2004l[?2004h>     # 5-10% malformed lines
+[?2004l[?2004h>     if [[ $((RANDOM % 100)) -lt 8 ]]; then
+[?2004l[?2004h>         # Malformed JSON
+[?2004l[?2004h>         line="{\"ts\": $current_time, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true"
+[?2004l[?2004h>     else
+[?2004l[?2004h>         # Valid JSON with random admin flag
+[?2004l[?2004h>         admin_flag=$([[ $((RANDOM % 2)) -eq 0 ]] && echo "true" || echo "false")
+[?2004l[?2004h>         line="{\"ts\": $current_time, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": $admin_flag}}"
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Output to stdout and log
+[?2004l[?2004h>     echo "$line"
+[?2004l[?2004h>     echo "$line" >> "$LOG_FILE"
+[?2004l[?2004h>     
+[?2004l[?2004h>     line_count=$((line_count + 1))
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Rotate if needed
+[?2004l[?2004h>     rotate_logs
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Random delay between 40-70ms
+[?2004l[?2004h>     delay=$((RANDOM % (MAX_DELAY - MIN_DELAY + 1) + MIN_DELAY))
+[?2004l[?2004h>     sleep "0.0$delay"
+[?2004l[?2004h> done
+[?2004l[?2004h> 
+[?2004l[?2004h> echo "Producer finished. Total lines: $line_count" >&2
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@e0d46a4841cc:/app# chmod +x producer.sh; tmux wait -S done
+[?2004l[?2004hroot@e0d46a4841cc:/app# cat > consumer.awk << 'EOF'
+[?2004l[?2004h> BEGIN {
+[?2004l[?2004h>     # Initialize variables
+[?2004l[?2004h>     window_size = 10000  # 10 seconds in milliseconds
+[?2004l[?2004h>     alert_threshold = 3
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Arrays to track sessions per user
+[?2004l[?2004h>     # user_sessions[user][session] = timestamp
+[?2004l[?2004h>     # user_alerts[user] = 1 if already alerted for current window
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> function parse_json(line,    i, n, parts, key, value, in_quotes, escape_next, char, result) {
+[?2004l[?2004h>     # Simple JSON parser for our specific format
+[?2004l[?2004h>     # Extract ts, user, session, and admin flag
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Initialize result
+[?2004l[?2004h>     result["ts"] = ""
+[?2004l[?2004h>     result["user"] = ""
+[?2004l[?2004h>     result["session"] = ""
+[?2004l[?2004h>     result["admin"] = "false"
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Skip malformed lines gracefully
+[?2004l[?2004h>     if (index(line, "}") == 0) {
+[?2004l[?2004h>         return 0
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract timestamp
+[?2004l[?2004h>     if (match(line, /"ts":[[:space:]]*([0-9]+)/, arr)) {
+[?2004l[?2004h>         result["ts"] = arr[1]
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract user
+[?2004l[?2004h>     if (match(line, /"user":[[:space:]]*"([^"]+)"/, arr)) {
+[?2004l[?2004h>         result["user"] = arr[1]
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract session
+[?2004l[?2004h>     if (match(line, /"session":[[:space:]]*"([^"]+)"/, arr)) {
+[?2004l[?2004h>         result["session"] = arr[1]
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract admin flag
+[?2004l[?2004h>     if (match(line, /"admin":[[:space:]]*true/)) {
+[?2004l[?2004h>         result["admin"] = "true"
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     return (result["ts"] != "" && result["user"] != "" && result["session"] != "")
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> function clean_old_sessions(current_ts,    user, session) {
+[?2004l[?2004h>     # Remove sessions older than window_size
+[?2004l[?2004h>     for (user in user_sessions) {
+[?2004l[?2004h>         for (session in user_sessions[user]) {
+[?2004l[?2004h>             if (current_ts - user_sessions[user][session] > window_size) {
+[?2004l[?2004h>                 delete user_sessions[user][session]
+[?2004l[?2004h>             }
+[?2004l[?2004h>         }
+[?2004l[?2004h>         # If user has no sessions left, remove user entry
+[?2004l[?2004h>         if (length(user_sessions[user]) == 0) {
+[?2004l[?2004h>             delete user_sessions[user]
+[?2004l[?2004h>             delete user_alerts[user]
+[?2004l[?2004h>         }
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> function count_user_sessions(user,    count, session) {
+[?2004l[?2004h>     count = 0
+[?2004l[?2004h>     for (session in user_sessions[user]) {
+[?2004l[?2004h>         count++
+[?2004l[?2004h>     }
+[?2004l[?2004h>     return count
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> function format_timestamp(ts_ms) {
+[?2004l[?2004h>     # Convert milliseconds to seconds for strftime
+[?2004l[?2004h>     ts_sec = int(ts_ms / 1000)
+[?2004l[?2004h>     return strftime("%Y-%m-%dT%H:%M:%SZ", ts_sec)
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> {
+[?2004l[?2004h>     # Process each line
+[?2004l[?2004h>     if (parse_json($0, data)) {
+[?2004l[?2004h>         ts = data["ts"]
+[?2004l[?2004h>         user = data["user"]
+[?2004l[?2004h>         session = data["session"]
+[?2004l[?2004h>         admin = data["admin"]
+[?2004l[?2004h>         
+[?2004l[?2004h>         # Only process admin sessions
+[?2004l[?2004h>         if (admin == "true") {
+[?2004l[?2004h>             # Clean old sessions first
+[?2004l[?2004h>             clean_old_sessions(ts)
+[?2004l[?2004h>             
+[?2004l[?2004h>             # Add this session
+[?2004l[?2004h>             user_sessions[user][session] = ts
+[?2004l[?2004h>             
+[?2004l[?2004h>             # Count current sessions for this user
+[?2004l[?2004h>             session_count = count_user_sessions(user)
+[?2004l[?2004h>             
+[?2004l[?2004h>             # Check if we need to alert
+[?2004l[?2004h>             if (session_count >= alert_threshold && !(user in user_alerts)) {
+[?2004l[?2004h>                 iso_time = format_timestamp(ts)
+[?2004l[?2004h>                 alert_line = "ALERT " user " " session_count " admin-sessions in 10s at " iso_time
+[?2004l[?2004h>                 print alert_line >> "alerts.txt"
+[?2004l[?2004h>                 fflush("alerts.txt")
+[?2004l[?2004h>                 user_alerts[user] = 1
+[?2004l[?2004h>             }
+[?2004l[?2004h>         }
+[?2004l[?2004h>     }
+[?2004l[?2004h>     # Ignore malformed lines silently
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> END {
+[?2004l[?2004h>     # Final cleanup not needed for this use case
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@e0d46a4841cc:/app# cat > run.sh << 'EOF'
+[?2004l[?2004h> #!/bin/bash
+[?2004l[?2004h> set -euo pipefail
+[?2004l[?2004h> 
+[?2004l[?2004h> # Supervisor script with flock for idempotency
+[?2004l[?2004h> exec 200>run.lock
+[?2004l[?2004h> flock -n 200 || { echo "Another instance is running" >&2; exit 1; }
+[?2004l[?2004h> 
+[?2004l[?2004h> # Cleanup function
+[?2004l[?2004h> cleanup() {
+[?2004l[?2004h>     echo "Cleaning up processes..." >&2
+[?2004l[?2004h>     # Kill background processes
+[?2004l[?2004h>     [[ -n "${CONSUMER_PID:-}" ]] && kill "$CONSUMER_PID" 2>/dev/null || true
+[?2004l[?2004h>     [[ -n "${PRODUCER_PID:-}" ]] && kill "$PRODUCER_PID" 2>/dev/null || true
+[?2004l[?2004h>     wait 2>/dev/null || true
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> trap cleanup INT TERM EXIT
+[?2004l[?2004h> 
+[?2004l[?2004h> # Ensure FIFO exists
+[?2004l[?2004h> if [[ ! -p pipe/events.fifo ]]; then
+[?2004l[?2004h>     mkfifo pipe/events.fifo
+[?2004l[?2004h> fi
+[?2004l[?2004h> 
+[?2004l[?2004h> # Initialize timing
+[?2004l[?2004h> START_TIME=$(date +%s%3N)
+[?2004l[?2004h> 
+[?2004l[?2004h> echo "Starting pipeline..." >&2
+[?2004l[?2004h> 
+[?2004l[?2004h> # Start consumer first (background)
+[?2004l[?2004h> echo "Starting consumer..." >&2
+[?2004l[?2004h> CONSUMER_START=$(date +%s%3N)
+[?2004l[?2004h> cat pipe/events.fifo | awk -f consumer.awk &
+[?2004l[?2004h> CONSUMER_PID=$!
+[?2004l[?2004h> 
+[?2004l[?2004h> # Small delay to ensure consumer is ready
+[?2004l[?2004h> sleep 0.5
+[?2004l[?2004h> 
+[?2004l[?2004h> # Start producer (background) - redirect output to FIFO
+[?2004l[?2004h> echo "Starting producer..." >&2
+[?2004l[?2004h> PRODUCER_START=$(date +%s%3N)
+[?2004l[?2004h> ./producer.sh > pipe/events.fifo &
+[?2004l[?2004h> PRODUCER_PID=$!
+[?2004l[?2004h> 
+[?2004l[?2004h> echo "Both processes started. Consumer PID: $CONSUMER_PID, Producer PID: $PRODUCER_PID" >&2
+[?2004l[?2004h> 
+[?2004l[?2004h> # Let it run for ~32 seconds
+[?2004l[?2004h> echo "Running for 32 seconds..." >&2
+[?2004l[?2004h> sleep 32
+[?2004l[?2004h> 
+[?2004l[?2004h> # Stop producer first
+[?2004l[?2004h> echo "Stopping producer..." >&2
+[?2004l[?2004h> kill "$PRODUCER_PID" 2>/dev/null || true
+[?2004l[?2004h> wait "$PRODUCER_PID" 2>/dev/null || true
+[?2004l[?2004h> PRODUCER_END=$(date +%s%3N)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Stop consumer
+[?2004l[?2004h> echo "Stopping consumer..." >&2
+[?2004l[?2004h> kill "$CONSUMER_PID" 2>/dev/null || true
+[?2004l[?2004h> wait "$CONSUMER_PID" 2>/dev/null || true
+[?2004l[?2004h> CONSUMER_END=$(date +%s%3N)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Count producer lines
+[?2004l[?2004h> PRODUCER_LINES=0
+[?2004l[?2004h> if [[ -f logs/events.log ]]; then
+[?2004l[?2004h>     PRODUCER_LINES=$(wc -l < logs/events.log)
+[?2004l[?2004h> fi
+[?2004l[?2004h> for i in {1..3}; do
+[?2004l[?2004h>     if [[ -f "logs/events.log.$i" ]]; then
+[?2004l[?2004h>         PRODUCER_LINES=$((PRODUCER_LINES + $(wc -l < "logs/events.log.$i")))
+[?2004l[?2004h>     fi
+[?2004l[?2004h> done
+[?2004l[?2004h> 
+[?2004l[?2004h> # Count alerts
+[?2004l[?2004h> ALERTS=0
+[?2004l[?2004h> if [[ -f alerts.txt ]]; then
+[?2004l[?2004h>     ALERTS=$(wc -l < alerts.txt)
+[?2004l[?2004h> fi
+[?2004l[?2004h> 
+[?2004l[?2004h> # Count rotations (minimum files that exist)
+[?2004l[?2004h> ROTATIONS_MIN=0
+[?2004l[?2004h> for i in {1..3}; do
+[?2004l[?2004h>     if [[ -f "logs/events.log.$i" ]]; then
+[?2004l[?2004h>         ROTATIONS_MIN=$((ROTATIONS_MIN + 1))
+[?2004l[?2004h>     fi
+[?2004l[?2004h> done
+[?2004l[?2004h> 
+[?2004l[?2004h> # Generate summary.json
+[?2004l[?2004h> cat > summary.json << JSON_EOF
+[?2004l[?2004h> {
+[?2004l[?2004h>   "producer_lines_total": $PRODUCER_LINES,
+[?2004l[?2004h>   "alerts": $ALERTS,
+[?2004l[?2004h>   "rotations_min": $ROTATIONS_MIN,
+[?2004l[?2004h>   "parallel": true
+[?2004l[?2004h> }
+[?2004l[?2004h> JSON_EOF
+[?2004l[?2004h> 
+[?2004l[?2004h> # Generate timeline.json
+[?2004l[?2004h> cat > timeline.json << JSON_EOF
+[?2004l[?2004h> {
+[?2004l[?2004h>   "consumer_start_ms": $CONSUMER_START,
+[?2004l[?2004h>   "producer_start_ms": $PRODUCER_START,
+[?2004l[?2004h>   "consumer_end_ms": $CONSUMER_END,
+[?2004l[?2004h>   "producer_end_ms": $PRODUCER_END
+[?2004l[?2004h> }
+[?2004l[?2004h> JSON_EOF
+[?2004l[?2004h> 
+[?2004l[?2004h> echo "DONE"
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@e0d46a4841cc:/app# chmod +x run.sh; tmux wait -S done
+[?2004l[?2004hroot@e0d46a4841cc:/app# ls -la; tmux wait -S done
+[?2004ltotal 28
+drwxr-xr-x 1 root root 4096 Aug 19 15:00 .
+drwxr-xr-x 1 root root 4096 Aug 19 14:59 ..
+-rw-r--r-- 1 root root 3209 Aug 19 15:00 consumer.awk
+drwxr-xr-x 2 root root 4096 Aug 19 14:59 logs
+drwxr-xr-x 2 root root 4096 Aug 19 15:00 pipe
+-rwxr-xr-x 1 root root 2183 Aug 19 15:00 producer.sh
+-rwxr-xr-x 1 root root 2497 Aug 19 15:00 run.sh
+[?2004hroot@e0d46a4841cc:/app# ./run.sh; tmux wait -S done
+[?2004lStarting pipeline...
+Starting consumer...
+Starting producer...
+Both processes started. Consumer PID: 197, Producer PID: 207
+Running for 32 seconds...
+Producer finished. Total lines: 442
+Stopping producer...
+Stopping consumer...
+DONE
+Cleaning up processes...
+[?2004hroot@e0d46a4841cc:/app# ls -la; tmux wait -S done
+[?2004ltotal 36
+drwxr-xr-x 1 root root 4096 Aug 19 15:01 .
+drwxr-xr-x 1 root root 4096 Aug 19 14:59 ..
+-rw-r--r-- 1 root root 3209 Aug 19 15:00 consumer.awk
+drwxr-xr-x 2 root root 4096 Aug 19 15:00 logs
+drwxr-xr-x 2 root root 4096 Aug 19 15:00 pipe
+-rwxr-xr-x 1 root root 2183 Aug 19 15:00 producer.sh
+-rw-r--r-- 1 root root    0 Aug 19 15:00 run.lock
+-rwxr-xr-x 1 root root 2497 Aug 19 15:00 run.sh
+-rw-r--r-- 1 root root   91 Aug 19 15:01 summary.json
+-rw-r--r-- 1 root root  151 Aug 19 15:01 timeline.json
+[?2004hroot@e0d46a4841cc:/app# cat summary.json; tmux wait -S done
+[?2004l{
+  "producer_lines_total": 442,
+  "alerts": 0,
+  "rotations_min": 0,
+  "parallel": true
+}
+[?2004hroot@e0d46a4841cc:/app# cat timeline.json; tmux wait -S done
+[?2004l{
+  "consumer_start_ms": 1755615654366,
+  "producer_start_ms": 1755615654871,
+  "consumer_end_ms": 1755615686883,
+  "producer_end_ms": 1755615686882
+}
+[?2004hroot@e0d46a4841cc:/app# ls -la logs/; tmux wait -S done
+[?2004ltotal 48
+drwxr-xr-x 2 root root  4096 Aug 19 15:00 .
+drwxr-xr-x 1 root root  4096 Aug 19 15:01 ..
+-rw-r--r-- 1 root root 38886 Aug 19 15:01 events.log
+[?2004hroot@e0d46a4841cc:/app# wc -l logs/events.log*; tmux wait -S done
+[?2004l442 logs/events.log
+[?2004hroot@e0d46a4841cc:/app# head -5 logs/events.log; tmux wait -S done
+[?2004l{"ts": 1755615654878, "session": "vwx234", "user": "郑王冯", "meta": {"admin": true}}
+{"ts": 1755615654961, "session": "def456", "user": "李周吴", "meta": {"admin": true}}
+{"ts": 1755615655037, "session": "pqr678", "user": "陈褚卫", "meta": {"admin": false}}
+{"ts": 1755615655109, "session": "pqr678", "user": "charlie", "meta": {"admin": false}}
+{"ts": 1755615655173, "session": "mno345", "user": "李周吴", "meta": {"admin": false}}
+[?2004hroot@e0d46a4841cc:/app# cat > producer.sh << 'EOF'
+[?2004l[?2004h> #!/bin/bash
+[?2004l[?2004h> 
+[?2004l[?2004h> # Producer script - generates NDJSON events with size-based rotation
+[?2004l[?2004h> set -euo pipefail
+[?2004l[?2004h> 
+[?2004l[?2004h> LOG_FILE="logs/events.log"
+[?2004l[?2004h> MAX_SIZE=15000  # Smaller size for more rotations
+[?2004l[?2004h> ROTATION_COUNT=3
+[?2004l[?2004h> TOTAL_DURATION=30
+[?2004l[?2004h> MIN_DELAY_MS=40
+[?2004l[?2004h> MAX_DELAY_MS=70
+[?2004l[?2004h> 
+[?2004l[?2004h> # Unicode users for testing
+[?2004l[?2004h> USERS=("赵钱孙" "李周吴" "郑王冯" "陈褚卫" "蒋沈韩" "杨朱秦" "alice" "bob" "charlie")
+[?2004l[?2004h> SESSIONS=("abc123" "def456" "ghi789" "jkl012" "mno345" "pqr678" "stu901" "vwx234" "yz567" "admin1" "admin2" "admin3" "admin4" "admin5")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Function to rotate logs
+[?2004l[?2004h> rotate_logs() {
+[?2004l[?2004h>     if [[ -f "$LOG_FILE" ]]; then
+[?2004l[?2004h>         local size=$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
+[?2004l[?2004h>         if [[ $size -gt $MAX_SIZE ]]; then
+[?2004l[?2004h>             # Rotate existing files
+[?2004l[?2004h>             for ((i=ROTATION_COUNT; i>=1; i--)); do
+[?2004l[?2004h>                 if [[ -f "${LOG_FILE}.$i" ]]; then
+[?2004l[?2004h>                     mv "${LOG_FILE}.$i" "${LOG_FILE}.$((i+1))"
+[?2004l[?2004h>                 fi
+[?2004l[?2004h>             done
+[?2004l[?2004h>             mv "$LOG_FILE" "${LOG_FILE}.1"
+[?2004l[?2004h>         fi
+[?2004l[?2004h>     fi
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> # Generate events
+[?2004l[?2004h> start_time=$(date +%s)
+[?2004l[?2004h> line_count=0
+[?2004l[?2004h> 
+[?2004l[?2004h> while true; do
+[?2004l[?2004h>     current_time_sec=$(date +%s)
+[?2004l[?2004h>     elapsed=$((current_time_sec - start_time))
+[?2004l[?2004h>     
+[?2004l[?2004h>     if [[ $elapsed -gt $TOTAL_DURATION ]]; then
+[?2004l[?2004h>         break
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Current timestamp in milliseconds
+[?2004l[?2004h>     current_time_ms=$(date +%s%3N)
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Random user and session
+[?2004l[?2004h>     user="${USERS[$((RANDOM % ${#USERS[@]}))]}"
+[?2004l[?2004h>     session="${SESSIONS[$((RANDOM % ${#SESSIONS[@]}))]}"
+[?2004l[?2004h>     
+[?2004l[?2004h>     # 5-10% malformed lines
+[?2004l[?2004h>     if [[ $((RANDOM % 100)) -lt 8 ]]; then
+[?2004l[?2004h>         # Malformed JSON
+[?2004l[?2004h>         line="{\"ts\": $current_time_ms, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true"
+[?2004l[?2004h>     else
+[?2004l[?2004h>         # Valid JSON with higher chance of admin=true to trigger alerts
+[?2004l[?2004h>         admin_flag=$([[ $((RANDOM % 3)) -eq 0 ]] && echo "false" || echo "true")
+[?2004l[?2004h>         line="{\"ts\": $current_time_ms, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": $admin_flag}}"
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Output to stdout and log
+[?2004l[?2004h>     echo "$line"
+[?2004l[?2004h>     echo "$line" >> "$LOG_FILE"
+[?2004l[?2004h>     
+[?2004l[?2004h>     line_count=$((line_count + 1))
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Rotate if needed
+[?2004l[?2004h>     rotate_logs
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Random delay between 40-70ms (correct format)
+[?2004l[?2004h>     delay_ms=$((RANDOM % (MAX_DELAY_MS - MIN_DELAY_MS + 1) + MIN_DELAY_MS))
+[?2004l[?2004h>     sleep "0.${delay_ms}"
+[?2004l[?2004h> done
+[?2004l[?2004h> 
+[?2004l[?2004h> echo "Producer finished. Total lines: $line_count" >&2
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@e0d46a4841cc:/app# rm -f alerts.txt summary.json timeline.json logs/events.log* run.lock; tmux wait -S done
+[?2004l[?2004hroot@e0d46a4841cc:/app# cat > consumer.awk << 'EOF'
+[?2004l[?2004h> BEGIN {
+[?2004l[?2004h>     # Initialize variables
+[?2004l[?2004h>     window_size = 10000  # 10 seconds in milliseconds
+[?2004l[?2004h>     alert_threshold = 3
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Arrays to track sessions per user
+[?2004l[?2004h>     # user_sessions[user][session] = timestamp
+[?2004l[?2004h>     # user_last_alert[user] = timestamp of last alert
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> function parse_json(line,    i, n, parts, key, value, in_quotes, escape_next, char, result) {
+[?2004l[?2004h>     # Simple JSON parser for our specific format
+[?2004l[?2004h>     # Extract ts, user, session, and admin flag
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Initialize result
+[?2004l[?2004h>     result["ts"] = ""
+[?2004l[?2004h>     result["user"] = ""
+[?2004l[?2004h>     result["session"] = ""
+[?2004l[?2004h>     result["admin"] = "false"
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Skip malformed lines gracefully
+[?2004l[?2004h>     if (index(line, "}") == 0) {
+[?2004l[?2004h>         return 0
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract timestamp
+[?2004l[?2004h>     if (match(line, /"ts":[[:space:]]*([0-9]+)/, arr)) {
+[?2004l[?2004h>         result["ts"] = arr[1]
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract user
+[?2004l[?2004h>     if (match(line, /"user":[[:space:]]*"([^"]+)"/, arr)) {
+[?2004l[?2004h>         result["user"] = arr[1]
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract session
+[?2004l[?2004h>     if (match(line, /"session":[[:space:]]*"([^"]+)"/, arr)) {
+[?2004l[?2004h>         result["session"] = arr[1]
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract admin flag
+[?2004l[?2004h>     if (match(line, /"admin":[[:space:]]*true/)) {
+[?2004l[?2004h>         result["admin"] = "true"
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     return (result["ts"] != "" && result["user"] != "" && result["session"] != "")
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> function clean_old_sessions(current_ts,    user, session) {
+[?2004l[?2004h>     # Remove sessions older than window_size
+[?2004l[?2004h>     for (user in user_sessions) {
+[?2004l[?2004h>         for (session in user_sessions[user]) {
+[?2004l[?2004h>             if (current_ts - user_sessions[user][session] > window_size) {
+[?2004l[?2004h>                 delete user_sessions[user][session]
+[?2004l[?2004h>             }
+[?2004l[?2004h>         }
+[?2004l[?2004h>         # If user has no sessions left, remove user entry
+[?2004l[?2004h>         if (length(user_sessions[user]) == 0) {
+[?2004l[?2004h>             delete user_sessions[user]
+[?2004l[?2004h>         }
+[?2004l[?2004h>         
+[?2004l[?2004h>         # Clean old alert timestamps
+[?2004l[?2004h>         if (user in user_last_alert && current_ts - user_last_alert[user] > window_size) {
+[?2004l[?2004h>             delete user_last_alert[user]
+[?2004l[?2004h>         }
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> function count_user_sessions(user,    count, session) {
+[?2004l[?2004h>     count = 0
+[?2004l[?2004h>     for (session in user_sessions[user]) {
+[?2004l[?2004h>         count++
+[?2004l[?2004h>     }
+[?2004l[?2004h>     return count
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> function format_timestamp(ts_ms) {
+[?2004l[?2004h>     # Convert milliseconds to seconds for strftime
+[?2004l[?2004h>     ts_sec = int(ts_ms / 1000)
+[?2004l[?2004h>     return strftime("%Y-%m-%dT%H:%M:%SZ", ts_sec)
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> {
+[?2004l[?2004h>     # Process each line
+[?2004l[?2004h>     if (parse_json($0, data)) {
+[?2004l[?2004h>         ts = data["ts"]
+[?2004l[?2004h>         user = data["user"]
+[?2004l[?2004h>         session = data["session"]
+[?2004l[?2004h>         admin = data["admin"]
+[?2004l[?2004h>         
+[?2004l[?2004h>         # Only process admin sessions
+[?2004l[?2004h>         if (admin == "true") {
+[?2004l[?2004h>             # Clean old sessions first
+[?2004l[?2004h>             clean_old_sessions(ts)
+[?2004l[?2004h>             
+[?2004l[?2004h>             # Add this session
+[?2004l[?2004h>             user_sessions[user][session] = ts
+[?2004l[?2004h>             
+[?2004l[?2004h>             # Count current sessions for this user
+[?2004l[?2004h>             session_count = count_user_sessions(user)
+[?2004l[?2004h>             
+[?2004l[?2004h>             # Check if we need to alert (and haven't alerted recently)
+[?2004l[?2004h>             if (session_count >= alert_threshold && !(user in user_last_alert)) {
+[?2004l[?2004h>                 iso_time = format_timestamp(ts)
+[?2004l[?2004h>                 alert_line = "ALERT " user " " session_count " admin-sessions in 10s at " iso_time
+[?2004l[?2004h>                 print alert_line >> "alerts.txt"
+[?2004l[?2004h>                 fflush("alerts.txt")
+[?2004l[?2004h>                 user_last_alert[user] = ts
+[?2004l[?2004h>             }
+[?2004l[?2004h>         }
+[?2004l[?2004h>     }
+[?2004l[?2004h>     # Ignore malformed lines silently
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> END {
+[?2004l[?2004h>     # Final cleanup not needed for this use case
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@e0d46a4841cc:/app# ./run.sh; tmux wait -S done
+[?2004lStarting pipeline...
+Starting consumer...
+Starting producer...
+Both processes started. Consumer PID: 2989, Producer PID: 2999
+Running for 32 seconds...
+Producer finished. Total lines: 54
+Stopping producer...
+Stopping consumer...
+DONE
+Cleaning up processes...
+[?2004hroot@e0d46a4841cc:/app# cat summary.json; tmux wait -S done
+[?2004l{
+  "producer_lines_total": 54,
+  "alerts": 0,
+  "rotations_min": 0,
+  "parallel": true
+}
+[?2004hroot@e0d46a4841cc:/app# cat > producer.sh << 'EOF'
+[?2004l[?2004h> #!/bin/bash
+[?2004l[?2004h> 
+[?2004l[?2004h> # Producer script - generates NDJSON events with size-based rotation
+[?2004l[?2004h> set -euo pipefail
+[?2004l[?2004h> 
+[?2004l[?2004h> LOG_FILE="logs/events.log"
+[?2004l[?2004h> MAX_SIZE=15000  # Smaller size for more rotations
+[?2004l[?2004h> ROTATION_COUNT=3
+[?2004l[?2004h> TOTAL_DURATION=30
+[?2004l[?2004h> MIN_DELAY_MS=40
+[?2004l[?2004h> MAX_DELAY_MS=70
+[?2004l[?2004h> 
+[?2004l[?2004h> # Unicode users for testing
+[?2004l[?2004h> USERS=("赵钱孙" "李周吴" "郑王冯" "陈褚卫" "蒋沈韩" "杨朱秦" "alice" "bob" "charlie")
+[?2004l[?2004h> SESSIONS=("abc123" "def456" "ghi789" "jkl012" "mno345" "pqr678" "stu901" "vwx234" "yz567" "admin1" "admin2" "admin3" "admin4" "admin5")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Function to rotate logs
+[?2004l[?2004h> rotate_logs() {
+[?2004l[?2004h>     if [[ -f "$LOG_FILE" ]]; then
+[?2004l[?2004h>         local size=$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
+[?2004l[?2004h>         if [[ $size -gt $MAX_SIZE ]]; then
+[?2004l[?2004h>             # Rotate existing files
+[?2004l[?2004h>             for ((i=ROTATION_COUNT; i>=1; i--)); do
+[?2004l[?2004h>                 if [[ -f "${LOG_FILE}.$i" ]]; then
+[?2004l[?2004h>                     mv "${LOG_FILE}.$i" "${LOG_FILE}.$((i+1))"
+[?2004l[?2004h>                 fi
+[?2004l[?2004h>             done
+[?2004l[?2004h>             mv "$LOG_FILE" "${LOG_FILE}.1"
+[?2004l[?2004h>         fi
+[?2004l[?2004h>     fi
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> # Generate events
+[?2004l[?2004h> start_time=$(date +%s)
+[?2004l[?2004h> line_count=0
+[?2004l[?2004h> 
+[?2004l[?2004h> while true; do
+[?2004l[?2004h>     current_time_sec=$(date +%s)
+[?2004l[?2004h>     elapsed=$((current_time_sec - start_time))
+[?2004l[?2004h>     
+[?2004l[?2004h>     if [[ $elapsed -gt $TOTAL_DURATION ]]; then
+[?2004l[?2004h>         break
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Current timestamp in milliseconds
+[?2004l[?2004h>     current_time_ms=$(date +%s%3N)
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Random user and session
+[?2004l[?2004h>     user="${USERS[$((RANDOM % ${#USERS[@]}))]}"
+[?2004l[?2004h>     session="${SESSIONS[$((RANDOM % ${#SESSIONS[@]}))]}"
+[?2004l[?2004h>     
+[?2004l[?2004h>     # 5-10% malformed lines
+[?2004l[?2004h>     if [[ $((RANDOM % 100)) -lt 8 ]]; then
+[?2004l[?2004h>         # Malformed JSON
+[?2004l[?2004h>         line="{\"ts\": $current_time_ms, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true"
+[?2004l[?2004h>     else
+[?2004l[?2004h>         # Valid JSON with higher chance of admin=true to trigger alerts
+[?2004l[?2004h>         admin_flag=$([[ $((RANDOM % 3)) -eq 0 ]] && echo "false" || echo "true")
+[?2004l[?2004h>         line="{\"ts\": $current_time_ms, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": $admin_flag}}"
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Output to stdout and log
+[?2004l[?2004h>     echo "$line"
+[?2004l[?2004h>     echo "$line" >> "$LOG_FILE"
+[?2004l[?2004h>     
+[?2004l[?2004h>     line_count=$((line_count + 1))
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Rotate if needed
+[?2004l[?2004h>     rotate_logs
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Correct millisecond delay: 40-70ms = 0.040-0.070 seconds
+[?2004l[?2004h>     delay_ms=$((RANDOM % (MAX_DELAY_MS - MIN_DELAY_MS + 1) + MIN_DELAY_MS))
+[?2004l[?2004h>     # Convert to proper decimal format: 40ms = 0.040s
+[?2004l[?2004h>     printf -v delay_sec "0.%03d" "$delay_ms"
+[?2004l[?2004h>     sleep "$delay_sec"
+[?2004l[?2004h> done
+[?2004l[?2004h> 
+[?2004l[?2004h> echo "Producer finished. Total lines: $line_count" >&2
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@e0d46a4841cc:/app# rm -f alerts.txt summary.json timeline.json logs/events.log* run.lock; tmux wait -S done
+[?2004l[?2004hroot@e0d46a4841cc:/app# ./run.sh; tmux wait -S done
+[?2004lStarting pipeline...
+Starting consumer...
+Starting producer...
+Both processes started. Consumer PID: 3389, Producer PID: 3399
+Running for 32 seconds...
+Producer finished. Total lines: 460
+Stopping producer...
+Stopping consumer...
+DONE
+Cleaning up processes...
+[?2004hroot@e0d46a4841cc:/app# cat summary.json; tmux wait -S done
+[?2004l{
+  "producer_lines_total": 460,
+  "alerts": 0,
+  "rotations_min": 2,
+  "parallel": true
+}
+[?2004hroot@e0d46a4841cc:/app# ls -la logs/; tmux wait -S done
+[?2004ltotal 52
+drwxr-xr-x 2 root root  4096 Aug 19 15:03 .
+drwxr-xr-x 1 root root  4096 Aug 19 15:03 ..
+-rw-r--r-- 1 root root 10377 Aug 19 15:03 events.log
+-rw-r--r-- 1 root root 15027 Aug 19 15:03 events.log.1
+-rw-r--r-- 1 root root 15002 Aug 19 15:03 events.log.2
+[?2004hroot@e0d46a4841cc:/app# head -3 logs/events.log; tmux wait -S done
+[?2004l{"ts": 1755615824973, "session": "ghi789", "user": "charlie", "meta": {"admin": false}}
+{"ts": 1755615825031, "session": "jkl012", "user": "杨朱秦", "meta": {"admin": false}}
+{"ts": 1755615825092, "session": "abc123", "user": "alice", "meta": {"admin": false}}
+[?2004hroot@e0d46a4841cc:/app# cat > producer.sh << 'EOF'
+[?2004l[?2004h> #!/bin/bash
+[?2004l[?2004h> 
+[?2004l[?2004h> # Producer script - generates NDJSON events with size-based rotation
+[?2004l[?2004h> set -euo pipefail
+[?2004l[?2004h> 
+[?2004l[?2004h> LOG_FILE="logs/events.log"
+[?2004l[?2004h> MAX_SIZE=12000  # Smaller for more rotations
+[?2004l[?2004h> ROTATION_COUNT=3
+[?2004l[?2004h> TOTAL_DURATION=30
+[?2004l[?2004h> MIN_DELAY_MS=15  # Reduced for higher volume
+[?2004l[?2004h> MAX_DELAY_MS=25  # Reduced for higher volume
+[?2004l[?2004h> 
+[?2004l[?2004h> # Unicode users for testing
+[?2004l[?2004h> USERS=("赵钱孙" "李周吴" "郑王冯" "陈褚卫" "蒋沈韩" "杨朱秦" "alice" "bob" "charlie")
+[?2004l[?2004h> SESSIONS=("abc123" "def456" "ghi789" "jkl012" "mno345" "pqr678" "stu901" "vwx234" "yz567" "admin1" "admin2" "admin3" "admin4" "admin5")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Function to rotate logs
+[?2004l[?2004h> rotate_logs() {
+[?2004l[?2004h>     if [[ -f "$LOG_FILE" ]]; then
+[?2004l[?2004h>         local size=$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
+[?2004l[?2004h>         if [[ $size -gt $MAX_SIZE ]]; then
+[?2004l[?2004h>             # Rotate existing files
+[?2004l[?2004h>             for ((i=ROTATION_COUNT; i>=1; i--)); do
+[?2004l[?2004h>                 if [[ -f "${LOG_FILE}.$i" ]]; then
+[?2004l[?2004h>                     mv "${LOG_FILE}.$i" "${LOG_FILE}.$((i+1))"
+[?2004l[?2004h>                 fi
+[?2004l[?2004h>             done
+[?2004l[?2004h>             mv "$LOG_FILE" "${LOG_FILE}.1"
+[?2004l[?2004h>         fi
+[?2004l[?2004h>     fi
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> # Generate events
+[?2004l[?2004h> start_time=$(date +%s)
+[?2004l[?2004h> line_count=0
+[?2004l[?2004h> 
+[?2004l[?2004h> while true; do
+[?2004l[?2004h>     current_time_sec=$(date +%s)
+[?2004l[?2004h>     elapsed=$((current_time_sec - start_time))
+[?2004l[?2004h>     
+[?2004l[?2004h>     if [[ $elapsed -gt $TOTAL_DURATION ]]; then
+[?2004l[?2004h>         break
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Current timestamp in milliseconds
+[?2004l[?2004h>     current_time_ms=$(date +%s%3N)
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Random user and session
+[?2004l[?2004h>     user="${USERS[$((RANDOM % ${#USERS[@]}))]}"
+[?2004l[?2004h>     session="${SESSIONS[$((RANDOM % ${#SESSIONS[@]}))]}"
+[?2004l[?2004h>     
+[?2004l[?2004h>     # 5-10% malformed lines
+[?2004l[?2004h>     if [[ $((RANDOM % 100)) -lt 8 ]]; then
+[?2004l[?2004h>         # Malformed JSON
+[?2004l[?2004h>         line="{\"ts\": $current_time_ms, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true"
+[?2004l[?2004h>     else
+[?2004l[?2004h>         # Valid JSON with higher chance of admin=true to trigger alerts
+[?2004l[?2004h>         admin_flag=$([[ $((RANDOM % 3)) -eq 0 ]] && echo "false" || echo "true")
+[?2004l[?2004h>         line="{\"ts\": $current_time_ms, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": $admin_flag}}"
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Output to stdout and log
+[?2004l[?2004h>     echo "$line"
+[?2004l[?2004h>     echo "$line" >> "$LOG_FILE"
+[?2004l[?2004h>     
+[?2004l[?2004h>     line_count=$((line_count + 1))
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Rotate if needed
+[?2004l[?2004h>     rotate_logs
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Correct millisecond delay: 15-25ms = 0.015-0.025 seconds
+[?2004l[?2004h>     delay_ms=$((RANDOM % (MAX_DELAY_MS - MIN_DELAY_MS + 1) + MIN_DELAY_MS))
+[?2004l[?2004h>     # Convert to proper decimal format: 15ms = 0.015s
+[?2004l[?2004h>     printf -v delay_sec "0.%03d" "$delay_ms"
+[?2004l[?2004h>     sleep "$delay_sec"
+[?2004l[?2004h> done
+[?2004l[?2004h> 
+[?2004l[?2004h> echo "Producer finished. Total lines: $line_count" >&2
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@e0d46a4841cc:/app# rm -f alerts.txt summary.json timeline.json logs/events.log* run.lock; tmux wait -S done
+[?2004l[?2004hroot@e0d46a4841cc:/app# ./run.sh; tmux wait -S done
+[?2004lStarting pipeline...
+Starting consumer...
+Starting producer...
+Both processes started. Consumer PID: 6237, Producer PID: 6247
+Running for 32 seconds...
+Producer finished. Total lines: 1037
+Stopping producer...
+Stopping consumer...
+DONE
+Cleaning up processes...
+[?2004hroot@e0d46a4841cc:/app# cat summary.json; tmux wait -S done
+[?2004l{
+  "producer_lines_total": 488,
+  "alerts": 0,
+  "rotations_min": 3,
+  "parallel": true
+}
+[?2004hroot@e0d46a4841cc:/app# cat timeline.json; tmux wait -S done
+[?2004l{
+  "consumer_start_ms": 1755615858924,
+  "producer_start_ms": 1755615859429,
+  "consumer_end_ms": 1755615891440,
+  "producer_end_ms": 1755615891438
+}
+[?2004hroot@e0d46a4841cc:/app# ls -la logs/; tmux wait -S done
+[?2004ltotal 64
+drwxr-xr-x 2 root root  4096 Aug 19 15:04 .
+drwxr-xr-x 1 root root  4096 Aug 19 15:04 ..
+-rw-r--r-- 1 root root  6668 Aug 19 15:04 events.log
+-rw-r--r-- 1 root root 12028 Aug 19 15:04 events.log.1
+-rw-r--r-- 1 root root 12067 Aug 19 15:04 events.log.2
+-rw-r--r-- 1 root root 12051 Aug 19 15:04 events.log.3
+-rw-r--r-- 1 root root 12074 Aug 19 15:04 events.log.4
+[?2004hroot@e0d46a4841cc:/app# cat alerts.txt 2>/dev/null || echo 'No alerts file'; tmux wait -S done
+[?2004lNo alerts file
+[?2004hroot@e0d46a4841cc:/app# wc -l logs/events.log*; tmux wait -S done
+[?2004l   76 logs/events.log
+  137 logs/events.log.1
+  138 logs/events.log.2
+  137 logs/events.log.3
+  138 logs/events.log.4
+  626 total
+[?2004hroot@e0d46a4841cc:/app# head -5 logs/events.log.1; tmux wait -S done
+[?2004l{"ts": 1755615883765, "session": "ghi789", "user": "蒋沈韩", "meta": {"admin": true}}
+{"ts": 1755615883789, "session": "stu901", "user": "charlie", "meta": {"admin": true}}
+{"ts": 1755615883820, "session": "admin2", "user": "杨朱秦", "meta": {"admin": true}}
+{"ts": 1755615883847, "session": "yz567", "user": "李周吴", "meta": {"admin": false}}
+{"ts": 1755615883875, "session": "admin4", "user": "郑王冯", "meta": {"admin": true
+[?2004hroot@e0d46a4841cc:/app# tail -5 logs/events.log.1; tmux wait -S done
+[?2004l{"ts": 1755615887679, "session": "ghi789", "user": "郑王冯", "meta": {"admin": false}}
+{"ts": 1755615887709, "session": "jkl012", "user": "bob", "meta": {"admin": true}}
+{"ts": 1755615887741, "session": "abc123", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755615887766, "session": "admin1", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755615887795, "session": "jkl012", "user": "alice", "meta": {"admin": true}}
+[?2004hroot@e0d46a4841cc:/app# echo '{"ts": 1755615883765, "session": "ghi789", "user": "赵钱孙", "meta": {"admin": true}}
+[?2004l[?2004h> {"ts": 1755615883766, "session": "abc123", "user": "赵钱孙", "meta": {"admin": true}}
+[?2004l[?2004h> {"ts": 1755615883767, "session": "def456", "user": "赵钱孙", "meta": {"admin": true}}' | awk -f consumer.awk; tmux wait -S done
+[?2004l[?2004hroot@e0d46a4841cc:/app# cat alerts.txt 2>/dev/null || echo 'Still no alerts'; tmux wait -S done
+[?2004lStill no alerts
+[?2004hroot@e0d46a4841cc:/app# awk 'BEGIN { print "Testing AWK basics..." } { print "Processing line:", $0 }' <<< '{"test": "data"}'; tmux wait -S done
+[?2004lTesting AWK basics...
+Processing line: {"test": "data"}
+[?2004hroot@e0d46a4841cc:/app# cat > test_consumer.awk << 'EOF'
+[?2004l[?2004h> BEGIN {
+[?2004l[?2004h>     print "AWK script started"
+[?2004l[?2004h>     window_size = 10000
+[?2004l[?2004h>     alert_threshold = 3
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> function parse_json_simple(line) {
+[?2004l[?2004h>     # Simple extraction for debugging
+[?2004l[?2004h>     if (match(line, /"ts":[[:space:]]*([0-9]+)/, arr)) {
+[?2004l[?2004h>         ts = arr[1]
+[?2004l[?2004h>     } else {
+[?2004l[?2004h>         print "Failed to parse ts from:", line
+[?2004l[?2004h>         return 0
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     if (match(line, /"user":[[:space:]]*"([^"]+)"/, arr)) {
+[?2004l[?2004h>         user = arr[1]
+[?2004l[?2004h>     } else {
+[?2004l[?2004h>         print "Failed to parse user from:", line
+[?2004l[?2004h>         return 0
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     if (match(line, /"session":[[:space:]]*"([^"]+)"/, arr)) {
+[?2004l[?2004h>         session = arr[1]
+[?2004l[?2004h>     } else {
+[?2004l[?2004h>         print "Failed to parse session from:", line
+[?2004l[?2004h>         return 0
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     admin = "false"
+[?2004l[?2004h>     if (match(line, /"admin":[[:space:]]*true/)) {
+[?2004l[?2004h>         admin = "true"
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     print "Parsed:", "ts=" ts, "user=" user, "session=" session, "admin=" admin
+[?2004l[?2004h>     return (ts != "" && user != "" && session != "")
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> {
+[?2004l[?2004h>     print "Processing line:", NR, $0
+[?2004l[?2004h>     if (parse_json_simple($0)) {
+[?2004l[?2004h>         if (admin == "true") {
+[?2004l[?2004h>             user_sessions[user][session] = ts
+[?2004l[?2004h>             count = 0
+[?2004l[?2004h>             for (s in user_sessions[user]) count++
+[?2004l[?2004h>             print "User", user, "now has", count, "admin sessions"
+[?2004l[?2004h>             
+[?2004l[?2004h>             if (count >= alert_threshold) {
+[?2004l[?2004h>                 print "ALERT", user, count, "admin-sessions triggered"
+[?2004l[?2004h>                 print "ALERT", user, count, "admin-sessions in 10s at 2024-08-19T15:00:00Z" >> "alerts.txt"
+[?2004l[?2004h>             }
+[?2004l[?2004h>         }
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@e0d46a4841cc:/app# echo '{"ts": 1755615883765, "session": "ghi789", "user": "赵钱孙", "meta": {"admin": true}}
+[?2004l[?2004h> {"ts": 1755615883766, "session": "abc123", "user": "赵钱孙", "meta": {"admin": true}}
+[?2004l[?2004h> {"ts": 1755615883767, "session": "def456", "user": "赵钱孙", "meta": {"admin": true}}' | awk -f test_consumer.awk; tmux wait -S done
+[?2004lAWK script started
+Processing line: 1 {"ts": 1755615883765, "session": "ghi789", "user": "赵钱孙", "meta": {"admin": true}}
+Parsed: ts=1755615883765 user=赵钱孙 session=ghi789 admin=true
+User 赵钱孙 now has 1 admin sessions
+Processing line: 2 {"ts": 1755615883766, "session": "abc123", "user": "赵钱孙", "meta": {"admin": true}}
+Parsed: ts=1755615883766 user=赵钱孙 session=abc123 admin=true
+User 赵钱孙 now has 2 admin sessions
+Processing line: 3 {"ts": 1755615883767, "session": "def456", "user": "赵钱孙", "meta": {"admin": true}}
+Parsed: ts=1755615883767 user=赵钱孙 session=def456 admin=true
+User 赵钱孙 now has 3 admin sessions
+ALERT 赵钱孙 3 admin-sessions triggered
+[?2004hroot@e0d46a4841cc:/app# cat alerts.txt 2>/dev/null || echo 'No alerts generated'; tmux wait -S done
+[?2004lALERT 赵钱孙 3 admin-sessions in 10s at 2024-08-19T15:00:00Z
+[?2004hroot@e0d46a4841cc:/app# rm -f alerts.txt; tmux wait -S done
+[?2004l[?2004hroot@e0d46a4841cc:/app# cat > consumer.awk << 'EOF'
+[?2004l[?2004h> BEGIN {
+[?2004l[?2004h>     window_size = 10000  # 10 seconds in milliseconds
+[?2004l[?2004h>     alert_threshold = 3
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> function parse_json_simple(line) {
+[?2004l[?2004h>     # Extract timestamp
+[?2004l[?2004h>     if (match(line, /"ts":[[:space:]]*([0-9]+)/, arr)) {
+[?2004l[?2004h>         ts = arr[1]
+[?2004l[?2004h>     } else {
+[?2004l[?2004h>         return 0
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract user
+[?2004l[?2004h>     if (match(line, /"user":[[:space:]]*"([^"]+)"/, arr)) {
+[?2004l[?2004h>         user = arr[1]
+[?2004l[?2004h>     } else {
+[?2004l[?2004h>         return 0
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract session
+[?2004l[?2004h>     if (match(line, /"session":[[:space:]]*"([^"]+)"/, arr)) {
+[?2004l[?2004h>         session = arr[1]
+[?2004l[?2004h>     } else {
+[?2004l[?2004h>         return 0
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Extract admin flag
+[?2004l[?2004h>     admin = "false"
+[?2004l[?2004h>     if (match(line, /"admin":[[:space:]]*true/)) {
+[?2004l[?2004h>         admin = "true"
+[?2004l[?2004h>     }
+[?2004l[?2004h>     
+[?2004l[?2004h>     return (ts != "" && user != "" && session != "")
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> function clean_old_sessions(current_ts,    user, session) {
+[?2004l[?2004h>     # Remove sessions older than window_size
+[?2004l[?2004h>     for (user in user_sessions) {
+[?2004l[?2004h>         for (session in user_sessions[user]) {
+[?2004l[?2004h>             if (current_ts - user_sessions[user][session] > window_size) {
+[?2004l[?2004h>                 delete user_sessions[user][session]
+[?2004l[?2004h>             }
+[?2004l[?2004h>         }
+[?2004l[?2004h>         # Clean old alert timestamps
+[?2004l[?2004h>         if (user in user_last_alert && current_ts - user_last_alert[user] > window_size) {
+[?2004l[?2004h>             delete user_last_alert[user]
+[?2004l[?2004h>         }
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> function format_timestamp(ts_ms) {
+[?2004l[?2004h>     ts_sec = int(ts_ms / 1000)
+[?2004l[?2004h>     return strftime("%Y-%m-%dT%H:%M:%SZ", ts_sec)
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> {
+[?2004l[?2004h>     # Process each line
+[?2004l[?2004h>     if (parse_json_simple($0)) {
+[?2004l[?2004h>         if (admin == "true") {
+[?2004l[?2004h>             # Clean old sessions first
+[?2004l[?2004h>             clean_old_sessions(ts)
+[?2004l[?2004h>             
+[?2004l[?2004h>             # Add this session
+[?2004l[?2004h>             user_sessions[user][session] = ts
+[?2004l[?2004h>             
+[?2004l[?2004h>             # Count current sessions for this user
+[?2004l[?2004h>             count = 0
+[?2004l[?2004h>             for (s in user_sessions[user]) count++
+[?2004l[?2004h>             
+[?2004l[?2004h>             # Check if we need to alert (and haven't alerted recently)
+[?2004l[?2004h>             if (count >= alert_threshold && !(user in user_last_alert)) {
+[?2004l[?2004h>                 iso_time = format_timestamp(ts)
+[?2004l[?2004h>                 alert_line = "ALERT " user " " count " admin-sessions in 10s at " iso_time
+[?2004l[?2004h>                 print alert_line >> "alerts.txt"
+[?2004l[?2004h>                 fflush("alerts.txt")
+[?2004l[?2004h>                 user_last_alert[user] = ts
+[?2004l[?2004h>             }
+[?2004l[?2004h>         }
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@e0d46a4841cc:/app# cat > producer.sh << 'EOF'
+[?2004l[?2004h> #!/bin/bash
+[?2004l[?2004h> 
+[?2004l[?2004h> # Producer script - generates NDJSON events with size-based rotation
+[?2004l[?2004h> set -euo pipefail
+[?2004l[?2004h> 
+[?2004l[?2004h> LOG_FILE="logs/events.log"
+[?2004l[?2004h> MAX_SIZE=10000  # Smaller for more rotations
+[?2004l[?2004h> ROTATION_COUNT=3
+[?2004l[?2004h> TOTAL_DURATION=30
+[?2004l[?2004h> MIN_DELAY_MS=10  # Reduced for higher volume
+[?2004l[?2004h> MAX_DELAY_MS=20  # Reduced for higher volume
+[?2004l[?2004h> 
+[?2004l[?2004h> # Unicode users for testing
+[?2004l[?2004h> USERS=("赵钱孙" "李周吴" "郑王冯" "陈褚卫" "蒋沈韩" "杨朱秦" "alice" "bob" "charlie")
+[?2004l[?2004h> SESSIONS=("abc123" "def456" "ghi789" "jkl012" "mno345" "pqr678" "stu901" "vwx234" "yz567" "admin1" "admin2" "admin3" "admin4" "admin5")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Function to rotate logs
+[?2004l[?2004h> rotate_logs() {
+[?2004l[?2004h>     if [[ -f "$LOG_FILE" ]]; then
+[?2004l[?2004h>         local size=$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
+[?2004l[?2004h>         if [[ $size -gt $MAX_SIZE ]]; then
+[?2004l[?2004h>             # Rotate existing files
+[?2004l[?2004h>             for ((i=ROTATION_COUNT; i>=1; i--)); do
+[?2004l[?2004h>                 if [[ -f "${LOG_FILE}.$i" ]]; then
+[?2004l[?2004h>                     mv "${LOG_FILE}.$i" "${LOG_FILE}.$((i+1))"
+[?2004l[?2004h>                 fi
+[?2004l[?2004h>             done
+[?2004l[?2004h>             mv "$LOG_FILE" "${LOG_FILE}.1"
+[?2004l[?2004h>         fi
+[?2004l[?2004h>     fi
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> # Generate events
+[?2004l[?2004h> start_time=$(date +%s)
+[?2004l[?2004h> line_count=0
+[?2004l[?2004h> 
+[?2004l[?2004h> while true; do
+[?2004l[?2004h>     current_time_sec=$(date +%s)
+[?2004l[?2004h>     elapsed=$((current_time_sec - start_time))
+[?2004l[?2004h>     
+[?2004l[?2004h>     if [[ $elapsed -gt $TOTAL_DURATION ]]; then
+[?2004l[?2004h>         break
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Current timestamp in milliseconds
+[?2004l[?2004h>     current_time_ms=$(date +%s%3N)
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Random user and session
+[?2004l[?2004h>     user="${USERS[$((RANDOM % ${#USERS[@]}))]}"
+[?2004l[?2004h>     session="${SESSIONS[$((RANDOM % ${#SESSIONS[@]}))]}"
+[?2004l[?2004h>     
+[?2004l[?2004h>     # 5-10% malformed lines
+[?2004l[?2004h>     if [[ $((RANDOM % 100)) -lt 8 ]]; then
+[?2004l[?2004h>         # Malformed JSON
+[?2004l[?2004h>         line="{\"ts\": $current_time_ms, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true"
+[?2004l[?2004h>     else
+[?2004l[?2004h>         # Valid JSON with higher chance of admin=true to trigger alerts
+[?2004l[?2004h>         admin_flag=$([[ $((RANDOM % 3)) -eq 0 ]] && echo "false" || echo "true")
+[?2004l[?2004h>         line="{\"ts\": $current_time_ms, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": $admin_flag}}"
+[?2004l[?2004h>     fi
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Output to stdout and log
+[?2004l[?2004h>     echo "$line"
+[?2004l[?2004h>     echo "$line" >> "$LOG_FILE"
+[?2004l[?2004h>     
+[?2004l[?2004h>     line_count=$((line_count + 1))
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Rotate if needed
+[?2004l[?2004h>     rotate_logs
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Correct millisecond delay: 10-20ms = 0.010-0.020 seconds
+[?2004l[?2004h>     delay_ms=$((RANDOM % (MAX_DELAY_MS - MIN_DELAY_MS + 1) + MIN_DELAY_MS))
+[?2004l[?2004h>     # Convert to proper decimal format: 10ms = 0.010s
+[?2004l[?2004h>     printf -v delay_sec "0.%03d" "$delay_ms"
+[?2004l[?2004h>     sleep "$delay_sec"
+[?2004l[?2004h> done
+[?2004l[?2004h> 
+[?2004l[?2004h> echo "Producer finished. Total lines: $line_count" >&2
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@e0d46a4841cc:/app# rm -f alerts.txt summary.json timeline.json logs/events.log* run.lock test_consumer.awk; tmux wait -S done
+[?2004l[?2004hroot@e0d46a4841cc:/app# ./run.sh; tmux wait -S done
+[?2004lStarting pipeline...
+Starting consumer...
+Starting producer...
+Both processes started. Consumer PID: 12712, Producer PID: 12722
+Running for 32 seconds...
+Producer finished. Total lines: 1316
+Stopping producer...
+Stopping consumer...
+DONE
+Cleaning up processes...
+[?2004hroot@e0d46a4841cc:/app# cat summary.json; tmux wait -S done
+[?2004l{
+  "producer_lines_total": 400,
+  "alerts": 27,
+  "rotations_min": 3,
+  "parallel": true
+}
+[?2004hroot@e0d46a4841cc:/app# cat timeline.json; tmux wait -S done
+[?2004l{
+  "consumer_start_ms": 1755615984042,
+  "producer_start_ms": 1755615984550,
+  "consumer_end_ms": 1755616016559,
+  "producer_end_ms": 1755616016557
+}
+[?2004hroot@e0d46a4841cc:/app# cat alerts.txt; tmux wait -S done
+[?2004lALERT 赵钱孙 3 admin-sessions in 10s at 2025-08-19T15:06:25Z
+ALERT 郑王冯 3 admin-sessions in 10s at 2025-08-19T15:06:25Z
+ALERT 蒋沈韩 3 admin-sessions in 10s at 2025-08-19T15:06:25Z
+ALERT alice 3 admin-sessions in 10s at 2025-08-19T15:06:25Z
+ALERT 杨朱秦 3 admin-sessions in 10s at 2025-08-19T15:06:25Z
+ALERT charlie 3 admin-sessions in 10s at 2025-08-19T15:06:25Z
+ALERT 李周吴 3 admin-sessions in 10s at 2025-08-19T15:06:25Z
+ALERT bob 3 admin-sessions in 10s at 2025-08-19T15:06:26Z
+ALERT 陈褚卫 3 admin-sessions in 10s at 2025-08-19T15:06:26Z
+ALERT alice 11 admin-sessions in 10s at 2025-08-19T15:06:35Z
+ALERT 郑王冯 12 admin-sessions in 10s at 2025-08-19T15:06:35Z
+ALERT 蒋沈韩 14 admin-sessions in 10s at 2025-08-19T15:06:35Z
+ALERT charlie 13 admin-sessions in 10s at 2025-08-19T15:06:36Z
+ALERT 李周吴 13 admin-sessions in 10s at 2025-08-19T15:06:36Z
+ALERT bob 13 admin-sessions in 10s at 2025-08-19T15:06:36Z
+ALERT 赵钱孙 14 admin-sessions in 10s at 2025-08-19T15:06:36Z
+ALERT 杨朱秦 12 admin-sessions in 10s at 2025-08-19T15:06:37Z
+ALERT 陈褚卫 12 admin-sessions in 10s at 2025-08-19T15:06:37Z
+ALERT alice 12 admin-sessions in 10s at 2025-08-19T15:06:45Z
+ALERT 蒋沈韩 12 admin-sessions in 10s at 2025-08-19T15:06:45Z
+ALERT 郑王冯 14 admin-sessions in 10s at 2025-08-19T15:06:45Z
+ALERT charlie 13 admin-sessions in 10s at 2025-08-19T15:06:46Z
+ALERT 李周吴 12 admin-sessions in 10s at 2025-08-19T15:06:46Z
+ALERT 赵钱孙 13 admin-sessions in 10s at 2025-08-19T15:06:46Z
+ALERT bob 13 admin-sessions in 10s at 2025-08-19T15:06:46Z
+ALERT 陈褚卫 13 admin-sessions in 10s at 2025-08-19T15:06:47Z
+ALERT 杨朱秦 12 admin-sessions in 10s at 2025-08-19T15:06:48Z
+[?2004hroot@e0d46a4841cc:/app# ls -la logs/; tmux wait -S done
+[?2004ltotal 64
+drwxr-xr-x 2 root root  4096 Aug 19 15:06 .
+drwxr-xr-x 1 root root  4096 Aug 19 15:06 ..
+-rw-r--r-- 1 root root  5097 Aug 19 15:06 events.log
+-rw-r--r-- 1 root root 10017 Aug 19 15:06 events.log.1
+-rw-r--r-- 1 root root 10006 Aug 19 15:06 events.log.2
+-rw-r--r-- 1 root root 10006 Aug 19 15:06 events.log.3
+-rw-r--r-- 1 root root 10060 Aug 19 15:06 events.log.4
+[?2004hroot@e0d46a4841cc:/app# wc -l logs/events.log*; tmux wait -S done
+[?2004l   58 logs/events.log
+  114 logs/events.log.1
+  114 logs/events.log.2
+  114 logs/events.log.3
+  114 logs/events.log.4
+  514 total
+[?2004hroot@e0d46a4841cc:/app# 

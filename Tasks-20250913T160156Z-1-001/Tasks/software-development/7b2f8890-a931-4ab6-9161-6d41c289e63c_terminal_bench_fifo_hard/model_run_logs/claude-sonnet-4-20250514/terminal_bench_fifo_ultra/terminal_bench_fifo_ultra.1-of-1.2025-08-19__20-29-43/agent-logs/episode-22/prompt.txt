@@ -1,0 +1,40 @@
+ALERT 杨朱秦 3 admin-sessions in 10s at 2025-08-19T15:06:25Z
+ALERT charlie 3 admin-sessions in 10s at 2025-08-19T15:06:25Z
+ALERT 李周吴 3 admin-sessions in 10s at 2025-08-19T15:06:25Z
+ALERT bob 3 admin-sessions in 10s at 2025-08-19T15:06:26Z
+ALERT 陈褚卫 3 admin-sessions in 10s at 2025-08-19T15:06:26Z
+ALERT alice 11 admin-sessions in 10s at 2025-08-19T15:06:35Z
+ALERT 郑王冯 12 admin-sessions in 10s at 2025-08-19T15:06:35Z
+ALERT 蒋沈韩 14 admin-sessions in 10s at 2025-08-19T15:06:35Z
+ALERT charlie 13 admin-sessions in 10s at 2025-08-19T15:06:36Z
+ALERT 李周吴 13 admin-sessions in 10s at 2025-08-19T15:06:36Z
+ALERT bob 13 admin-sessions in 10s at 2025-08-19T15:06:36Z
+ALERT 赵钱孙 14 admin-sessions in 10s at 2025-08-19T15:06:36Z
+ALERT 杨朱秦 12 admin-sessions in 10s at 2025-08-19T15:06:37Z
+ALERT 陈褚卫 12 admin-sessions in 10s at 2025-08-19T15:06:37Z
+ALERT alice 12 admin-sessions in 10s at 2025-08-19T15:06:45Z
+ALERT 蒋沈韩 12 admin-sessions in 10s at 2025-08-19T15:06:45Z
+ALERT 郑王冯 14 admin-sessions in 10s at 2025-08-19T15:06:45Z
+ALERT charlie 13 admin-sessions in 10s at 2025-08-19T15:06:46Z
+ALERT 李周吴 12 admin-sessions in 10s at 2025-08-19T15:06:46Z
+ALERT 赵钱孙 13 admin-sessions in 10s at 2025-08-19T15:06:46Z
+ALERT bob 13 admin-sessions in 10s at 2025-08-19T15:06:46Z
+ALERT 陈褚卫 13 admin-sessions in 10s at 2025-08-19T15:06:47Z
+ALERT 杨朱秦 12 admin-sessions in 10s at 2025-08-19T15:06:48Z
+root@e0d46a4841cc:/app# ls -la logs/; tmux wait -S done
+total 64
+drwxr-xr-x 2 root root  4096 Aug 19 15:06 .
+drwxr-xr-x 1 root root  4096 Aug 19 15:06 ..
+-rw-r--r-- 1 root root  5097 Aug 19 15:06 events.log
+-rw-r--r-- 1 root root 10017 Aug 19 15:06 events.log.1
+-rw-r--r-- 1 root root 10006 Aug 19 15:06 events.log.2
+-rw-r--r-- 1 root root 10006 Aug 19 15:06 events.log.3
+-rw-r--r-- 1 root root 10060 Aug 19 15:06 events.log.4
+root@e0d46a4841cc:/app# wc -l logs/events.log*; tmux wait -S done
+   58 logs/events.log
+  114 logs/events.log.1
+  114 logs/events.log.2
+  114 logs/events.log.3
+  114 logs/events.log.4
+  514 total
+root@e0d46a4841cc:/app#

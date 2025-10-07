@@ -1,0 +1,4 @@
+'mkdir -p pipe logs\n'
+'mkfifo pipe/events.fifo\n'
+'./run.sh\n'
+['bash ', '/tests/run-tests.sh', 'Enter']

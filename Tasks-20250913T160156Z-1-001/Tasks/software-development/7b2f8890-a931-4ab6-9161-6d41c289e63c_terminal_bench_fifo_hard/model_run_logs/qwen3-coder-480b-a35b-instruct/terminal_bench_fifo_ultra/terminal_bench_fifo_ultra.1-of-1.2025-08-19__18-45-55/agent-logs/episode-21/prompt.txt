@@ -1,0 +1,40 @@
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573820, "session": "QKEWXHB3lV", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573892, "session": "oYsI1Xky6q", "user": "Анна", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573960, "session": "niUI7LxosV", "user": "Анна", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574030, "session": "ARUYsUCTD6", "user": "محمدعلي", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574095, "session": "imPcAHdsNz", "user": "MariaGarcia", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609574163
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574225, "session": "weuDAVspt8", "user": "MariaGarcia", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574296, "session": "CwtEE1Qncs", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609574363
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574429, "session": "qFbtcO9g3s", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574494, "session": "HPBKEIJy4a", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609574564
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574629, "session": "57x5huNVho", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574699, "session": "qWb0GZkqt9", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574769, "session": "qYSTM7q7RD", "user": "Анна", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609574835
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574899, "session": "TApXHmKY8A", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574969, "session": "aSg4sADPjY", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+Producer finished. Generated 431 lines.
+DONE
+root@38ff7a4514c0:/app#

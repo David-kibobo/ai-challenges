@@ -1,0 +1,40 @@
+Both processes started. Consumer PID: 6237, Producer PID: 6247
+Running for 32 seconds...
+Producer finished. Total lines: 1037
+Stopping producer...
+Stopping consumer...
+DONE
+Cleaning up processes...
+root@e0d46a4841cc:/app# cat summary.json; tmux wait -S done
+{
+  "producer_lines_total": 488,
+  "alerts": 0,
+  "rotations_min": 3,
+  "parallel": true
+}
+root@e0d46a4841cc:/app# cat timeline.json; tmux wait -S done
+{
+  "consumer_start_ms": 1755615858924,
+  "producer_start_ms": 1755615859429,
+  "consumer_end_ms": 1755615891440,
+  "producer_end_ms": 1755615891438
+}
+root@e0d46a4841cc:/app# ls -la logs/; tmux wait -S done
+total 64
+drwxr-xr-x 2 root root  4096 Aug 19 15:04 .
+drwxr-xr-x 1 root root  4096 Aug 19 15:04 ..
+-rw-r--r-- 1 root root  6668 Aug 19 15:04 events.log
+-rw-r--r-- 1 root root 12028 Aug 19 15:04 events.log.1
+-rw-r--r-- 1 root root 12067 Aug 19 15:04 events.log.2
+-rw-r--r-- 1 root root 12051 Aug 19 15:04 events.log.3
+-rw-r--r-- 1 root root 12074 Aug 19 15:04 events.log.4
+root@e0d46a4841cc:/app# cat alerts.txt 2>/dev/null || echo 'No alerts file'; tmux wait -S done
+No alerts file
+root@e0d46a4841cc:/app# wc -l logs/events.log*; tmux wait -S done
+   76 logs/events.log
+  137 logs/events.log.1
+  138 logs/events.log.2
+  137 logs/events.log.3
+  138 logs/events.log.4
+  626 total
+root@e0d46a4841cc:/app#

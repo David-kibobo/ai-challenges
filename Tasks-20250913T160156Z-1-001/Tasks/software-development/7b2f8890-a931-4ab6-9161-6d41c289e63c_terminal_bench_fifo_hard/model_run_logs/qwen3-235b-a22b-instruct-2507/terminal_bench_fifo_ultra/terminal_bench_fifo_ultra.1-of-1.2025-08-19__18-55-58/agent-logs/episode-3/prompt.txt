@@ -1,0 +1,40 @@
+> function iso8601(ts) {
+>     # Convert ms to seconds for strftime
+>     return strftime("%Y-%m-%dT%H:%M:%S", int(ts/1000)) "Z"
+> }
+>
+> # Main processing
+> {
+>     # Skip empty lines
+>     if (NF == 0) next
+>
+>     # Parse JSON line
+>     if (!parse_json($0)) next  # Skip malformed lines
+>
+>     # Get current time from ts field
+>     current_ts = ts
+>
+>     # Evict old sessions
+>     evict_old_sessions(current_ts)
+>
+>     # Process admin session
+>     if (admin) {
+>         add_admin_session(user, session, current_ts)
+>
+>         # Check alert condition
+>         if (user_count[user] >= alert_threshold) {
+>             # Avoid duplicate alerts
+>             if (!(user in alerted) || alerted[user] < current_ts - 1000) {
+>                 print "ALERT", user, user_count[user], "admin-sessions in 10s at", iso8601(current_ts) > "alerts.txt"
+>                 alerted[user] = current_ts  # Rate limit alerts
+>             }
+>         }
+>     }
+> }
+>
+> END {
+>     # Cleanup
+>     close("alerts.txt")
+> }
+> EOF
+root@3bb2812d406a:/app#

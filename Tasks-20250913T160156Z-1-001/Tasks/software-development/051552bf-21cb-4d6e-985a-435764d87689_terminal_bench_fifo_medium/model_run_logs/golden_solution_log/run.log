@@ -1,0 +1,18 @@
+Processing tasks in duration order (longest first):
++-----+-----------------------------------------------------------------+------------+------------+
+|   # | Task Name                                                       | Duration   | Source     |
++=====+=================================================================+============+============+
+|   1 | 051552bf-21cb-4d6e-985a-435764d87689_terminal_bench_fifo_medium | 7m 0s      | calculated |
++-----+-----------------------------------------------------------------+------------+------------+
+Total tasks: 1
+Starting harness run
+Run ID: 2025-08-25__16-36-35
+Running task: 051552bf-21cb-4d6e-985a-435764d87689_terminal_bench_fifo_medium
+Running docker compose command: docker compose -p 051552bf-21cb-4d6e-985a-435764d87689_terminal_bench_fifo_medium-1-of-1-2025-08-25__16-36-35 -f /Users/mathavansg/terminal-bench/tasks/051552bf-21cb-4d6e-985a-435764d87689_terminal_bench_fifo_medium/docker-compose.yaml build
+Running docker compose command: docker compose -p 051552bf-21cb-4d6e-985a-435764d87689_terminal_bench_fifo_medium-1-of-1-2025-08-25__16-36-35 -f /Users/mathavansg/terminal-bench/tasks/051552bf-21cb-4d6e-985a-435764d87689_terminal_bench_fifo_medium/docker-compose.yaml up -d
+Sending keys: ['bash /oracle/solution.sh', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: inf
+Blocking command completed in 32.49s.
+Sending keys: ['bash ', '/tests/run-tests.sh', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 240.0
+Blocking command completed in 6.71s.
+Running docker compose command: docker compose -p 051552bf-21cb-4d6e-985a-435764d87689_terminal_bench_fifo_medium-1-of-1-2025-08-25__16-36-35 -f /Users/mathavansg/terminal-bench/tasks/051552bf-21cb-4d6e-985a-435764d87689_terminal_bench_fifo_medium/docker-compose.yaml down
+Resolved task 051552bf-21cb-4d6e-985a-435764d87689_terminal_bench_fifo_medium

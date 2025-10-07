@@ -1,0 +1,40 @@
+{"ts": 1755609750947, "session": "pSyLfDKTyk", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609751015, "session": "o5hiHBEhlM", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609751099, "session": "qvRGyO3FoW", "user": "山田太郎", "meta": {"admin": true}}
+malformed_line_1755609751174
+{"ts": 1755609751228, "session": "aLtTvg78Fz", "user": "赵钱孙", "meta": {"admin": true}}
+malformed_line_1755609751301
+{"ts": 1755609751371, "session": "DWwZXoApOR", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609751445, "session": "b0XC2Z0uDm", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609751510, "session": "Tnj6p8VMfM", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609751595, "session": "nJcLJdTMmY", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609751678, "session": "V3tmWXXeUS", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609751742, "session": "oCxj0c74qb", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609751811, "session": "GtOgPbu3xz", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609751895, "session": "zMzYfjTPZi", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609751977, "session": "t0FwwDYeTF", "user": "张伟", "meta": {"admin": true}}
+Producer finished. Generated 407 lines.
+DONE
+root@38ff7a4514c0:/app# ls -la; tmux wait -S done
+total 40
+drwxr-xr-x 1 root root 4096 Aug 19 13:22 .
+drwxr-xr-x 1 root root 4096 Aug 19 13:15 ..
+-rw-r--r-- 1 root root   61 Aug 19 13:22 alerts.txt
+-rwxr-xr-x 1 root root 2604 Aug 19 13:21 consumer.awk
+drwxr-xr-x 2 root root 4096 Aug 19 13:22 logs
+drwxr-xr-x 2 root root 4096 Aug 19 13:16 pipe
+-rwxr-xr-x 1 root root 2347 Aug 19 13:21 producer.sh
+-rw-r--r-- 1 root root    0 Aug 19 13:22 run.lock
+-rwxr-xr-x 1 root root 2548 Aug 19 13:17 run.sh
+-rw-r--r-- 1 root root   91 Aug 19 13:22 summary.json
+-rw-r--r-- 1 root root  151 Aug 19 13:22 timeline.json
+root@38ff7a4514c0:/app# cat alerts.txt; tmux wait -S done
+ALERT 张伟 10 admin-sessions in 10s at 2025-08-19T13:22:31
+root@38ff7a4514c0:/app# cat summary.json; tmux wait -S done
+{
+  "producer_lines_total": 407,
+  "alerts": 1,
+  "rotations_min": 0,
+  "parallel": true
+}
+root@38ff7a4514c0:/app#

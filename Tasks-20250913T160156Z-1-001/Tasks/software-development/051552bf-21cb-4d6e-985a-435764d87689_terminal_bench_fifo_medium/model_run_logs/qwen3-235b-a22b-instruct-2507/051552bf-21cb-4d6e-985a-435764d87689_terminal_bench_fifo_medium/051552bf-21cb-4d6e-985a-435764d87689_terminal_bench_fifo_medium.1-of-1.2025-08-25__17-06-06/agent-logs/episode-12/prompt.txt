@@ -1,0 +1,40 @@
+    session="$(openssl rand -hex 3)"
+    ts=$(date +%s%3N)
+    admin="false"; if [ $((RANDOM % 5)) -eq 0 ]; then admin="true"; fi
+
+    if [ $((RANDOM % 100)) -lt 8 ]; then
+        line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": $admin}"
+    else
+        line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": $admin}}"
+    fi
+
+    echo "$line"
+
+    if [ -f "$LOGFILE" ] && [ $(stat -c %s "$LOGFILE") -ge $MAX_SIZE ]; then
+        rotate_log "$LOGFILE" "$LOGFILE.1"
+    fi
+    echo "$line" >> "$LOGFILE"
+
+    line_count=$((line_count + 1))
+done
+
+echo "Produced $line_count lines" >&2
+EOF
+chmod +x producer.sh; tmux wait -S done
+./run.sh; tmux wait -S done
+wait; tmux wait -S done
+^C
+root@8af36de92545:/app# sleep 2; tmux wait -S done
+root@8af36de92545:/app# ls -la alerts.txt summary.json timeline.json logs/events.log* && echo "\n--- alerts.txt ---" && cat alerts.txt && echo "\n--- summary.js
+on ---" && cat summary.json && echo "\n--- timeline.json ---" && cat timeline.json; tmux wait -S done
+-rw-r--r-- 1 root root   0 Aug 25 11:39 alerts.txt
+-rw-r--r-- 1 root root 703 Aug 25 11:38 logs/events.log
+-rw-r--r-- 1 root root   0 Aug 25 11:38 logs/events.log.1
+-rw-r--r-- 1 root root   0 Aug 25 11:38 logs/events.log.2
+-rw-r--r-- 1 root root   0 Aug 25 11:37 logs/events.log.3
+-rw-r--r-- 1 root root   0 Aug 25 11:39 summary.json
+-rw-r--r-- 1 root root   0 Aug 25 11:39 timeline.json
+\n--- alerts.txt ---
+\n--- summary.json ---
+\n--- timeline.json ---
+root@8af36de92545:/app#

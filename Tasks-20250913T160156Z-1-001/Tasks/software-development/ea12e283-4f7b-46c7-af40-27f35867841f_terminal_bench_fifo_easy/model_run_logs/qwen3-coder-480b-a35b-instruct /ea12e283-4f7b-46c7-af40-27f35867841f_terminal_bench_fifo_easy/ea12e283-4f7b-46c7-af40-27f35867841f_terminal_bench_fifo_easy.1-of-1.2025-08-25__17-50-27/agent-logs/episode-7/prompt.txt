@@ -1,0 +1,50 @@
+Previous command:
+keystrokes='./run.sh\n' is_blocking=True timeout_sec=30.0
+
+The previous command timed out after 30.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+root@9b6e34b0dc97:/app# ls -la; tmux wait -S done
+total 24
+drwxr-xr-x 1 root root 4096 Aug 25 12:09 .
+drwxr-xr-x 1 root root 4096 Aug 25 12:20 ..
+-rw-r--r-- 1 root root 1961 Aug 25 12:09 consumer.awk
+-rwxr-xr-x 1 root root   81 Aug 25 12:09 consumer.sh
+-rw-r--r-- 1 root root 2159 Aug 25 12:09 producer.py
+-rw-r--r-- 1 root root 1865 Aug 25 12:09 run.sh
+root@9b6e34b0dc97:/app# mkdir -p pipe logs; tmux wait -S done
+root@9b6e34b0dc97:/app# mkfifo pipe/events.fifo; tmux wait -S done
+root@9b6e34b0dc97:/app# ls -la pipe/; tmux wait -S done
+total 8
+drwxr-xr-x 2 root root 4096 Aug 25 12:20 .
+drwxr-xr-x 1 root root 4096 Aug 25 12:20 ..
+prw-r--r-- 1 root root    0 Aug 25 12:20 events.fifo
+root@9b6e34b0dc97:/app# ./run.sh; tmux wait -S done
+-bash: ./run.sh: Permission denied
+root@9b6e34b0dc97:/app# chmod +x run.sh; tmux wait -S done
+root@9b6e34b0dc97:/app# ./run.sh; tmux wait -S done
+awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 

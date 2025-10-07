@@ -1,0 +1,25 @@
+{
+    "id": "dbc1abcc-2345-4502-b7a7-46aa1c695337",
+    "trial_name": "ea12e283-4f7b-46c7-af40-27f35867841f_terminal_bench_fifo_easy.1-of-1.2025-08-25__17-50-27",
+    "task_id": "ea12e283-4f7b-46c7-af40-27f35867841f_terminal_bench_fifo_easy",
+    "instruction": "You are inside a Linux container at /app. Your goal is to run a **two-process pipeline** using a **single FIFO** and a **pure-awk consumer** to perform basic streaming log analysis.\n\n## What is already provided for you\nThe following files are already present in the container at the root `/app`:\n- `consumer.awk`: parses NDJSON lines and writes alerts to `alerts.txt`\n- `producer.py`: emits NDJSON log lines to STDOUT and appends them to rotating files\n- `run.sh`: the supervisor script that orchestrates everything\n- `write_json.py`: writes `summary.json` and `timeline.json` based on run metrics\n\n## What you need to do\n1. Create the `pipe/` and `logs/` directories if they don’t exist.\n2. Create a FIFO file at `pipe/events.fifo` using `mkfifo`.\n3. Run the supervisor script:\n   ```bash\n   ./run.sh\n   ```\n\n## What the pipeline does (already implemented)\n- The **producer** writes ~1 NDJSON line every 25–30 ms for ~25 seconds, logs them to `logs/events.log`, and handles log rotation (`.1`, `.2`, `.3`).\n- The **consumer** reads directly from the FIFO and uses `awk` to detect when a user accumulates ≥3 admin sessions in a 10s window. It emits **deduplicated** alerts to `alerts.txt` using `strftime()`.\n\n## Log line example (valid line)\n\n`{\"ts\": 1720000000123, \"session\": \"abc123\", \"user\": \"赵钱孙\", \"meta\": {\"admin\": true}}`\n\n\n## Supervisor behavior\n- Uses `flock run.lock` to ensure idempotency (only one instance runs)\n- Starts consumer first, then producer\n- Cleans up properly on termination\n- Runs for ~26s before terminating both processes\n- Writes:\n  - `summary.json`: `{ producer_lines_total, alerts, rotations_min, parallel: true }`\n  - `timeline.json`: `{ consumer_start_ms, producer_start_ms, consumer_end_ms, producer_end_ms }`\n- Prints `DONE` on success\n\n## Easy-level constraints (checked by tests)\n- **All required files are already available**\n- Consumer uses **only FIFO + awk** (no file reads, no system())\n- **Malformed + Unicode** lines must not crash\n- **Volume**: `producer_lines_total ≥ 600`\n- **Rotations**: at least `.1` and `.2` exist; one file ≥ 1024 bytes\n- **Timeline**: consumer starts before producer; overlap ≥ 6s\n- **Alerts**: ≥2 alerts for ≥1 distinct user (at least one with non-ASCII); spacing between alerts ≥2.0s\n",
+    "is_resolved": true,
+    "failure_mode": "unset",
+    "parser_results": {
+        "test_consumer_fifo_and_awk_only": "passed",
+        "test_runtime_volume_rotations_timeline": "passed",
+        "test_alerts_truthy_diverse_antispam": "passed",
+        "test_run_sh_parallel_and_idempotent": "passed",
+        "test_rotations_and_sizes": "passed",
+        "test_summary_timeline_and_parallelism": "passed"
+    },
+    "recording_path": null,
+    "total_input_tokens": 80278,
+    "total_output_tokens": 1994,
+    "trial_started_at": "2025-08-25T12:20:27.609165+00:00",
+    "trial_ended_at": "2025-08-25T12:22:08.876642+00:00",
+    "agent_started_at": "2025-08-25T12:20:29.466212+00:00",
+    "agent_ended_at": "2025-08-25T12:21:51.479612+00:00",
+    "test_started_at": "2025-08-25T12:21:51.678904+00:00",
+    "test_ended_at": "2025-08-25T12:21:58.041010+00:00"
+}

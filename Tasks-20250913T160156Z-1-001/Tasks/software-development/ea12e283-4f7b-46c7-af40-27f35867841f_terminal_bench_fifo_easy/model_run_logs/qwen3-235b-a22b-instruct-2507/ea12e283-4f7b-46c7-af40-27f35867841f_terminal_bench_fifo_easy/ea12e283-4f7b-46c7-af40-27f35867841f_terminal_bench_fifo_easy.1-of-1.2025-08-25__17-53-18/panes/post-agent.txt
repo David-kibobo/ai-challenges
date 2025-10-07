@@ -1,0 +1,40 @@
+root@f796a07054fe:/app# mkdir -p pipe logs; tmux wait -S done
+root@f796a07054fe:/app# mkfifo pipe/events.fifo; tmux wait -S done
+root@f796a07054fe:/app# ./run.sh; tmux wait -S done
+-bash: ./run.sh: Permission denied
+root@f796a07054fe:/app#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

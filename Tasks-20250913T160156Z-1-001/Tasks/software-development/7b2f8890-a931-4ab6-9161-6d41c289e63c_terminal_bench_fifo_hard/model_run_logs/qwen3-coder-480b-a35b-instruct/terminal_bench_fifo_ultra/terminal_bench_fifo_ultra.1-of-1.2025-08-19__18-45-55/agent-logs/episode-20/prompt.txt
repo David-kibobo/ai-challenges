@@ -1,0 +1,40 @@
+>                     user_session_count[user]++
+>                 }
+>             }
+>
+>             # Check if user has 3 or more sessions
+>             if (user_session_count[user] >= 3) {
+>                 # Check if we've already alerted for this user in this window
+>                 should_alert = 1
+>                 for (i in alerts) {
+>                     split(alerts[i], alert_parts, "|")
+>                     alert_time = alert_parts[1]
+>                     alert_user = alert_parts[2]
+>
+>                     if (alert_user == user && alert_time > (ts - window_size)) {
+>                         should_alert = 0
+>                         break
+>                     }
+>                 }
+>
+>                 if (should_alert) {
+>                     # Create alert
+>                     iso_time = strftime("%Y-%m-%dT%H:%M:%S", ts/1000)
+>                     alert_line = "ALERT " user " " user_session_count[user] " admin-sessions in 10s at " iso_time
+>                     print alert_line > "alerts.txt"
+>                     close("alerts.txt")
+>
+>                     # Record that we've alerted for this user
+>                     alerts[length(alerts)+1] = ts "|" user
+>                 }
+>             }
+>         }
+>     }
+> }
+>
+> END {
+>     # Nothing special needed here
+> }
+> EOF
+root@38ff7a4514c0:/app# rm -f alerts.txt summary.json timeline.json logs/*; tmux wait -S done
+root@38ff7a4514c0:/app#

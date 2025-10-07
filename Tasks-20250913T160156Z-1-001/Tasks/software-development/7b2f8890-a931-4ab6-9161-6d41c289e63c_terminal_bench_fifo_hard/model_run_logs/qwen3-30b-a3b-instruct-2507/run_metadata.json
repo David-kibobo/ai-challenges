@@ -1,0 +1,30 @@
+{
+    "run_id": "2025-08-19__19-00-03",
+    "uuid": "50c07153-d835-45ee-907d-30369a6b182c",
+    "dataset_path": "/Users/mathavansg/terminal-bench/tasks",
+    "dataset_name": null,
+    "dataset_version": null,
+    "output_path": "/Users/mathavansg/terminal-bench/runs",
+    "agent_name": "terminus-1",
+    "no_rebuild": false,
+    "cleanup": false,
+    "log_level": 20,
+    "task_ids": [
+        "terminal_bench_fifo_ultra"
+    ],
+    "exclude_task_ids": null,
+    "n_tasks": null,
+    "n_concurrent_trials": 4,
+    "n_attempts": 1,
+    "dataset_size": 1,
+    "accuracy": 0.0,
+    "model_name": "dashscope/qwen3-30b-a3b-instruct-2507",
+    "start_time": "2025-08-19T13:30:03.756976+00:00",
+    "end_time": "2025-08-19T13:31:08.109364+00:00",
+    "commit_hash": "0d57e3aea47f411368e909144d309f90c3a1a12d",
+    "username": "MathavanSG14",
+    "s3_bucket": null,
+    "agent_kwargs": null,
+    "pass_at_k": {},
+    "resumed_at": null
+}

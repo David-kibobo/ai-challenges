@@ -1,0 +1,38 @@
+{
+    "id": "bf2519e0-b904-4d4a-a837-c7a2a709e8c6",
+    "results": [
+        {
+            "id": "aa854f6b-90b2-4763-80e6-65e39e7b7337",
+            "trial_name": "051552bf-21cb-4d6e-985a-435764d87689_terminal_bench_fifo_medium.1-of-1.2025-08-25__17-24-47",
+            "task_id": "051552bf-21cb-4d6e-985a-435764d87689_terminal_bench_fifo_medium",
+            "instruction": "You are inside a Linux container at /app. Build a **two-process pipeline** with a **single FIFO** and a **pure-awk consumer** that performs stateful streaming analysis, with practical constraints.\n\n## Topology\n- Create `pipe/events.fifo` (a named pipe).\n- **Producer**: write NDJSON lines to **STDOUT** and append the same lines to `logs/events.log` with **size-based rotation** (no timestamps): `.1`, `.2`, `.3`.\n  - Emit ~**1 line every 18–24 ms** for ~**30–32 s** total (volume target for medium).\n  - Include **Unicode** users and inject **~5–10% malformed** lines.\n  - Example good line:\n    `{\"ts\": 1720000000123, \"session\": \"abc123\", \"user\": \"赵钱孙\", \"meta\": {\"admin\": true}}`\n\n- **Consumer (awk-only)** must read **directly from the FIFO**, not from files:\n    ```bash\n    cat pipe/events.fifo | awk -f consumer.awk\n    ```\n  > `consumer.awk` is provided in the task directory.  \n  Forbidden in the consumer: `jq`, `python`, `perl`, `node`, `ruby`, `tail`, reading `logs/` inside consumer, and **no `system()`** calls inside awk.\n\n  Logic:\n  - Join and track **distinct admin sessions per user** (where `meta.admin=true` on the JSON).\n  - Maintain a **sliding 10 s window** with **eviction** (drop old sessions continuously, not a fixed counter).\n  - When a user reaches **≥3 distinct admin sessions within the last 10 s**, append ONE **deduped** alert line to `alerts.txt`:\n    `ALERT <USER> <COUNT> admin-sessions in 10s at <ISO8601>`\n    Use awk `strftime()` (no shelling-out for time).\n\n## Supervisor (`run.sh`)\n- `flock run.lock` for idempotency.\n- Ensure FIFO exists before starting processes.\n- Start **consumer first** (bg), then **producer** (bg). Trap INT/TERM and clean up.\n- Let it run ~**30–31 s**, then stop and write:\n  - `summary.json`: `{ producer_lines_total, alerts, rotations_min, parallel: true }`\n  - `timeline.json`: `{ consumer_start_ms, producer_start_ms, consumer_end_ms, producer_end_ms }`\n- Print **DONE** on success.\n\n## Natural failure points\n- Consumer uses **only** the FIFO stream + awk, with the exact pipeline pattern (no file reads, no `system()`).\n- **Unicode** & malformed lines must not crash the pipeline.\n- **Rotations:** `events.log` plus at least `.1` and `.2` exist and are non-trivial; **at least one rotated file ≥ 1536 bytes**.\n- **Volume:** `producer_lines_total ≥ 900`.\n- **Timeline:** consumer starts **before** producer; **overlap ≥ 9 s**.\n- **Alerts:** ≥ **4 alerts** across ≥ **2 distinct users**, with **≥1 non-ASCII** username; per-user alert spacing **≥ 2.5 s**.\n",
+            "is_resolved": false,
+            "failure_mode": "unset",
+            "parser_results": {
+                "test_rotations_and_sizes": "passed",
+                "test_consumer_fifo_and_awk_only": "failed",
+                "test_runtime_volume_rotations_timeline": "failed",
+                "test_alerts_truthy_diverse_antispam": "failed",
+                "test_run_sh_parallel_and_idempotent": "failed",
+                "test_summary_timeline_and_parallelism": "failed"
+            },
+            "recording_path": null,
+            "total_input_tokens": 69577,
+            "total_output_tokens": 5759,
+            "trial_started_at": "2025-08-25T11:54:47.462231+00:00",
+            "trial_ended_at": "2025-08-25T11:58:16.317190+00:00",
+            "agent_started_at": "2025-08-25T11:54:49.423543+00:00",
+            "agent_ended_at": "2025-08-25T11:57:58.690917+00:00",
+            "test_started_at": "2025-08-25T11:57:58.907968+00:00",
+            "test_ended_at": "2025-08-25T11:58:05.460528+00:00"
+        }
+    ],
+    "pass_at_k": {},
+    "n_resolved": 0,
+    "n_unresolved": 1,
+    "resolved_ids": [],
+    "unresolved_ids": [
+        "051552bf-21cb-4d6e-985a-435764d87689_terminal_bench_fifo_medium"
+    ],
+    "accuracy": 0.0
+}

@@ -1,0 +1,40 @@
+>         user = arr[1]
+>     } else {
+>         print "Failed to parse user from:", line
+>         return 0
+>     }
+>
+>     if (match(line, /"session":[[:space:]]*"([^"]+)"/, arr)) {
+>         session = arr[1]
+>     } else {
+>         print "Failed to parse session from:", line
+>         return 0
+>     }
+>
+>     admin = "false"
+>     if (match(line, /"admin":[[:space:]]*true/)) {
+>         admin = "true"
+>     }
+>
+>     print "Parsed:", "ts=" ts, "user=" user, "session=" session, "admin=" admin
+>     return (ts != "" && user != "" && session != "")
+> }
+>
+> {
+>     print "Processing line:", NR, $0
+>     if (parse_json_simple($0)) {
+>         if (admin == "true") {
+>             user_sessions[user][session] = ts
+>             count = 0
+>             for (s in user_sessions[user]) count++
+>             print "User", user, "now has", count, "admin sessions"
+>
+>             if (count >= alert_threshold) {
+>                 print "ALERT", user, count, "admin-sessions triggered"
+>                 print "ALERT", user, count, "admin-sessions in 10s at 2024-08-19T15:00:00Z" >> "alerts.txt"
+>             }
+>         }
+>     }
+> }
+> EOF
+root@e0d46a4841cc:/app#

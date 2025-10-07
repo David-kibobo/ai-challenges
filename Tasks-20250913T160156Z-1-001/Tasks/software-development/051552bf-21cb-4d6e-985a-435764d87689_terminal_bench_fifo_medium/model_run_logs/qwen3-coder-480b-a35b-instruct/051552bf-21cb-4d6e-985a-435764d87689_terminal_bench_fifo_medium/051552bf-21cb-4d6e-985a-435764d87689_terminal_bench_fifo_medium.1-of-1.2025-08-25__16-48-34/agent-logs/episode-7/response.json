@@ -1,0 +1,12 @@
+{
+    "state_analysis": "It seems vim is not available in this environment. I'll try using nano instead to edit the producer.sh file.",
+    "explanation": "I'll use nano to create and edit the producer.sh script.",
+    "commands": [
+        {
+            "keystrokes": "nano producer.sh\n",
+            "is_blocking": false,
+            "timeout_sec": 1
+        }
+    ],
+    "is_task_complete": false
+}

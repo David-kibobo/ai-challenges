@@ -1,0 +1,40 @@
+Processing tasks in duration order (longest first):
++-----+---------------------------------------------------------------+------------+------------+
+|   # | Task Name                                                     | Duration   | Source     |
++=====+===============================================================+============+============+
+|   1 | ea12e283-4f7b-46c7-af40-27f35867841f_terminal_bench_fifo_easy | 7m 0s      | calculated |
++-----+---------------------------------------------------------------+------------+------------+
+Total tasks: 1
+Starting harness run
+Run ID: 2025-08-25__17-56-23
+Running task: ea12e283-4f7b-46c7-af40-27f35867841f_terminal_bench_fifo_easy
+Running docker compose command: docker compose -p ea12e283-4f7b-46c7-af40-27f35867841f_terminal_bench_fifo_easy-1-of-1-2025-08-25__17-56-23 -f /Users/mathavansg/terminal-bench/tasks/ea12e283-4f7b-46c7-af40-27f35867841f_terminal_bench_fifo_easy/docker-compose.yaml build
+Running docker compose command: docker compose -p ea12e283-4f7b-46c7-af40-27f35867841f_terminal_bench_fifo_easy-1-of-1-2025-08-25__17-56-23 -f /Users/mathavansg/terminal-bench/tasks/ea12e283-4f7b-46c7-af40-27f35867841f_terminal_bench_fifo_easy/docker-compose.yaml up -d
+Making call to dashscope/qwen3-30b-a3b-instruct-2507
+Sending keys: ['mkdir -p pipe logs', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 5.0
+Blocking command completed in 0.10s.
+Sending keys: ['mkfifo pipe/events.fifo', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 5.0
+Blocking command completed in 0.10s.
+Sending keys: ['./run.sh', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 30.0
+Blocking command completed in 0.09s.
+Making call to dashscope/qwen3-30b-a3b-instruct-2507
+Sending keys: ['chmod +x run.sh', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 5.0
+Blocking command completed in 0.11s.
+Sending keys: ['./run.sh', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 30.0
+Making call to dashscope/qwen3-30b-a3b-instruct-2507
+Sending keys: ['cat consumer.awk', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 10.0
+Blocking command completed in 0.11s.
+Making call to dashscope/qwen3-30b-a3b-instruct-2507
+Sending keys: ['C-c\n'] min_timeout_sec: 0.0 max_timeout_sec: 5.0
+Sending keys: ['./run.sh', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 30.0
+Making call to dashscope/qwen3-30b-a3b-instruct-2507
+Sending keys: ['ps aux | grep run.sh', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 10.0
+Blocking command completed in 0.11s.
+Sending keys: ['kill $(pgrep -f run.sh) 2>/dev/null || true', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 5.0
+Blocking command completed in 0.09s.
+Sending keys: ['./run.sh', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 30.0
+Making call to dashscope/qwen3-30b-a3b-instruct-2507
+Sending keys: ['bash ', '/tests/run-tests.sh', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 240.0
+Blocking command completed in 6.09s.
+Running docker compose command: docker compose -p ea12e283-4f7b-46c7-af40-27f35867841f_terminal_bench_fifo_easy-1-of-1-2025-08-25__17-56-23 -f /Users/mathavansg/terminal-bench/tasks/ea12e283-4f7b-46c7-af40-27f35867841f_terminal_bench_fifo_easy/docker-compose.yaml down
+Resolved task ea12e283-4f7b-46c7-af40-27f35867841f_terminal_bench_fifo_easy

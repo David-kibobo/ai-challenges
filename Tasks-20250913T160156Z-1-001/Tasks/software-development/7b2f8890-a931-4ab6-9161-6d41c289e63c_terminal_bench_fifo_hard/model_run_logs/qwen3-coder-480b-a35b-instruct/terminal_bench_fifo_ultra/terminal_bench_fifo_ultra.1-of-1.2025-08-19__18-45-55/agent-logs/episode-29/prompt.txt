@@ -1,0 +1,40 @@
+>     fi
+> }
+>
+> # Main loop - run for ~30 seconds
+> end_time=$(($(date +%s) + 30))
+> line_count=0
+>
+> while [ $(date +%s) -lt $end_time ]; do
+>     line=$(generate_line)
+>     echo "$line"
+>
+>     # Append to log file
+>     echo "$line" >> "$LOG_FILE"
+>
+>     # Check if rotation is needed
+>     if [ -f "$LOG_FILE" ]; then
+>         size=$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
+>         if [ "$size" -gt "$MAX_SIZE" ]; then
+>             rotate_logs
+>         fi
+>     fi
+>
+>     line_count=$((line_count + 1))
+>
+>     # Sleep for 40-70ms using sleep command
+>     sleep_duration=$((40 + RANDOM % 31))
+>     # Convert to seconds with 3 decimal places
+>     sleep_seconds=$(echo "scale=3; $sleep_duration/1000" | bc)
+>     sleep $sleep_seconds 2>/dev/null || sleep 0.05
+>
+>     # For the first few lines, sleep a bit longer to ensure consumer starts first
+>     if [ $line_count -lt 5 ]; then
+>         sleep 0.1
+>     fi
+> done
+>
+> echo "Producer finished. Generated $line_count lines." >&2
+> EOF
+root@38ff7a4514c0:/app# rm -f alerts.txt summary.json timeline.json logs/*; tmux wait -S done
+root@38ff7a4514c0:/app#

@@ -1,0 +1,40 @@
+>     }
+>
+>     print "Parsed:", "ts=" ts, "user=" user, "session=" session, "admin=" admin
+>     return (ts != "" && user != "" && session != "")
+> }
+>
+> {
+>     print "Processing line:", NR, $0
+>     if (parse_json_simple($0)) {
+>         if (admin == "true") {
+>             user_sessions[user][session] = ts
+>             count = 0
+>             for (s in user_sessions[user]) count++
+>             print "User", user, "now has", count, "admin sessions"
+>
+>             if (count >= alert_threshold) {
+>                 print "ALERT", user, count, "admin-sessions triggered"
+>                 print "ALERT", user, count, "admin-sessions in 10s at 2024-08-19T15:00:00Z" >> "alerts.txt"
+>             }
+>         }
+>     }
+> }
+> EOF
+root@e0d46a4841cc:/app# echo '{"ts": 1755615883765, "session": "ghi789", "user": "赵钱孙", "meta": {"admin": true}}
+> {"ts": 1755615883766, "session": "abc123", "user": "赵钱孙", "meta": {"admin": true}}
+> {"ts": 1755615883767, "session": "def456", "user": "赵钱孙", "meta": {"admin": true}}' | awk -f test_consumer.awk; tmux wait -S done
+AWK script started
+Processing line: 1 {"ts": 1755615883765, "session": "ghi789", "user": "赵钱孙", "meta": {"admin": true}}
+Parsed: ts=1755615883765 user=赵钱孙 session=ghi789 admin=true
+User 赵钱孙 now has 1 admin sessions
+Processing line: 2 {"ts": 1755615883766, "session": "abc123", "user": "赵钱孙", "meta": {"admin": true}}
+Parsed: ts=1755615883766 user=赵钱孙 session=abc123 admin=true
+User 赵钱孙 now has 2 admin sessions
+Processing line: 3 {"ts": 1755615883767, "session": "def456", "user": "赵钱孙", "meta": {"admin": true}}
+Parsed: ts=1755615883767 user=赵钱孙 session=def456 admin=true
+User 赵钱孙 now has 3 admin sessions
+ALERT 赵钱孙 3 admin-sessions triggered
+root@e0d46a4841cc:/app# cat alerts.txt 2>/dev/null || echo 'No alerts generated'; tmux wait -S done
+ALERT 赵钱孙 3 admin-sessions in 10s at 2024-08-19T15:00:00Z
+root@e0d46a4841cc:/app#

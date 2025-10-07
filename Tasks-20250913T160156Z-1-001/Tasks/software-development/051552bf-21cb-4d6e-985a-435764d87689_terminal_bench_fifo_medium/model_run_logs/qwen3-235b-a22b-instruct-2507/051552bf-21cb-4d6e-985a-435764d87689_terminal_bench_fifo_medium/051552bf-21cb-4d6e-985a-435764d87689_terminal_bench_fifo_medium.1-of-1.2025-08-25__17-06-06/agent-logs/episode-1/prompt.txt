@@ -1,0 +1,40 @@
+root@8af36de92545:/app# mkdir -p pipe logs; tmux wait -S done
+root@8af36de92545:/app# mkfifo pipe/events.fifo; tmux wait -S done
+root@8af36de92545:/app# ls -l consumer.awk; tmux wait -S done
+-rw-r--r-- 1 root root 1961 Aug 25 11:04 consumer.awk
+root@8af36de92545:/app#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

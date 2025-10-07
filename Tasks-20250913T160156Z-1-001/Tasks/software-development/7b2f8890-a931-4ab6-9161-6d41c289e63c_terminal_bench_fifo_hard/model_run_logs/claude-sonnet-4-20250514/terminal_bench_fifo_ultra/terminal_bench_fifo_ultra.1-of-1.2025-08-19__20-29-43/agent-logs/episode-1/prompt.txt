@@ -1,0 +1,40 @@
+root@e0d46a4841cc:/app# ls -la; tmux wait -S done
+total 8
+drwxr-xr-x 2 root root 4096 Aug 18 11:46 .
+drwxr-xr-x 1 root root 4096 Aug 19 14:59 ..
+root@e0d46a4841cc:/app# mkdir -p pipe logs; tmux wait -S done
+root@e0d46a4841cc:/app#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

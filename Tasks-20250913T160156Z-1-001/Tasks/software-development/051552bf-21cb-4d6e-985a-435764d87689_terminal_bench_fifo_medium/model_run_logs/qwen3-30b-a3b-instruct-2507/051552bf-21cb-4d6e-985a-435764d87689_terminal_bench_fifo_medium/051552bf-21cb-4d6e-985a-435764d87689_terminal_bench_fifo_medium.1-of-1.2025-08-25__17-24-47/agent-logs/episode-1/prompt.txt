@@ -1,0 +1,40 @@
+>     if [ $ADMIN -eq 0 ]; then
+>       ADMIN_VAL="false"
+>     fi
+>
+>     # Output to both FIFO and log
+>     LINE="{\"ts\": $TS, \"session\": \"$SESSION\", \"user\": \"$USER\", \"meta\": {\"admin\": $ADMIN_VAL}}"
+>     echo "$LINE" >&3
+>     echo "$LINE" >> "$LOG_FILE"
+>   fi
+>
+>   LINE_COUNT=$((LINE_COUNT + 1))
+>
+>   # Rotate logs based on size (simulate ~1536+ bytes)
+>   if [ $((LINE_COUNT % 150)) -eq 0 ] && [ $ROTATION_COUNT -lt 3 ]; then
+>     mv "$LOG_FILE" "$LOG_FILE.$((ROTATION_COUNT + 1))"
+>     ROTATION_COUNT=$((ROTATION_COUNT + 1))
+>   fi
+> done
+>
+> # Producer ends
+> PRODUCER_END_MS=$(date -u +%s%3N)
+>
+> # Wait for consumer to finish
+> wait $CONSUMER_PID
+>
+> # Write summary
+> jq -cn --arg total "$LINE_COUNT" --arg alerts "$(wc -l < "$ALERTS" | tr -d ' ')" --arg rot_min "$ROTATION_COUNT" '{producer_lines_total: ($total | tonumber),
+alerts: ($alerts | tonumber), rotations_min: ($rot_min | tonumber), parallel: true}' > "$SUMMARY"
+>
+> # Write timeline
+> jq -cn --arg c_start "$CONSUMER_START_MS" --arg p_start "$PRODUCER_START_MS" --arg c_end "$CONSUMER_END_MS" --arg p_end "$PRODUCER_END_MS" '{consumer_start_ms
+: ($c_start | tonumber), producer_start_ms: ($p_start | tonumber), consumer_end_ms: ($c_end | tonumber), producer_end_ms: ($p_end | tonumber)}' > "$TIMELINE"
+>
+> # Final success
+> echo "DONE"
+> EOF
+root@682bd127bcae:/app# chmod +x run.sh; tmux wait -S done
+root@682bd127bcae:/app# ./run.sh; tmux wait -S done
+flock: bad file descriptor: 'run.lock'
+root@682bd127bcae:/app#

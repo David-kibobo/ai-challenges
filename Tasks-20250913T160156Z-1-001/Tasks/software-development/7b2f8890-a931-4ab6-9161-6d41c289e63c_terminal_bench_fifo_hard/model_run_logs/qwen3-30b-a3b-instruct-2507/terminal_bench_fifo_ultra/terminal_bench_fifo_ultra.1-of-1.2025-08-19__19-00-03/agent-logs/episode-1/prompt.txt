@@ -1,0 +1,50 @@
+Previous command:
+keystrokes='chmod +x run.sh\n' is_blocking=True timeout_sec=5.0
+
+The previous command timed out after 5.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+>         echo \"producer_end_ms\": $end_time >> timeline.json
+>
+>         # Kill consumer after producer ends
+>         kill $CONSUMER_PID 2>/dev/null || true
+>     ) &
+>     PRODUCER_PID=$!
+>
+>     # Wait until both finish or timeout
+>     wait $PRODUCER_PID
+>
+>     # Cleanup
+>     rm -f "$FIFO"
+>
+>     # Write summary
+>     total_lines=$(wc -l < <(grep -v '^$' logs/events.log | grep -v '^{' | grep -v 'malformed' | wc -l) 2>/dev/null || echo 0)
+>     total_lines=$(($total_lines + $(grep -c '^{' logs/events.log | tail -n 1)))
+>
+>     alerts=$(wc -l < alerts.txt 2>/dev/null || echo 0)
+>     rotations=$(ls -1 logs/events.log.* 2>/dev/null | wc -l)
+>
+>     cat > summary.json << EOF
+> {
+>   \"producer_lines_total\": $total_lines,
+>   \"alerts\": $alerts,
+>   \"rotations_min\": $rotations,
+>   \"parallel\": true
+> }
+> EOF
+root@71d33cf7f63a:/app#
+root@71d33cf7f63a:/app#     # Finalize timeline
+root@71d33cf7f63a:/app#     if [[ -f "timeline.json" ]]; then
+>         jq -c . < timeline.json > timeline.json.tmp && mv timeline.json.tmp timeline.json
+>     fi
+root@71d33cf7f63a:/app#
+root@71d33cf7f63a:/app#     echo \"DONE\"
+"DONE"
+root@71d33cf7f63a:/app# "
+> EOF
+> chmod +x run.sh; tmux wait -S done
+>
+ 

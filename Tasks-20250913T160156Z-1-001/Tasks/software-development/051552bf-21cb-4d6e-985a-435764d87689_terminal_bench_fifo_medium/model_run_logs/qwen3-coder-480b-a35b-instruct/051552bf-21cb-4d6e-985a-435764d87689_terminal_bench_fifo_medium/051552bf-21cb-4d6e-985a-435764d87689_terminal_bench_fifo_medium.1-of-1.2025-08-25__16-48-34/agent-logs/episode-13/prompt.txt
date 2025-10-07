@@ -1,0 +1,40 @@
+  sleep 0.0${sleep_time}s
+
+done
+
+# Output summary information
+rotation_count_min=0
+if [[ -f "${log_file}.1" ]]; then
+  rotation_count_min=$((rotation_count_min + 1))
+fi
+if [[ -f "${log_file}.2" ]]; then
+  rotation_count_min=$((rotation_count_min + 1))
+fi
+if [[ -f "${log_file}.3" ]]; then
+  rotation_count_min=$((rotation_count_min + 1))
+fi
+
+echo "producer_lines_total=$line_count" > summary.tmp
+echo "rotations_min=$rotation_count_min" >> summary.tmp
+root@09078e0953c3:/app# head -20 producer.sh; tmux wait -S done
+#!/bin/bash
+
+# Create logs directory if it doesn't exist
+mkdir -p logs
+
+# Initialize variables
+log_file="logs/events.log"
+start_time=$(date +%s%3N)
+end_time=$((start_time + 31000))  # Run for ~31 seconds
+line_count=0
+rotation_count=0
+last_rotation_size=0
+
+# Function to rotate logs when size exceeds 1024 bytes
+rotate_logs() {
+  if [[ -f "$log_file" ]]; then
+    size=$(stat -c %s "$log_file" 2>/dev/null || echo 0)
+    if [[ $size -ge 1024 ]]; then
+      # Rotate files: .3 -> .4 (if exists), .2 -> .3, .1 -> .2, events.log -> .1
+      for i in {3..1}; do
+root@09078e0953c3:/app#

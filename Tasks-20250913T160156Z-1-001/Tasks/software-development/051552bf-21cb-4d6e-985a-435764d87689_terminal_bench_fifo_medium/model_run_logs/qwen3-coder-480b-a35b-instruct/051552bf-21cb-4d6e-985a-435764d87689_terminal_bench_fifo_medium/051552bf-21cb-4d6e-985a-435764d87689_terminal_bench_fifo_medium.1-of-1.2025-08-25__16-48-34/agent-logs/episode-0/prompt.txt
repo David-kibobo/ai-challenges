@@ -1,0 +1,167 @@
+You are an AI assistant tasked with solving command-line tasks in a Linux environment. You will be given a task instruction and the output from previously executed commands. Your goal is to solve the task by providing batches of shell commands.
+
+For each response:
+1. Analyze the current state based on any terminal output provided
+2. Determine the next set of commands needed to make progress
+3. Decide if you need to see the output of these commands before proceeding
+
+Instruction:
+You are inside a Linux container at /app. Build a **two-process pipeline** with a **single FIFO** and a **pure-awk consumer** that performs stateful streaming analysis, with practical constraints.
+
+## Topology
+- Create `pipe/events.fifo` (a named pipe).
+- **Producer**: write NDJSON lines to **STDOUT** and append the same lines to `logs/events.log` with **size-based rotation** (no timestamps): `.1`, `.2`, `.3`.
+  - Emit ~**1 line every 18–24 ms** for ~**30–32 s** total (volume target for medium).
+  - Include **Unicode** users and inject **~5–10% malformed** lines.
+  - Example good line:
+    `{"ts": 1720000000123, "session": "abc123", "user": "赵钱孙", "meta": {"admin": true}}`
+
+- **Consumer (awk-only)** must read **directly from the FIFO**, not from files:
+    ```bash
+    cat pipe/events.fifo | awk -f consumer.awk
+    ```
+  > `consumer.awk` is provided in the task directory.  
+  Forbidden in the consumer: `jq`, `python`, `perl`, `node`, `ruby`, `tail`, reading `logs/` inside consumer, and **no `system()`** calls inside awk.
+
+  Logic:
+  - Join and track **distinct admin sessions per user** (where `meta.admin=true` on the JSON).
+  - Maintain a **sliding 10 s window** with **eviction** (drop old sessions continuously, not a fixed counter).
+  - When a user reaches **≥3 distinct admin sessions within the last 10 s**, append ONE **deduped** alert line to `alerts.txt`:
+    `ALERT <USER> <COUNT> admin-sessions in 10s at <ISO8601>`
+    Use awk `strftime()` (no shelling-out for time).
+
+## Supervisor (`run.sh`)
+- `flock run.lock` for idempotency.
+- Ensure FIFO exists before starting processes.
+- Start **consumer first** (bg), then **producer** (bg). Trap INT/TERM and clean up.
+- Let it run ~**30–31 s**, then stop and write:
+  - `summary.json`: `{ producer_lines_total, alerts, rotations_min, parallel: true }`
+  - `timeline.json`: `{ consumer_start_ms, producer_start_ms, consumer_end_ms, producer_end_ms }`
+- Print **DONE** on success.
+
+## Natural failure points
+- Consumer uses **only** the FIFO stream + awk, with the exact pipeline pattern (no file reads, no `system()`).
+- **Unicode** & malformed lines must not crash the pipeline.
+- **Rotations:** `events.log` plus at least `.1` and `.2` exist and are non-trivial; **at least one rotated file ≥ 1536 bytes**.
+- **Volume:** `producer_lines_total ≥ 900`.
+- **Timeline:** consumer starts **before** producer; **overlap ≥ 9 s**.
+- **Alerts:** ≥ **4 alerts** across ≥ **2 distinct users**, with **≥1 non-ASCII** username; per-user alert spacing **≥ 2.5 s**.
+
+
+Your response must be a JSON object that matches this schema:
+
+{
+  "$defs": {
+    "Command": {
+      "additionalProperties": false,
+      "properties": {
+        "keystrokes": {
+          "description": "Keystrokes to execute in the terminal. Use tmux-style escape sequences for modifier keys (e.g. C-c for ctrl-c). Modifier keys must be sent as their own commands otherwise the characters will be interpreted literally.",
+          "title": "Keystrokes",
+          "type": "string"
+        },
+        "is_blocking": {
+          "description": "Whether to wait for and return the terminal output after executing these keystrokes. This will append '; tmux wait -S done' to your command.DO NOT block on modifier keys or inside interactive programs (e.g. vim or less). Only block when the command is executed in the command line, is not interactive, and you expect the output to be returned with no intervention. When in doubt, wait instead of blocking.",
+          "title": "Is Blocking",
+          "type": "boolean"
+        },
+        "timeout_sec": {
+          "description": "The number of expected seconds to wait for the command to complete.",
+          "title": "Timeout Sec",
+          "type": "number"
+        }
+      },
+      "required": [
+        "keystrokes",
+        "is_blocking",
+        "timeout_sec"
+      ],
+      "title": "Command",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "state_analysis": {
+      "description": "Description of the current state of the terminal",
+      "title": "State Analysis",
+      "type": "string"
+    },
+    "explanation": {
+      "description": "Brief explanation of what these commands will do",
+      "title": "Explanation",
+      "type": "string"
+    },
+    "commands": {
+      "description": "List of shell interactions to execute in the Docker container",
+      "items": {
+        "$ref": "#/$defs/Command"
+      },
+      "title": "Commands",
+      "type": "array"
+    },
+    "is_task_complete": {
+      "description": "Whether the task is complete following the execution of these commands. Make sure to check that the command you last executed worked before saying you're done.",
+      "title": "Is Task Complete",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "state_analysis",
+    "explanation",
+    "commands",
+    "is_task_complete"
+  ],
+  "title": "CommandBatchResponse",
+  "type": "object"
+}
+
+Don't include markdown formatting.
+
+Note that you operate directly on the terminal from inside a tmux session. Use tmux keystrokes like `C-x` or `Escape` to interactively navigate the terminal. If you would like to execute a command that you have written you will need to append a newline character to the end of your command.
+
+For example, if you write "ls -la" you will need to append a newline character to the end of your command like this: `ls -la\n`.
+
+One thing to be very careful about is handling interactive sessions like less, vim, or git diff. In these cases, you should not wait for the output of the command. Instead, you should send the keystrokes to the terminal as if you were typing them.
+
+The current terminal state is:
+root@09078e0953c3:/app#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

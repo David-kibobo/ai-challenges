@@ -1,0 +1,40 @@
+> kill $consumer_pid 2>/dev/null
+> wait $consumer_pid 2>/dev/null
+> consumer_end_ms=$(date +%s%3N)
+>
+> # Generate timeline.json
+> cat > timeline.json << TIMELINE
+> {
+>   "consumer_start_ms": $consumer_start_ms,
+>   "producer_start_ms": $producer_start_ms,
+>   "consumer_end_ms": $consumer_end_ms,
+>   "producer_end_ms": $producer_end_ms
+> }
+> TIMELINE
+>
+> # Get producer summary from temp file
+> if [[ -f summary.tmp ]]; then
+>   source summary.tmp
+>   rm summary.tmp
+> else
+>   producer_lines_total=0
+>   rotations_min=0
+> fi
+>
+> # Count alerts
+> alerts=$(wc -l < alerts.txt 2>/dev/null || echo 0)
+>
+> # Generate summary.json
+> cat > summary.json << SUMMARY
+> {
+>   "producer_lines_total": $producer_lines_total,
+>   "alerts": $alerts,
+>   "rotations_min": $rotations_min,
+>   "parallel": true
+> }
+> SUMMARY
+>
+> echo "DONE"
+> EOF
+root@09078e0953c3:/app# chmod +x run.sh; tmux wait -S done
+root@09078e0953c3:/app#

@@ -1,0 +1,40 @@
+>
+>   # Output to STDOUT
+>   echo "$line"
+>
+>   # Append to log file
+>   echo "$line" >> "$log_file"
+>
+>   # Rotate logs if needed
+>   rotate_logs
+>
+>   # Increment line counter
+>   line_count=$((line_count + 1))
+>
+>   # Wait for 18-24ms
+>   sleep_time=$((18 + RANDOM % 7))
+>   sleep 0.0${sleep_time}s
+> done
+>
+> # Output summary information
+> rotation_count_min=0
+> if [[ -f "${log_file}.1" ]]; then
+>   rotation_count_min=$((rotation_count_min + 1))
+> fi
+> if [[ -f "${log_file}.2" ]]; then
+>   rotation_count_min=$((rotation_count_min + 1))
+> fi
+> if [[ -f "${log_file}.3" ]]; then
+>   rotation_count_min=$((rotation_count_min + 1))
+> fi
+>
+> echo "producer_lines_total=$line_count" > summary.tmp
+> echo "rotations_min=$rotation_count_min" >> summary.tmp
+> EOF
+root@09078e0953c3:/app# ./run.sh; tmux wait -S done
+Starting consumer...
+awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
+Starting producer...
+Stopping processes...
+DONE
+root@09078e0953c3:/app#

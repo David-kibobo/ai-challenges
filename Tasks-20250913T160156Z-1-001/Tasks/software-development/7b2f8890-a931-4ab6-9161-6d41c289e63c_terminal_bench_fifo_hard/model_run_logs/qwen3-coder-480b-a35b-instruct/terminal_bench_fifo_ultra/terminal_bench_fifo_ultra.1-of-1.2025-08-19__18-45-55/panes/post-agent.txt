@@ -1,0 +1,2020 @@
+{"ts": 1755609564603, "session": "iwiYExYL9D", "user": "赵钱孙", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609564669, "session": "fTg1SviBWq", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609564734, "session": "uiXdskyivS", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609564798, "session": "sYhmpBD8p2", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609564864, "session": "jXJY1tZhBM", "user": "MariaGarcia", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609564929, "session": "22nA10yIJt", "user": "山田太郎", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609564992, "session": "g0tRbs9FoQ", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565058, "session": "3aEjNXHjP4", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565122, "session": "rDKoQyXyjS", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565187, "session": "bEmNd8oY2V", "user": "MariaGarcia", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565251, "session": "5H0SAKvzHg", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565321, "session": "nZ5Uk7qvy9", "user": "赵钱孙", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565386, "session": "5tJr7kIjIV", "user": "山田太郎", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565451, "session": "DrVUUQnuqX", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565517, "session": "EeBzUX1vzg", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565583, "session": "rb9FdYzQTY", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609565647
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565709, "session": "ETg2IzKdgY", "user": "赵钱孙", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565774, "session": "3Fpm4Oa72e", "user": "MariaGarcia", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565840, "session": "tXfcnPaaR8", "user": "محمدعلي", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565905, "session": "NqRjOrNEPl", "user": "JeanDupont", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609565970, "session": "iyCAihAxhd", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566034, "session": "cHboBGOqf6", "user": "محمدعلي", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566100, "session": "TmLExtKcPG", "user": "赵钱孙", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566169, "session": "DTX8qGjedQ", "user": "JeanDupont", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566235, "session": "kbz2C0GESK", "user": "山田太郎", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566300, "session": "JGpOwC1GPP", "user": "山田太郎", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566369, "session": "RexwJ0oqqi", "user": "MariaGarcia", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566439, "session": "YHvcHMN8z9", "user": "MariaGarcia", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566505, "session": "PY2i9uGxeK", "user": "山田太郎", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566570, "session": "wHTVKmw563", "user": "JohnDoe", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566635, "session": "bVy8kn1hPS", "user": "MariaGarcia", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566700, "session": "D0x51NM3vK", "user": "JeanDupont", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566765, "session": "8VOeBSAIhY", "user": "محمدعلي", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566829, "session": "jUeKcUpQin", "user": "Анна", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566894, "session": "1hEVm90VEl", "user": "JeanDupont", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609566962, "session": "2MaTX2T8HW", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567028, "session": "WeEgTyoGjJ", "user": "MariaGarcia", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567092, "session": "HI4QZQy1DT", "user": "赵钱孙", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567157, "session": "znM2DBKSip", "user": "JohnDoe", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567222, "session": "XLveQHWB87", "user": "محمدعلي", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567288, "session": "84KhMsqAyr", "user": "JohnDoe", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567354, "session": "88YqU1xWqz", "user": "山田太郎", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609567423
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567485, "session": "7wMBzqV89X", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567554, "session": "JNxaXTuJ6L", "user": "JeanDupont", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567621, "session": "G7As9MMWgm", "user": "MariaGarcia", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609567689
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567753, "session": "x0634kqjqM", "user": "JeanDupont", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567820, "session": "8ZJTcKsUcj", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567883, "session": "6HnrbYlHWy", "user": "محمدعلي", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609567954, "session": "UjN367bePG", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568021, "session": "tFkKhzuCFE", "user": "JeanDupont", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568091, "session": "td0sH3y702", "user": "JeanDupont", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568161, "session": "IZBNEr3EqT", "user": "JeanDupont", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568228, "session": "HR9DuMl9WS", "user": "MariaGarcia", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568298, "session": "8keabRIlSO", "user": "JeanDupont", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568366, "session": "n4wPNFK4Sj", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568438, "session": "BBHLXxVMDO", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568508, "session": "67KLgyvAcl", "user": "山田太郎", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568579, "session": "HXuhdcQ1eU", "user": "محمدعلي", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568645, "session": "iGJcq69wtM", "user": "JeanDupont", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568716, "session": "FD9UCS0jFU", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568783, "session": "rTJdOw5CRQ", "user": "山田太郎", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568851, "session": "e88FZ5QM5N", "user": "赵钱孙", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568917, "session": "d3NKjD9NI3", "user": "محمدعلي", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609568987, "session": "qmYgo7GN03", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609569052, "session": "t7Ls5LgTwe", "user": "赵钱孙", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609569121, "session": "nDiaFU7Qoa", "user": "JeanDupont", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609569191, "session": "G7MaqSneN1", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609569262, "session": "cwoJsc8Z0w", "user": "محمدعلي", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609569331, "session": "6VynvQ1Sts", "user": "محمدعلي", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609569403
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609569468, "session": "c0mJiZriLm", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609569536, "session": "8SC13b5SZb", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609569607
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609569672, "session": "AvlfaHSeaT", "user": "محمدعلي", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609569738, "session": "HQw7etdMAA", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609569805, "session": "F66dUBRWDI", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609569871, "session": "PTp43iy0L6", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609569941
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570007, "session": "VJaioWgLoM", "user": "محمدعلي", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570078, "session": "lHKoPI9ji5", "user": "محمدعلي", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609570144
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570212, "session": "KloQ5SC1dg", "user": "محمدعلي", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570281, "session": "HplT4KdstO", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570346, "session": "VW3tlanvy0", "user": "JohnDoe", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570411, "session": "0J8b46I5d5", "user": "赵钱孙", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570476, "session": "sHBe2A7hdZ", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570542, "session": "Ty1UdYjGlq", "user": "JeanDupont", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570607, "session": "L5Ddj5pely", "user": "赵钱孙", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570672, "session": "SmmUbXeZh3", "user": "赵钱孙", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570737, "session": "suAjnzEu2P", "user": "محمدعلي", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570805, "session": "UkDpOzYzLR", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570871, "session": "8GGh4ckdQg", "user": "山田太郎", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609570935
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609570995, "session": "O0BL8hqzdo", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609571062, "session": "IHQyEHvx9U", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609571127
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609571189, "session": "FAmo00TTO0", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609571258
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609571319, "session": "0QscGiC2z2", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609571386, "session": "rS7Hu0lGsM", "user": "赵钱孙", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609571450, "session": "x4MNRl26tv", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609571515, "session": "xM1Ebs0i9v", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609571581, "session": "hygqJqOI5D", "user": "赵钱孙", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609571650, "session": "1aceyGvOqY", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609571714, "session": "eDtXWyTtE7", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609571781, "session": "MUit6HcRW2", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609571847, "session": "WvCRzwiM5G", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609571914, "session": "FUx7H8mR6e", "user": "赵钱孙", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609571979
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572054, "session": "Eyu1LL9o0u", "user": "محمدعلي", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572116, "session": "W3A0Q6zEHJ", "user": "محمدعلي", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572179, "session": "zSziS612E5", "user": "JohnDoe", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572243, "session": "guZawWRdjN", "user": "山田太郎", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572309, "session": "KgcgYWEcgr", "user": "محمدعلي", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609572374
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572434, "session": "wuxccxTXVY", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572500, "session": "dp49FdD4xn", "user": "Анна", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572568, "session": "CPgDTeSPzY", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572632, "session": "gr4DoRQlFK", "user": "محمدعلي", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572695, "session": "bGnfTpsYFs", "user": "JeanDupont", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572753, "session": "LqIUDmZbWL", "user": "Анна", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609572815
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572875, "session": "ivplAmmi99", "user": "赵钱孙", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609572942, "session": "xQf2aeVzkX", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609573010
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573075, "session": "6VIFYRlzfR", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573139, "session": "cPCdoK4Ly6", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609573210
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609573273
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573338, "session": "I2yfBlJ8oc", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573406, "session": "l194V5CpnC", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573477, "session": "lGOxfNEfui", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609573547
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573614, "session": "fThnQCkA6x", "user": "赵钱孙", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573680, "session": "6kt1y1YDbU", "user": "赵钱孙", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573751, "session": "YjKFYkk8AJ", "user": "MariaGarcia", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573820, "session": "QKEWXHB3lV", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573892, "session": "oYsI1Xky6q", "user": "Анна", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609573960, "session": "niUI7LxosV", "user": "Анна", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574030, "session": "ARUYsUCTD6", "user": "محمدعلي", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574095, "session": "imPcAHdsNz", "user": "MariaGarcia", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609574163
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574225, "session": "weuDAVspt8", "user": "MariaGarcia", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574296, "session": "CwtEE1Qncs", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609574363
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574429, "session": "qFbtcO9g3s", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574494, "session": "HPBKEIJy4a", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609574564
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574629, "session": "57x5huNVho", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574699, "session": "qWb0GZkqt9", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574769, "session": "qYSTM7q7RD", "user": "Анна", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609574835
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574899, "session": "TApXHmKY8A", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574969, "session": "aSg4sADPjY", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+Producer finished. Generated 431 lines.
+DONE
+root@38ff7a4514c0:/app# ls -la; tmux wait -S done
+total 40
+drwxr-xr-x 1 root root 4096 Aug 19 13:19 .
+drwxr-xr-x 1 root root 4096 Aug 19 13:15 ..
+-rw-r--r-- 1 root root   65 Aug 19 13:19 alerts.txt
+-rwxr-xr-x 1 root root 2604 Aug 19 13:18 consumer.awk
+drwxr-xr-x 2 root root 4096 Aug 19 13:19 logs
+drwxr-xr-x 2 root root 4096 Aug 19 13:16 pipe
+-rwxr-xr-x 1 root root 2346 Aug 19 13:18 producer.sh
+-rw-r--r-- 1 root root    0 Aug 19 13:19 run.lock
+-rwxr-xr-x 1 root root 2548 Aug 19 13:17 run.sh
+-rw-r--r-- 1 root root   91 Aug 19 13:19 summary.json
+-rw-r--r-- 1 root root  151 Aug 19 13:19 timeline.json
+root@38ff7a4514c0:/app# cat alerts.txt; tmux wait -S done
+ALERT MariaGarcia 6 admin-sessions in 10s at 2025-08-19T13:19:34
+root@38ff7a4514c0:/app# cat summary.json; tmux wait -S done
+{
+  "producer_lines_total": 431,
+  "alerts": 1,
+  "rotations_min": 0,
+  "parallel": true
+}
+root@38ff7a4514c0:/app# cat timeline.json; tmux wait -S done
+{
+  "consumer_start_ms": 1755609545370,
+  "producer_start_ms": 1755609545879,
+  "consumer_end_ms": 1755609577888,
+  "producer_end_ms": 1755609577888
+}
+root@38ff7a4514c0:/app# ls -la logs/; tmux wait -S done
+total 48
+drwxr-xr-x 2 root root  4096 Aug 19 13:19 .
+drwxr-xr-x 1 root root  4096 Aug 19 13:19 ..
+-rw-r--r-- 1 root root 37302 Aug 19 13:19 events.log
+root@38ff7a4514c0:/app# apt-get update && apt-get install -y bc; tmux wait -S done
+Get:1 http://deb.debian.org/debian trixie InRelease [138 kB]
+Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.1 kB]
+Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+Get:4 http://deb.debian.org/debian trixie/main arm64 Packages [9604 kB]
+Get:5 http://deb.debian.org/debian trixie-updates/main arm64 Packages [2432 B]
+Get:6 http://deb.debian.org/debian-security trixie-security/main arm64 Packages [12.3 kB]
+Fetched 9847 kB in 1s (9499 kB/s)
+Reading package lists... Done
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following NEW packages will be installed:
+  bc
+0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.
+Need to get 101 kB of archives.
+After this operation, 280 kB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian trixie/main arm64 bc arm64 1.07.1-4+b1 [101 kB]
+Fetched 101 kB in 0s (2355 kB/s)
+debconf: unable to initialize frontend: Dialog
+debconf: (No usable dialog-like program is installed, so the dialog based frontend cannot be used. at /usr/share/perl5/Debconf/FrontEnd/Dialog.pm line 79, <STDI
+N> line 1.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/aarch64-linu
+x-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/aarch64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/aarch64-linux-gnu/perl-base /usr/lib/aarch64-linu
+x-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8, <STDIN> line 1.)
+debconf: falling back to frontend: Teletype
+Selecting previously unselected package bc.
+(Reading database ... 7798 files and directories currently installed.)
+Preparing to unpack .../bc_1.07.1-4+b1_arm64.deb ...
+Unpacking bc (1.07.1-4+b1) ...
+Setting up bc (1.07.1-4+b1) ...
+root@38ff7a4514c0:/app# cat > producer.sh << 'EOF'
+> #!/bin/bash
+>
+> # Producer script for generating NDJSON events
+> LOG_FILE="logs/events.log"
+> MAX_SIZE=300000  # 300KB to ensure rotation
+> ROTATION_COUNT=3
+>
+> # Function to rotate logs
+> rotate_logs() {
+>     # Rotate existing files
+>     for ((i=$ROTATION_COUNT; i>1; i--)); do
+>         if [ -f "$LOG_FILE.$((i-1))" ]; then
+>             mv "$LOG_FILE.$((i-1))" "$LOG_FILE.$i"
+>         fi
+>     done
+>
+>     # Move main log to .1
+>     if [ -f "$LOG_FILE" ]; then
+>         mv "$LOG_FILE" "$LOG_FILE.1"
+>     fi
+> }
+>
+> # Function to generate a random NDJSON line
+> # With ~10% malformed lines
+> generate_line() {
+>     if [ $((RANDOM % 10)) -eq 0 ]; then
+>         # Malformed line
+>         echo "malformed_line_$(date +%s%3N)"
+>         return
+>     fi
+>
+>     # Good line
+>     ts=$(date +%s%3N)  # milliseconds since epoch
+>
+>     # Array of users including Unicode ones
+>     users=("赵钱孙" "JohnDoe" "محمدعلي" "Анна" "山田太郎" "MariaGarcia" "张伟" "JeanDupont")
+>     user=${users[$RANDOM % ${#users[@]}]}
+>
+>     session=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+>
+>     # 60% chance of being admin to generate more alerts
+>     if [ $((RANDOM % 10)) -lt 6 ]; then
+>         echo "{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}}"
+>     else
+>         echo "{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": false}}"
+>     fi
+> }
+>
+> # Main loop - run for ~30 seconds
+> end_time=$(($(date +%s) + 30))
+> line_count=0
+>
+> while [ $(date +%s) -lt $end_time ]; do
+>     line=$(generate_line)
+>     echo "$line"
+>
+>     # Append to log file
+>     echo "$line" >> "$LOG_FILE"
+>
+>     # Check if rotation is needed
+>     if [ -f "$LOG_FILE" ]; then
+>         size=$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
+>         if [ "$size" -gt "$MAX_SIZE" ]; then
+>             rotate_logs
+>         fi
+>     fi
+>
+>     line_count=$((line_count + 1))
+>
+>     # Sleep for 40-70ms using sleep command
+>     sleep_duration=$((40 + RANDOM % 31))
+>     # Convert to seconds with 3 decimal places
+>     sleep_seconds=$(echo "scale=3; $sleep_duration/1000" | bc)
+>     sleep $sleep_seconds 2>/dev/null || sleep 0.05
+>
+>     # For the first few lines, sleep a bit longer to ensure consumer starts first
+>     if [ $line_count -lt 5 ]; then
+>         sleep 0.1
+>     fi
+> done
+>
+> echo "Producer finished. Generated $line_count lines." >&2
+> EOF
+root@38ff7a4514c0:/app# rm -f alerts.txt summary.json timeline.json logs/*; tmux wait -S done
+root@38ff7a4514c0:/app# ./run.sh; tmux wait -S done
+Consumer started (PID: 2548)
+Producer started (PID: 2558)
+{"ts": 1755609628737, "session": "4ms8MRXdPu", "user": "JohnDoe", "meta": {"admin": true}}
+malformed_line_1755609628915
+{"ts": 1755609629108, "session": "u5u2VstDEJ", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609629274, "session": "L6aVhuaebq", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609629455, "session": "yMyLMZLZgW", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609629524, "session": "HDzh24dHGj", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609629589, "session": "eVQfpoaJMF", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609629650, "session": "axhJc1HWV8", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609629714, "session": "bFt3CcHw4s", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609629773, "session": "R3T6dmv1pT", "user": "JeanDupont", "meta": {"admin": false}}
+malformed_line_1755609629837
+{"ts": 1755609629919, "session": "7kxYwgyyvi", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609629983, "session": "BPjG8T3wwg", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609630041, "session": "YASxF5SMd5", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609630107, "session": "Py2nPKTFNo", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609630171, "session": "R3TYExyb2X", "user": "JohnDoe", "meta": {"admin": true}}
+malformed_line_1755609630256
+{"ts": 1755609630319, "session": "y7GT7h2t3z", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609630405, "session": "LYAqzEHPdr", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609630465, "session": "u95zSKA3fy", "user": "JeanDupont", "meta": {"admin": true}}
+malformed_line_1755609630536
+{"ts": 1755609630592, "session": "DnsSHQOAul", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609630673
+{"ts": 1755609630744, "session": "t0kjo35WHq", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609630799, "session": "EAs75vINcN", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609630868, "session": "sa26QQ0Uei", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609630956, "session": "Mi4Uzy1DvF", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609631025, "session": "pgiD124VeG", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609631097, "session": "jYrNjrzYdq", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609631176, "session": "RXHh4xFXDR", "user": "山田太郎", "meta": {"admin": false}}
+malformed_line_1755609631250
+{"ts": 1755609631304, "session": "TmC0lmRdmN", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609631367, "session": "JdxRKttODX", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609631441, "session": "GsB9XsJYAP", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609631528, "session": "NeXUPkhsiH", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609631599, "session": "Z7jbIncVgc", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609631686, "session": "BflpIbDi3y", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609631770, "session": "NQxd2ve4X8", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609631847, "session": "tZe03I7w67", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609631924, "session": "LgnRCR6lcW", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609632008, "session": "vtrqCODKlb", "user": "JeanDupont", "meta": {"admin": false}}
+malformed_line_1755609632087
+{"ts": 1755609632171, "session": "4jyLVOawwG", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609632234, "session": "TSvPYOtjFP", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609632308, "session": "fDVrBMXlpP", "user": "JohnDoe", "meta": {"admin": true}}
+malformed_line_1755609632391
+{"ts": 1755609632456, "session": "p611y5SqSo", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609632511, "session": "AaOH8yDIdI", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609632581, "session": "tJcvtBqJKm", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609632651, "session": "7tuNB51MyK", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609632719, "session": "hQbDGJqt8D", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609632824, "session": "YIbrYDr6Rk", "user": "Анна", "meta": {"admin": false}}
+malformed_line_1755609632878
+{"ts": 1755609632947, "session": "NKBLfOOfnK", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609633031, "session": "A02Ivc7qNE", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609633113, "session": "8yoKEGPKy6", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609633184, "session": "ZZlAQLqRpB", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609633258, "session": "1oM9ELZCzr", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609633342, "session": "Aa2XyaAOQt", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609633428, "session": "bqiKVLQs5F", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609633511, "session": "LPZomGF61d", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609633571, "session": "v8BydyZh1n", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609633637, "session": "Uc4t7fztD3", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609633712
+{"ts": 1755609633784, "session": "xBW5tpWXp6", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609633855, "session": "UC7mduEwmi", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609633944, "session": "cYH2zvxtF3", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609634010, "session": "ltcz4XfVGt", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609634098, "session": "P1crkS6dGo", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609634171, "session": "PT6X3TQej7", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609634231, "session": "GRyjV1ZEeE", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609634317, "session": "kSlulpEfUe", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609634385, "session": "bZWZQBcGBm", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609634467, "session": "2fy1bcZVtA", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609634524, "session": "uBmQ0AKLu8", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609634608, "session": "XZ1StQSQbH", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609634685, "session": "VYiI6XvshB", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609634762, "session": "AvijrhUwnJ", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609634847, "session": "dwYrCrMAsX", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609634904, "session": "7BoQnNvlpe", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609634987, "session": "igMwa5jQOV", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609635050, "session": "MrjktQ6UJ8", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609635131, "session": "PC2dV42BIr", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609635207, "session": "IKaxNbfVn5", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609635271, "session": "3MDEjgf9MH", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609635331, "session": "ErC4Rl7C53", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609635386, "session": "1nOnqZ39pV", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609635477, "session": "7jJCmkXtIS", "user": "JohnDoe", "meta": {"admin": false}}
+malformed_line_1755609635549
+{"ts": 1755609635617, "session": "gOb0O2iHzn", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609635694, "session": "7ObMSPrcLb", "user": "JohnDoe", "meta": {"admin": false}}
+malformed_line_1755609635756
+malformed_line_1755609635837
+{"ts": 1755609635894, "session": "znMkXA9sl5", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609635958, "session": "8ByvKBjFTn", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609636015, "session": "5Oz0VzrSOT", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609636098, "session": "huDIaMuwxs", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609636174, "session": "DBmxOfcQ4W", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609636238, "session": "hYrUwpMtcx", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609636311, "session": "mIL1KBGaLd", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609636371, "session": "9pcWtIxEQw", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609636436, "session": "JbunCZM6fu", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609636504, "session": "oRAZDukQlX", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609636583, "session": "FtBX4gvv1M", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609636643, "session": "Di6updA9Rm", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609636714, "session": "f9FmEMgkbm", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609636795, "session": "FsL2tIqa0T", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609636854, "session": "omZOpxyyTl", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609636924, "session": "hyveyGOStQ", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609637000, "session": "D2SyexwXqU", "user": "JohnDoe", "meta": {"admin": false}}
+malformed_line_1755609637087
+{"ts": 1755609637169, "session": "uZLiajyg5M", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609637225, "session": "Wf6LR0kAFg", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609637284, "session": "hjrdcjRWsG", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609637344, "session": "1Ft3uOU22M", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609637427, "session": "dBtZUMlG10", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609637489, "session": "bXtT7dsgqP", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609637558, "session": "QGH6PK497j", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609637644, "session": "4U8u89DSBz", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609637713, "session": "eP1Bm3kPKG", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609637786, "session": "YANwm31wWH", "user": "MariaGarcia", "meta": {"admin": false}}
+malformed_line_1755609637859
+{"ts": 1755609637914, "session": "6ZpFZ4slEx", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609637991, "session": "F4HHpyYUqi", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609638068, "session": "DMhxYxlttl", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609638140, "session": "jFkeUYh7M9", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609638217, "session": "2Qln43Hcv7", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609638289, "session": "KqR22ZRwzZ", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609638364, "session": "pPOm2Mp4iK", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609638435, "session": "5ag88b8QNP", "user": "山田太郎", "meta": {"admin": true}}
+malformed_line_1755609638496
+{"ts": 1755609638570, "session": "YlOPwi6nCR", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609638655, "session": "jrddsuODl2", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609638719, "session": "o1sE7L8hq3", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609638804, "session": "W2f0imIiSG", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609638885, "session": "MgnN0OjNlg", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609638938, "session": "7mgCuk588g", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609639001, "session": "wMZ61mKSOv", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609639056, "session": "M1UjqFXVlS", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609639124, "session": "DcH6i5zYTx", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609639205, "session": "nsX4XKeHXP", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609639287, "session": "bWoEpM1BGf", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609639350, "session": "bWDU9pjk33", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609639420, "session": "kke38wTRzO", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609639476, "session": "388j4kid3A", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609639557, "session": "1i7wVUg857", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609639632, "session": "2RCBeWUpOZ", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609639697, "session": "z6XmGjyoyW", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609639774, "session": "EoRF2b5SK5", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609639847, "session": "sI2Ro50z3R", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609639912, "session": "sJD4cqcjyk", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609639971, "session": "0J1cV2sqcG", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609640058, "session": "upKiaP3Nx7", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609640124, "session": "Zmex6Rf1Ah", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609640189, "session": "hj4eLjvghd", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609640258, "session": "fHjJkqdRei", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609640334, "session": "3YovEo12S3", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609640411, "session": "8WqlddPbDf", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609640485, "session": "6hDazvin6X", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609640545
+{"ts": 1755609640619, "session": "r5Jf47rpNg", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609640690, "session": "N8w72AOQY9", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609640760, "session": "UJFto7cI2j", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609640835, "session": "1ycugbh13P", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609640914, "session": "4gh1nTNmmP", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609640981, "session": "6fuIf9N2LO", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609641063, "session": "MqsNr1qUaF", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609641131
+{"ts": 1755609641183, "session": "I7EQdshS2u", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609641240, "session": "OYgQSmM3yP", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609641320, "session": "XD8nE4tU2n", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609641408, "session": "3PQ2XpilYk", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609641466, "session": "SI5b3gSqKa", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609641536, "session": "ldNiHKkAmG", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609641607, "session": "7M9kTIwtRo", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609641684, "session": "sF0SNd9RUt", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609641752, "session": "UgWStpV0Cj", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609641825, "session": "a84SPxxszS", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609641889, "session": "psGoRvZCok", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609641967, "session": "kESReTYLrk", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609642046, "session": "PkXoFL79HT", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609642104, "session": "QJYBzHJrOs", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609642183, "session": "uWT3dCH52i", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609642261, "session": "yOABZj6N6Y", "user": "JohnDoe", "meta": {"admin": false}}
+malformed_line_1755609642344
+{"ts": 1755609642423, "session": "A8h2crLchi", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609642482, "session": "LvWtzm6j82", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609642552, "session": "R0j3r7T6PB", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609642612, "session": "RPEiVzwzyo", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609642693, "session": "gAoRjgzvbx", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609642776, "session": "GrwTi2H5qN", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609642839, "session": "mqfVVGkyty", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609642910, "session": "MMIeBA7z04", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609642977, "session": "mP2CbuldVD", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609643037, "session": "czipnSEGkh", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609643112, "session": "t6YNXORRby", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609643185, "session": "r49i6WZJ7k", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609643252, "session": "jTFW5xmzT2", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609643311, "session": "z7H9tOtFmv", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609643369, "session": "b2hlRCyb83", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609643442, "session": "EWIE6ZtBwr", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609643500, "session": "Xh0CCXCxMa", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609643583, "session": "37rfUa8asJ", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609643660, "session": "C39HRCxp2A", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609643723, "session": "7VUTLfyNQ6", "user": "Анна", "meta": {"admin": false}}
+malformed_line_1755609643791
+{"ts": 1755609643850, "session": "RnYfPdXRNm", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609643930, "session": "AEBHR3H5X0", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609644002, "session": "m9jdY7bFgg", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609644066, "session": "HbDJ4fbQYb", "user": "张伟", "meta": {"admin": true}}
+malformed_line_1755609644120
+{"ts": 1755609644184, "session": "BLKyMtNjf8", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609644283, "session": "jouC5JmuOF", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609644357, "session": "GhhwI8vBYU", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609644437, "session": "Hm56qoDaAj", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609644512, "session": "MMIvn61uNQ", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609644570, "session": "iYGjT1DMZa", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609644656, "session": "ymvcH17Wo7", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609644736, "session": "Rn5hI4p1cg", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609644807, "session": "hsJbxSU5MD", "user": "张伟", "meta": {"admin": true}}
+malformed_line_1755609644868
+{"ts": 1755609644935, "session": "HEqX4sDFob", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609645017, "session": "CUh1CGYyfh", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609645095, "session": "7moY733HB2", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609645152, "session": "2ofGUvRrgt", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609645210, "session": "Wv6OTrwp9A", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609645281, "session": "AN9iVNgMv1", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609645365, "session": "7BQeTKpPBY", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609645440, "session": "cCxj6wBPY4", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609645519, "session": "OAbbGYm36s", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609645600, "session": "BYnlc0fcLx", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609645675, "session": "aYdxUChQ4E", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609645747, "session": "XLP1ooly21", "user": "JohnDoe", "meta": {"admin": false}}
+malformed_line_1755609645825
+{"ts": 1755609645882, "session": "WedbMZ8vDz", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609645964, "session": "nqn3xM2Vbg", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609646034, "session": "bSthlSztl3", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609646121, "session": "pdNEBA6Imy", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609646185, "session": "kCNAwEi7TF", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609646252, "session": "QPIhdgSxOb", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609646320, "session": "gazPJULpV9", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609646381, "session": "iCNcdn5ACC", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609646440, "session": "zb3SmS2vjU", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609646509, "session": "iPGcftNP85", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609646582, "session": "3IAlvDrrad", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609646650, "session": "gnoODrHUPT", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609646747, "session": "dsraX6mpkT", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609646801, "session": "MuEKlOfXuw", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609646875, "session": "yhxjhrMZAY", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609646941, "session": "AuEbhYd02Y", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609647018, "session": "8gilhFHSMW", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609647101, "session": "Blwfn7QFEo", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609647181, "session": "OIgc9u8Bg0", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609647243, "session": "7eWUo8b1x8", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609647304, "session": "EKiVGD881c", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609647367, "session": "P2K8bNSBd3", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609647435, "session": "ZbufreAGkk", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609647517, "session": "xrVlHp3knZ", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609647571, "session": "hY059SkaPB", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609647642, "session": "YuEKN5O6Jq", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609647706, "session": "6g3GM18SzJ", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609647784, "session": "1INXIYEXDZ", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609647863, "session": "ZD0b4eWeAH", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609647926, "session": "3G3kcjQufZ", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609648004, "session": "uXpcvKqizZ", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609648073, "session": "DdGP8ncVZd", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609648146, "session": "ORjLKvYnug", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609648230, "session": "CpawHwSeJJ", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609648295, "session": "X1H4KtMcOz", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609648381, "session": "CnYPW8SLaR", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609648439, "session": "RbxvtCIk21", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609648527, "session": "v1xoHyTzfb", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609648587, "session": "VT9bPbKktH", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609648670, "session": "UvTEUEQaFS", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609648747, "session": "AUyQ6hCZns", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609648824
+{"ts": 1755609648893, "session": "YYvHsoVmi0", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609648945, "session": "LgXaNqy7kB", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609649039, "session": "HqzGxNUbpR", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609649101, "session": "MncOIy9ROZ", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609649172, "session": "X9mk3nmcW3", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609649232, "session": "zv3pdFahq5", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609649311, "session": "hz2erHGXqs", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609649375, "session": "Aiihs8Br5b", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609649455, "session": "PZjrwMTUpN", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609649526, "session": "jc2X6Gitz7", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609649583, "session": "EHOFVytuRv", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609649671, "session": "NgWx2FFRz9", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609649752, "session": "LKg0RO2YPU", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609649827, "session": "yDiDlWdmlY", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609649910, "session": "x9POvirgLn", "user": "山田太郎", "meta": {"admin": false}}
+malformed_line_1755609649997
+{"ts": 1755609650069, "session": "zVRIRaeCKC", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609650145, "session": "eDwFfQVv5c", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609650219, "session": "d8Uje9GyKd", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609650275, "session": "PCY0nomsGU", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609650354, "session": "jvo2XyhrZo", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609650436, "session": "exDZEXgY2g", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609650504, "session": "3vln35hMGK", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609650560, "session": "6DWKPnOoIU", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609650629, "session": "lSUQ6Zv9MT", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609650696, "session": "jVsmMboUaU", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609650761, "session": "b4MqO4fqqv", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609650835, "session": "V5zrmNrl9I", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609650902, "session": "7Ytii2XCmL", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609650976, "session": "luD7E9iKqu", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609651055, "session": "vzZiJ9NvNY", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609651129, "session": "cCi4eGzy0N", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609651198, "session": "4SNnMxMshz", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609651261, "session": "njq3hfKsZn", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609651317, "session": "eGHARqZmoV", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609651379, "session": "pd7xrx8R6W", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609651445, "session": "QweJqmxutb", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609651517, "session": "V8QEGDfLOW", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609651599, "session": "WrGNGpqvuk", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609651671, "session": "2pXhoXrnhN", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609651742, "session": "T8sbV6ywRL", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609651819, "session": "ij6cItYonl", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609651894, "session": "NKccL5wvc7", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609651950, "session": "HuYCZg5nex", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609652025, "session": "ShtmRXUnpV", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609652100, "session": "BOqri7vtaR", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609652170, "session": "TpEu0aDsjG", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609652236, "session": "mXRy3ZzBq2", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609652302, "session": "JnN4c9JELK", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609652359, "session": "ySzwtgnEDf", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609652422, "session": "Ka0hRsXseQ", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609652484, "session": "AncJxVM62t", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609652557, "session": "fTDTWkhHT1", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609652615, "session": "010pQCW0VX", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609652714, "session": "gB4MtGBToX", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609652808, "session": "fm8EdbL08a", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609652865
+{"ts": 1755609652942, "session": "eEFmbi98H1", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609653021, "session": "Ou6tCCZZ9k", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609653107, "session": "gurLzgze1q", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609653181, "session": "3AZmmMsk91", "user": "JeanDupont", "meta": {"admin": false}}
+malformed_line_1755609653268
+{"ts": 1755609653337, "session": "o3scmU86ZE", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609653421, "session": "RVTYjy9Hix", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609653484, "session": "ivAYGSP74R", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609653558, "session": "OVZT5Jatcw", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609653648, "session": "A3f8tqEm9J", "user": "张伟", "meta": {"admin": false}}
+malformed_line_1755609653712
+{"ts": 1755609653795, "session": "ssSJg3X7ZW", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609653885, "session": "0PCxtusLq8", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609653939, "session": "ELz1PxkZeX", "user": "赵钱孙", "meta": {"admin": true}}
+malformed_line_1755609654006
+{"ts": 1755609654074, "session": "2iiDpFYCwr", "user": "张伟", "meta": {"admin": true}}
+malformed_line_1755609654152
+{"ts": 1755609654204, "session": "CCu4D1T3SN", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609654284, "session": "aGRJZHIpUd", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609654345, "session": "etIEkVnVQQ", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609654408, "session": "pDudN4hhV5", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609654471, "session": "IHCRRlYEQQ", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609654542, "session": "plnKEPnnYS", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609654608, "session": "xQQXLX4HfA", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609654668, "session": "I7aixC5Hpz", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609654752, "session": "EFe7ivzP7C", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609654812, "session": "Oxor6jDM62", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609654871, "session": "yyXJr0NrZg", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609654935, "session": "h04VkAywDN", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609655012, "session": "rr5C6vVfIH", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609655072, "session": "45dsqlepYN", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609655130, "session": "z1yejcb90I", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609655197, "session": "BELEsrTe7z", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609655269, "session": "Mp3xMxBKIv", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609655330, "session": "VdXbUItCMK", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609655406, "session": "mPYS7Xm1Zu", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609655480, "session": "6K5HiHeoGI", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609655539, "session": "zCVQ1qXRkC", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609655608, "session": "N0BebKkXfp", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609655684, "session": "4zlazmojLm", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609655757, "session": "xcCoUQ2bxR", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609655818, "session": "M3cHaEdEeO", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609655877, "session": "kQxbGws009", "user": "张伟", "meta": {"admin": false}}
+malformed_line_1755609655960
+{"ts": 1755609656023, "session": "BRmoh6fbUu", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609656102, "session": "DzraAzwtBG", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609656170, "session": "KZ5FEYyjLR", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609656227, "session": "WKkFKKx0lD", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609656308, "session": "q4mGQ36xWY", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609656386, "session": "HRUKolXcXq", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609656461, "session": "UGH0ugPHSZ", "user": "张伟", "meta": {"admin": false}}
+malformed_line_1755609656535
+{"ts": 1755609656609, "session": "ySoiZqMM3n", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609656694, "session": "6RcVpJJMep", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609656749, "session": "nM1Q8m2Tdi", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609656818, "session": "9sXkOEN7g3", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609656895, "session": "5c6uMPqXaS", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609656962, "session": "kumrtkgWSb", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609657036, "session": "RsH5N3Ny9K", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609657097, "session": "E7UqyalwPz", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609657168, "session": "hcN8Gc6vEZ", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609657236, "session": "zoL6uAW43R", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609657308
+{"ts": 1755609657364, "session": "Lai9uVJdBg", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609657431, "session": "A4QDob4GX1", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609657520, "session": "ToxW344CVU", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609657599, "session": "ru2xR73oP0", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609657658, "session": "xg0rOVrkQh", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609657718
+{"ts": 1755609657795, "session": "zj0fzwXB4r", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609657858, "session": "nuIJqtZp0R", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609657922, "session": "uZ7Jak0Jz4", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609657992, "session": "vjwskqYl60", "user": "山田太郎", "meta": {"admin": true}}
+Producer finished. Generated 406 lines.
+DONE
+root@38ff7a4514c0:/app# ls -la; tmux wait -S done
+total 40
+drwxr-xr-x 1 root root 4096 Aug 19 13:21 .
+drwxr-xr-x 1 root root 4096 Aug 19 13:15 ..
+-rw-r--r-- 1 root root   69 Aug 19 13:20 alerts.txt
+-rwxr-xr-x 1 root root 2604 Aug 19 13:18 consumer.awk
+drwxr-xr-x 2 root root 4096 Aug 19 13:20 logs
+drwxr-xr-x 2 root root 4096 Aug 19 13:16 pipe
+-rwxr-xr-x 1 root root 2347 Aug 19 13:20 producer.sh
+-rw-r--r-- 1 root root    0 Aug 19 13:20 run.lock
+-rwxr-xr-x 1 root root 2548 Aug 19 13:17 run.sh
+-rw-r--r-- 1 root root   91 Aug 19 13:21 summary.json
+-rw-r--r-- 1 root root  151 Aug 19 13:21 timeline.json
+root@38ff7a4514c0:/app# cat alerts.txt; tmux wait -S done
+ALERT محمدعلي 10 admin-sessions in 10s at 2025-08-19T13:20:56
+root@38ff7a4514c0:/app# cat summary.json; tmux wait -S done
+{
+  "producer_lines_total": 406,
+  "alerts": 1,
+  "rotations_min": 0,
+  "parallel": true
+}
+root@38ff7a4514c0:/app# cat timeline.json; tmux wait -S done
+{
+  "consumer_start_ms": 1755609628217,
+  "producer_start_ms": 1755609628728,
+  "consumer_end_ms": 1755609660728,
+  "producer_end_ms": 1755609660728
+}
+root@38ff7a4514c0:/app# ls -la logs/; tmux wait -S done
+total 44
+drwxr-xr-x 2 root root  4096 Aug 19 13:20 .
+drwxr-xr-x 1 root root  4096 Aug 19 13:21 ..
+-rw-r--r-- 1 root root 35939 Aug 19 13:20 events.log
+root@38ff7a4514c0:/app# cat > producer.sh << 'EOF'
+> #!/bin/bash
+>
+> # Producer script for generating NDJSON events
+> LOG_FILE="logs/events.log"
+> MAX_SIZE=200000  # 200KB to ensure rotation
+> ROTATION_COUNT=3
+>
+> # Function to rotate logs
+> rotate_logs() {
+>     # Rotate existing files
+>     for ((i=$ROTATION_COUNT; i>1; i--)); do
+>         if [ -f "$LOG_FILE.$((i-1))" ]; then
+>             mv "$LOG_FILE.$((i-1))" "$LOG_FILE.$i"
+>         fi
+>     done
+>
+>     # Move main log to .1
+>     if [ -f "$LOG_FILE" ]; then
+>         mv "$LOG_FILE" "$LOG_FILE.1"
+>     fi
+> }
+>
+> # Function to generate a random NDJSON line
+> # With ~10% malformed lines
+> generate_line() {
+>     if [ $((RANDOM % 10)) -eq 0 ]; then
+>         # Malformed line
+>         echo "malformed_line_$(date +%s%3N)"
+>         return
+>     fi
+>
+>     # Good line
+>     ts=$(date +%s%3N)  # milliseconds since epoch
+>
+>     # Array of users including Unicode ones
+>     users=("赵钱孙" "JohnDoe" "محمدعلي" "Анна" "山田太郎" "MariaGarcia" "张伟" "JeanDupont")
+>     user=${users[$RANDOM % ${#users[@]}]}
+>
+>     session=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+>
+>     # 70% chance of being admin to generate more alerts
+>     if [ $((RANDOM % 10)) -lt 7 ]; then
+>         echo "{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}}"
+>     else
+>         echo "{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": false}}"
+>     fi
+> }
+>
+> # Main loop - run for ~30 seconds
+> end_time=$(($(date +%s) + 30))
+> line_count=0
+>
+> while [ $(date +%s) -lt $end_time ]; do
+>     line=$(generate_line)
+>     echo "$line"
+>
+>     # Append to log file
+>     echo "$line" >> "$LOG_FILE"
+>
+>     # Check if rotation is needed
+>     if [ -f "$LOG_FILE" ]; then
+>         size=$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
+>         if [ "$size" -gt "$MAX_SIZE" ]; then
+>             rotate_logs
+>         fi
+>     fi
+>
+>     line_count=$((line_count + 1))
+>
+>     # Sleep for 40-70ms using sleep command
+>     sleep_duration=$((40 + RANDOM % 31))
+>     # Convert to seconds with 3 decimal places
+>     sleep_seconds=$(echo "scale=3; $sleep_duration/1000" | bc)
+>     sleep $sleep_seconds 2>/dev/null || sleep 0.05
+>
+>     # For the first few lines, sleep a bit longer to ensure consumer starts first
+>     if [ $line_count -lt 5 ]; then
+>         sleep 0.1
+>     fi
+> done
+>
+> echo "Producer finished. Generated $line_count lines." >&2
+> EOF
+root@38ff7a4514c0:/app# cat > consumer.awk << 'EOF'
+> #!/usr/bin/awk -f
+>
+> BEGIN {
+>     # Initialize variables
+>     window_size = 10000  # 10 seconds in milliseconds
+> }
+>
+> {
+>     # Skip malformed lines
+>     if (NF == 0 || $0 !~ /^\{.*\}$/) {
+>         next
+>     }
+>
+>     # Extract fields using regex (since we can't use jq)
+>     if (match($0, /"ts"\s*:\s*([0-9]+)/, ts_arr) &&
+>         match($0, /"user"\s*:\s*"([^"]+)"/, user_arr) &&
+>         match($0, /"session"\s*:\s*"([^"]+)"/, session_arr) &&
+>         match($0, /"admin"\s*:\s*true/, admin_arr)) {
+>
+>         ts = ts_arr[1]
+>         user = user_arr[1]
+>         session = session_arr[1]
+>
+>         # Add session to tracking if it's an admin session
+>         if (length(admin_arr[0]) > 0) {
+>             # Remove old sessions outside the window
+>             for (key in sessions) {
+>                 if (sessions[key] < (ts - window_size)) {
+>                     delete sessions[key]
+>                 }
+>             }
+>
+>             # Create a unique key for user+session
+>             key = user ":" session
+>             sessions[key] = ts
+>
+>             # Count distinct sessions per user in window
+>             delete user_session_count[user]
+>
+>             for (skey in sessions) {
+>                 split(skey, parts, ":")
+>                 u = parts[1]
+>                 if (u == user) {
+>                     user_session_count[user]++
+>                 }
+>             }
+>
+>             # Check if user has 3 or more sessions
+>             if (user_session_count[user] >= 3) {
+>                 # Check if we've already alerted for this user in this window
+>                 should_alert = 1
+>                 for (i in alerts) {
+>                     split(alerts[i], alert_parts, "|")
+>                     alert_time = alert_parts[1]
+>                     alert_user = alert_parts[2]
+>
+>                     if (alert_user == user && alert_time > (ts - window_size)) {
+>                         should_alert = 0
+>                         break
+>                     }
+>                 }
+>
+>                 if (should_alert) {
+>                     # Create alert
+>                     iso_time = strftime("%Y-%m-%dT%H:%M:%S", ts/1000)
+>                     alert_line = "ALERT " user " " user_session_count[user] " admin-sessions in 10s at " iso_time
+>                     print alert_line > "alerts.txt"
+>                     close("alerts.txt")
+>
+>                     # Record that we've alerted for this user
+>                     alerts[length(alerts)+1] = ts "|" user
+>                 }
+>             }
+>         }
+>     }
+> }
+>
+> END {
+>     # Nothing special needed here
+> }
+> EOF
+root@38ff7a4514c0:/app# rm -f alerts.txt summary.json timeline.json logs/*; tmux wait -S done
+root@38ff7a4514c0:/app# ./run.sh; tmux wait -S done
+Consumer started (PID: 8256)
+Producer started (PID: 8266)
+{"ts": 1755609722720, "session": "yVYExvFeGh", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609722883, "session": "XtKIDgNOno", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609723056, "session": "kpwkP6ba5x", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609723241, "session": "mHiQo8zs90", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609723402, "session": "ob05u7pzUI", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609723459, "session": "l46NZhdTC1", "user": "JohnDoe", "meta": {"admin": true}}
+malformed_line_1755609723541
+{"ts": 1755609723616, "session": "MFbsftmwmK", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609723684, "session": "z0TE0fQW7B", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609723766, "session": "wE9Bea6PTL", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609723823, "session": "isHQXDhQNK", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609723886, "session": "Rx1aZo6lyq", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609723970, "session": "WQnjaN3EF2", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609724034, "session": "CgRUnAzHAD", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609724094, "session": "JGjIOHQLck", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609724167, "session": "KggCkWIpEP", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609724236, "session": "dZ88IxJjn4", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609724290, "session": "ymfWqIKOSU", "user": "赵钱孙", "meta": {"admin": false}}
+malformed_line_1755609724365
+{"ts": 1755609724443, "session": "ZN0CBHj7he", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609724502, "session": "FzTRVaKqNm", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609724569, "session": "6kI3AHapIh", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609724623, "session": "lKSF2KZB9u", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609724701, "session": "fdtqxpLHcX", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609724756, "session": "8QkdWfFRkV", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609724828, "session": "QTQuVTTRNx", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609724898, "session": "pWgAtj3Spp", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609724989, "session": "CmBlstIMkr", "user": "JeanDupont", "meta": {"admin": true}}
+malformed_line_1755609725061
+{"ts": 1755609725126, "session": "3N2jTGkli7", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609725198, "session": "efJrSOg2mR", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609725258, "session": "Y3PwYW5eaM", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609725342, "session": "S4hADndhmD", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609725416, "session": "veHAz7CWab", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609725475, "session": "K1vVq12qF4", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609725545, "session": "LIOyf5w7io", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609725603, "session": "MwC62IksSz", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609725685, "session": "ueicvSxkiK", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609725758, "session": "922ihhd2EC", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609725843, "session": "RNhFMoHJbJ", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609725915, "session": "VC5Fsv0x8y", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609725990, "session": "yCntxS2K0F", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609726065, "session": "li0q0dGlgo", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609726129, "session": "m3LptzZgfc", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609726199, "session": "jX36XKbr32", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609726258, "session": "yQ96JaFNoU", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609726325, "session": "DJeb5p6Mgb", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609726409, "session": "8preUvkHvv", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609726489, "session": "5r4vVaT24o", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609726576
+{"ts": 1755609726660, "session": "umfNDIDVRs", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609726717, "session": "19jbrOwocg", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609726767, "session": "mu2I23LzNt", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609726823, "session": "Pesjre0X73", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609726881, "session": "ACh1EH7Cx0", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609726963, "session": "G6D4RnfSjn", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609727035, "session": "985iROVb3V", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609727116, "session": "aXJyCxDy5n", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609727189, "session": "KXasApJCmS", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609727270, "session": "MElMLobZe5", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609727326, "session": "vIXXw6uvyW", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609727406, "session": "Ja7yN9YEiM", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609727466, "session": "08rnpiQmmW", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609727551
+malformed_line_1755609727618
+{"ts": 1755609727691, "session": "3WaqNyumHE", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609727751, "session": "y05kSIFZLf", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609727833, "session": "SxrLGo2kol", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609727910, "session": "pm4lrnvlgl", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609727969, "session": "3ajlMKlLkA", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609728029, "session": "Eo1cGykmoR", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609728098
+{"ts": 1755609728165, "session": "yR1UQ5ENgP", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609728249, "session": "lDm0VrqPNh", "user": "赵钱孙", "meta": {"admin": false}}
+malformed_line_1755609728326
+{"ts": 1755609728397, "session": "kMf09Dx6QI", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609728480, "session": "pOEyj05GNv", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609728544, "session": "Eohj5nsH3h", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609728610, "session": "PwSYAU2etx", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609728698, "session": "I4MW3PBEMf", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609728765, "session": "1EprKx8fiP", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609728840, "session": "ogqmIdNEGY", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609728898, "session": "6phBu8HHi5", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609728976, "session": "XJhkywUKPR", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609729045, "session": "Szgd2p4lRe", "user": "赵钱孙", "meta": {"admin": true}}
+malformed_line_1755609729133
+malformed_line_1755609729195
+{"ts": 1755609729266, "session": "pu4Rk4MUK4", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609729330, "session": "nxpBUFd4Qb", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609729404, "session": "Y63leUmaWo", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609729493, "session": "dh3iMW66ro", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609729560, "session": "zEYr96XOM9", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609729640, "session": "NGkVgImcYa", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609729713, "session": "y0ClbRz2p1", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609729792, "session": "oVwoXp3MCE", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609729868, "session": "TkQS1JCgaS", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609729945, "session": "ZHRAyVkR9v", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609730014, "session": "yOOYXbYoIF", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609730090, "session": "3jo07KHkuL", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609730176, "session": "QnYKzsvBdL", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609730234, "session": "Pyhi1elH6x", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609730304, "session": "Qn5MvMMx0P", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609730364, "session": "qfnfSxPykB", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609730445
+malformed_line_1755609730498
+{"ts": 1755609730573, "session": "xSnmSo5XVA", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609730633, "session": "jkUGzPfPIy", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609730690, "session": "0KCFv1u37R", "user": "山田太郎", "meta": {"admin": false}}
+malformed_line_1755609730748
+malformed_line_1755609730811
+{"ts": 1755609730878, "session": "1fM1Qlos0X", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609730954, "session": "agqa6jZfhK", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609731040, "session": "S2db0WnJJv", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609731104, "session": "TMbufU3hDY", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609731191, "session": "7N9downNoN", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609731249, "session": "Z6FnR0LJTD", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609731317, "session": "A8zdICzPf4", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609731402, "session": "QHiMXOHtm2", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609731482, "session": "7RnhqbKyMQ", "user": "JohnDoe", "meta": {"admin": false}}
+malformed_line_1755609731564
+{"ts": 1755609731616, "session": "DCFnELyZ4Z", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609731690, "session": "xhcCLO3uFt", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609731766, "session": "NUQCml5HOC", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609731829, "session": "tHlmLYIPFg", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609731901, "session": "gOF3xcGC6D", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609731977, "session": "7MhyK0BJBm", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609732048, "session": "cuAHHyGl87", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609732123, "session": "vP8EgoSdwa", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609732199, "session": "cEA4JG91EV", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609732260, "session": "fQdq230MB5", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609732332, "session": "BDZ3AdPL0t", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609732391, "session": "awZ6lskWn5", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609732457, "session": "dnyOh06ux4", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609732523, "session": "5X2h4bupHC", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609732590, "session": "sBlxrsTfAV", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609732666, "session": "olc9G2aBgr", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609732749, "session": "Bpsyikwizd", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609732805, "session": "u2de3ntEMJ", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609732873, "session": "l48qi3B6J6", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609732927, "session": "bgEuSCfHSf", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609733009, "session": "xKSzOhlHss", "user": "JeanDupont", "meta": {"admin": true}}
+malformed_line_1755609733084
+{"ts": 1755609733140, "session": "BzHpiO9PXA", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609733204, "session": "UsHwd7Bp7F", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609733293, "session": "mSAeVbYpWp", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609733370, "session": "kZsRrjOUkA", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609733437, "session": "qJyN3xyqD0", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609733507, "session": "IRQmNP8Qoz", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609733574, "session": "nAJqcj0vZM", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609733630, "session": "8nwUzwC7Yl", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609733685, "session": "e3VnGN3zoK", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609733767, "session": "SeF4UJa5fV", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609733855, "session": "farJx4FaTT", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609733924, "session": "u5sDz5a7gu", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609734002, "session": "jExdPGARGB", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609734074, "session": "Vb11d0mow9", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609734158, "session": "KDyUk43545", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609734240, "session": "O6A78xhg0o", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609734324
+{"ts": 1755609734387, "session": "B8kfAApjhZ", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609734447, "session": "8ED5T9fySf", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609734509, "session": "7ddbjqCuHM", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609734593, "session": "o0wCpZpdfH", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609734665, "session": "FF1h89cf0S", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609734747, "session": "HEL2eTowbj", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609734829, "session": "cDWhYx41B7", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609734911, "session": "dfHDiBl6CN", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609734977, "session": "Ou6b7e0Bxh", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609735042, "session": "o57AjGLvUh", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609735119, "session": "R24wZQv1Z4", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609735199, "session": "DuQeu6CwnI", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609735273, "session": "6lFmuYzsSX", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609735350
+{"ts": 1755609735406, "session": "oWnZ8yACwh", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609735482, "session": "JWCcXjLyZA", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609735567, "session": "tS3SauIrit", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609735638, "session": "8VtNZwgKYA", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609735727, "session": "E6PFoTyl3L", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609735817, "session": "4s7pyIyufs", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609735903, "session": "cujtr5i0Zd", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609735965, "session": "gvwJSJpQSN", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609736051, "session": "wJOzcRaEh6", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609736110, "session": "BPFcZ8JYbz", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609736194, "session": "khkvwu0vT9", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609736266, "session": "o62ZvaagTD", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609736329, "session": "T6ONF8BkXy", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609736412, "session": "e2MtRyeUcq", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609736468, "session": "IzeX6HyniW", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609736537, "session": "BQGtfuwQ0x", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609736614, "session": "gOt7selV31", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609736685, "session": "uTmVNSzbW5", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609736742, "session": "EQ94pyA4uD", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609736817, "session": "s4N73QYBtd", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609736886, "session": "lysGEqc05N", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609736940, "session": "K3dKyxY0gW", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609736997, "session": "O5bgD6MZJn", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609737082, "session": "nJy50ZMM4p", "user": "JohnDoe", "meta": {"admin": false}}
+malformed_line_1755609737144
+{"ts": 1755609737208, "session": "QATp0QUEoM", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609737272, "session": "obu2ZVVmsr", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609737339, "session": "VU15hC9L7g", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609737395, "session": "iV8mRJ239b", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609737472, "session": "cDWKphqZoc", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609737556, "session": "zvxcS7Qat3", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609737631, "session": "sQJiwA0b8W", "user": "JeanDupont", "meta": {"admin": true}}
+malformed_line_1755609737709
+{"ts": 1755609737778, "session": "jYfH3M7j8J", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609737845, "session": "LnMVfYwXVZ", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609737920, "session": "kwYp61dOFJ", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609738002
+{"ts": 1755609738085, "session": "KCypPH8sa4", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609738169, "session": "rZAkDBDMQU", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609738242, "session": "ppJlRUyfg1", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609738318, "session": "dY3DBsbua2", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609738380, "session": "u1tyaYOKs1", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609738466, "session": "cEIhuQ8dEE", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609738526, "session": "RNNJxFO2FC", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609738587
+{"ts": 1755609738643, "session": "NsGKSdHPt5", "user": "MariaGarcia", "meta": {"admin": false}}
+malformed_line_1755609738721
+{"ts": 1755609738788, "session": "dYPi17tJD0", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609738857, "session": "QWugS748w3", "user": "JeanDupont", "meta": {"admin": true}}
+malformed_line_1755609738936
+{"ts": 1755609739011, "session": "WMJ6UAvyu2", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609739067, "session": "nY2tYbL1iO", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609739122, "session": "bfnKUExCbF", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609739199, "session": "AqKNwPYMKB", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609739257, "session": "Hxtog7cZzk", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609739325, "session": "FjeICWVSpj", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609739390, "session": "mv8zt2xkyw", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609739467, "session": "TWDBnTol4g", "user": "张伟", "meta": {"admin": true}}
+malformed_line_1755609739527
+{"ts": 1755609739589, "session": "nzNQt8vwlI", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609739676, "session": "iiHLSpPsTL", "user": "赵钱孙", "meta": {"admin": true}}
+malformed_line_1755609739752
+{"ts": 1755609739836, "session": "pE5jJkcilk", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609739946, "session": "1peVArX5rr", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609740003, "session": "GuW5WKE9YF", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609740061, "session": "IHmREPyMm0", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609740130, "session": "5pT8wi5sEu", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609740216, "session": "dJVbiDAo3m", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609740303, "session": "4RMcHfAgZ6", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609740393, "session": "KA804e0zwY", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609740452, "session": "UPKfRFonk0", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609740512, "session": "GqfZHSGT2k", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609740595, "session": "X0En0Gu8iV", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609740657, "session": "X0HOrbQp8o", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609740713, "session": "M64NtjOKMr", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609740768, "session": "AxyA6XHpqa", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609740841, "session": "yWezBZkcZO", "user": "MariaGarcia", "meta": {"admin": true}}
+malformed_line_1755609740899
+{"ts": 1755609740961, "session": "aiyFYd1Urs", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609741043, "session": "iMctXqhHfg", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609741111, "session": "n8Zmzakeu3", "user": "赵钱孙", "meta": {"admin": true}}
+malformed_line_1755609741183
+{"ts": 1755609741250, "session": "4LHvZ7JQV5", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609741333, "session": "fIUppw1inh", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609741392, "session": "iiM5nMpNkH", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609741463, "session": "MuXewI7WcM", "user": "山田太郎", "meta": {"admin": true}}
+malformed_line_1755609741528
+{"ts": 1755609741598, "session": "bjRU1fN3G8", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609741670, "session": "PzHgw9luu6", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609741746, "session": "JcQCDpqM23", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609741814, "session": "cS7gBpZsDN", "user": "JeanDupont", "meta": {"admin": true}}
+malformed_line_1755609741880
+{"ts": 1755609741949, "session": "5wOqM2CENg", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609742022, "session": "5NhOLRac6p", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609742109, "session": "ltisghnur2", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609742175, "session": "ZeR8E3eQH6", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609742253, "session": "urhF5pMFSP", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609742313, "session": "qG4a127lb6", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609742396, "session": "SzGkQNvS27", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609742466, "session": "P4sUKaKncx", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609742530, "session": "AaTsDEz74F", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609742592, "session": "CPPKm80OrI", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609742655, "session": "VQBguVBEFr", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609742725, "session": "KunnZizpZN", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609742781, "session": "z2Y6XRuHYZ", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609742849, "session": "0E3aWrVJbL", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609742930, "session": "bs6smnmTVI", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609743001, "session": "yoB01yvsaR", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609743076, "session": "rT5sgDwFg1", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609743161, "session": "xmF75hXRrA", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609743237, "session": "j0n8gc3Oon", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609743303, "session": "OarXXIfbBH", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609743362, "session": "I9OnmgDwXY", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609743434, "session": "RmsC3rVnm4", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609743520, "session": "ULgyhSKrxL", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609743584, "session": "MKoSj2oMBQ", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609743647, "session": "fCZr8DQNy3", "user": "MariaGarcia", "meta": {"admin": false}}
+malformed_line_1755609743717
+{"ts": 1755609743790, "session": "MPtlM8gMrF", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609743851, "session": "l7cHlzUjxU", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609743911, "session": "84neUE8ByM", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609743973, "session": "qnMcW4Z3u5", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609744048, "session": "oF1tHD7A4i", "user": "MariaGarcia", "meta": {"admin": true}}
+malformed_line_1755609744125
+{"ts": 1755609744183, "session": "pmyPmW953K", "user": "MariaGarcia", "meta": {"admin": true}}
+malformed_line_1755609744238
+{"ts": 1755609744298, "session": "2NfumHCIN7", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609744373, "session": "z94FJfSuGT", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609744447, "session": "GcQGpXvCUA", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609744519, "session": "UqFtsOnqjJ", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609744604, "session": "rhjrcJdibk", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609744687, "session": "cc8yxEz76m", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609744759, "session": "Js4WHDZMMv", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609744822, "session": "CQAtLs6ROp", "user": "张伟", "meta": {"admin": false}}
+malformed_line_1755609744889
+{"ts": 1755609744945, "session": "elfTb3kcEO", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609745009, "session": "Sh2xfePhpU", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609745072, "session": "3AZkttE7CE", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609745150, "session": "JghCuV5CyD", "user": "山田太郎", "meta": {"admin": true}}
+malformed_line_1755609745218
+malformed_line_1755609745276
+{"ts": 1755609745333, "session": "VnSGpiZoPx", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609745391, "session": "YgEJxLLZAv", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609745453, "session": "zVqpsoE4zn", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609745510, "session": "NI75jfluxn", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609745579, "session": "qXZPbCjr6Y", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609745660, "session": "SyFcUuyc6k", "user": "JohnDoe", "meta": {"admin": true}}
+malformed_line_1755609745738
+malformed_line_1755609745820
+{"ts": 1755609745885, "session": "IL9xTQBlyy", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609745953, "session": "WgtQoli3tF", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609746033, "session": "ipIEtWsgpU", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609746119, "session": "NDwsJsAVVQ", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609746183, "session": "2ZLZgv3ZBt", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609746240, "session": "VGKqfOlwfi", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609746301, "session": "bRe0q12QJe", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609746383, "session": "Rw6fhpxB3M", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609746452, "session": "QiciBGGs7k", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609746541, "session": "ggHVRZhf1G", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609746623, "session": "uv9uWqJQgw", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609746689, "session": "ZxNvx8tfRC", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609746775, "session": "XNlg3syCeO", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609746865, "session": "zeZPvoRDGM", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609746951, "session": "p7qGXEaU7P", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609747026, "session": "NhHXtOJ5zo", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609747110, "session": "rwd6ZHuLnr", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609747192, "session": "rZC0D7VERq", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609747251, "session": "WnUfRYjSWX", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609747320, "session": "wjUpIvnZel", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609747380, "session": "xGgRkKaG4P", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609747463, "session": "MRtGR7Hckv", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609747536, "session": "YckhJDFfEZ", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609747620, "session": "hFRzajsJrA", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609747702, "session": "wBhTtM5i7M", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609747782, "session": "Xxbsn3SWSz", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609747868, "session": "Df0UV25qrc", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609747952, "session": "9SuryhiwKH", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609748038, "session": "sG0mPePshI", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609748095, "session": "NnGOsQmnXK", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609748159
+{"ts": 1755609748240, "session": "N553Jra23y", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609748300, "session": "9Ww0luDQxV", "user": "Анна", "meta": {"admin": false}}
+malformed_line_1755609748380
+{"ts": 1755609748463, "session": "qWZ9pBIJG2", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609748531, "session": "rR29u5LBzJ", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609748587, "session": "dIfLovJ4ot", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609748643, "session": "yj2FU5Q1wO", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609748717, "session": "tdoISiuenS", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609748797, "session": "JvEB4gIjFX", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609748860, "session": "Va4Swf8fCH", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609748928, "session": "v2w5XTBNYV", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609748993, "session": "f7pFpuipwI", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609749059, "session": "AkV3jEPZcr", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609749128, "session": "ySS4qD8vAs", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609749204, "session": "w8AK8QigE2", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609749270, "session": "50yuLKzL2J", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609749334, "session": "WRrbSsUFIg", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609749404, "session": "o2xXdx1rDY", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609749488, "session": "pMvKgkbX59", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609749548, "session": "WniyfqZI75", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609749612, "session": "BL10MRpPF1", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609749681, "session": "fBAIqbjh14", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609749757, "session": "fUEdd9f5qi", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609749828, "session": "RmMVvpReQH", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609749911, "session": "cp3XaAlCFt", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609749994, "session": "8dK7ynBu8t", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609750073, "session": "hMnz29Sq3F", "user": "山田太郎", "meta": {"admin": true}}
+malformed_line_1755609750141
+{"ts": 1755609750203, "session": "AvJmOu3Eu6", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609750277, "session": "BXAyNvJknX", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609750350, "session": "YnfzGyK87E", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609750430, "session": "HaAoS3gS3B", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609750486, "session": "xI8y2LJSI6", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609750565, "session": "6H2tRuU8SC", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609750628, "session": "dqVRRCFx3V", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609750696, "session": "Zb0omeysB2", "user": "山田太郎", "meta": {"admin": false}}
+malformed_line_1755609750762
+{"ts": 1755609750829, "session": "9LG732OhcW", "user": "山田太郎", "meta": {"admin": true}}
+malformed_line_1755609750885
+{"ts": 1755609750947, "session": "pSyLfDKTyk", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609751015, "session": "o5hiHBEhlM", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609751099, "session": "qvRGyO3FoW", "user": "山田太郎", "meta": {"admin": true}}
+malformed_line_1755609751174
+{"ts": 1755609751228, "session": "aLtTvg78Fz", "user": "赵钱孙", "meta": {"admin": true}}
+malformed_line_1755609751301
+{"ts": 1755609751371, "session": "DWwZXoApOR", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609751445, "session": "b0XC2Z0uDm", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609751510, "session": "Tnj6p8VMfM", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609751595, "session": "nJcLJdTMmY", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609751678, "session": "V3tmWXXeUS", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609751742, "session": "oCxj0c74qb", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609751811, "session": "GtOgPbu3xz", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609751895, "session": "zMzYfjTPZi", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609751977, "session": "t0FwwDYeTF", "user": "张伟", "meta": {"admin": true}}
+Producer finished. Generated 407 lines.
+DONE
+root@38ff7a4514c0:/app# ls -la; tmux wait -S done
+total 40
+drwxr-xr-x 1 root root 4096 Aug 19 13:22 .
+drwxr-xr-x 1 root root 4096 Aug 19 13:15 ..
+-rw-r--r-- 1 root root   61 Aug 19 13:22 alerts.txt
+-rwxr-xr-x 1 root root 2604 Aug 19 13:21 consumer.awk
+drwxr-xr-x 2 root root 4096 Aug 19 13:22 logs
+drwxr-xr-x 2 root root 4096 Aug 19 13:16 pipe
+-rwxr-xr-x 1 root root 2347 Aug 19 13:21 producer.sh
+-rw-r--r-- 1 root root    0 Aug 19 13:22 run.lock
+-rwxr-xr-x 1 root root 2548 Aug 19 13:17 run.sh
+-rw-r--r-- 1 root root   91 Aug 19 13:22 summary.json
+-rw-r--r-- 1 root root  151 Aug 19 13:22 timeline.json
+root@38ff7a4514c0:/app# cat alerts.txt; tmux wait -S done
+ALERT 张伟 10 admin-sessions in 10s at 2025-08-19T13:22:31
+root@38ff7a4514c0:/app# cat summary.json; tmux wait -S done
+{
+  "producer_lines_total": 407,
+  "alerts": 1,
+  "rotations_min": 0,
+  "parallel": true
+}
+root@38ff7a4514c0:/app# cat timeline.json; tmux wait -S done
+{
+  "consumer_start_ms": 1755609722207,
+  "producer_start_ms": 1755609722714,
+  "consumer_end_ms": 1755609754725,
+  "producer_end_ms": 1755609754725
+}
+root@38ff7a4514c0:/app# ls -la logs/; tmux wait -S done
+total 44
+drwxr-xr-x 2 root root  4096 Aug 19 13:22 .
+drwxr-xr-x 1 root root  4096 Aug 19 13:22 ..
+-rw-r--r-- 1 root root 35321 Aug 19 13:22 events.log
+root@38ff7a4514c0:/app# cat > producer.sh << 'EOF'
+> #!/bin/bash
+>
+> # Producer script for generating NDJSON events
+> LOG_FILE="logs/events.log"
+> MAX_SIZE=150000  # 150KB to ensure rotation
+> ROTATION_COUNT=3
+>
+> # Function to rotate logs
+> rotate_logs() {
+>     # Rotate existing files
+>     for ((i=$ROTATION_COUNT; i>1; i--)); do
+>         if [ -f "$LOG_FILE.$((i-1))" ]; then
+>             mv "$LOG_FILE.$((i-1))" "$LOG_FILE.$i"
+>         fi
+>     done
+>
+>     # Move main log to .1
+>     if [ -f "$LOG_FILE" ]; then
+>         mv "$LOG_FILE" "$LOG_FILE.1"
+>     fi
+> }
+>
+> # Function to generate a random NDJSON line
+> # With ~10% malformed lines
+> generate_line() {
+>     if [ $((RANDOM % 10)) -eq 0 ]; then
+>         # Malformed line
+>         echo "malformed_line_$(date +%s%3N)"
+>         return
+>     fi
+>
+>     # Good line
+>     ts=$(date +%s%3N)  # milliseconds since epoch
+>
+>     # Array of users including Unicode ones
+>     users=("赵钱孙" "JohnDoe" "محمدعلي" "Анна" "山田太郎" "MariaGarcia" "张伟" "JeanDupont")
+>     user=${users[$RANDOM % ${#users[@]}]}
+>
+>     session=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+>
+>     # 80% chance of being admin to generate more alerts
+>     if [ $((RANDOM % 10)) -lt 8 ]; then
+>         echo "{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}}"
+>     else
+>         echo "{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": false}}"
+>     fi
+> }
+>
+> # Main loop - run for ~30 seconds
+> end_time=$(($(date +%s) + 30))
+> line_count=0
+>
+> while [ $(date +%s) -lt $end_time ]; do
+>     line=$(generate_line)
+>     echo "$line"
+>
+>     # Append to log file
+>     echo "$line" >> "$LOG_FILE"
+>
+>     # Check if rotation is needed
+>     if [ -f "$LOG_FILE" ]; then
+>         size=$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
+>         if [ "$size" -gt "$MAX_SIZE" ]; then
+>             rotate_logs
+>         fi
+>     fi
+>
+>     line_count=$((line_count + 1))
+>
+>     # Sleep for 40-70ms using sleep command
+>     sleep_duration=$((40 + RANDOM % 31))
+>     # Convert to seconds with 3 decimal places
+>     sleep_seconds=$(echo "scale=3; $sleep_duration/1000" | bc)
+>     sleep $sleep_seconds 2>/dev/null || sleep 0.05
+>
+>     # For the first few lines, sleep a bit longer to ensure consumer starts first
+>     if [ $line_count -lt 5 ]; then
+>         sleep 0.1
+>     fi
+> done
+>
+> echo "Producer finished. Generated $line_count lines." >&2
+> EOF
+root@38ff7a4514c0:/app# rm -f alerts.txt summary.json timeline.json logs/*; tmux wait -S done
+root@38ff7a4514c0:/app# ./run.sh; tmux wait -S done
+Consumer started (PID: 13909)
+Producer started (PID: 13919)
+{"ts": 1755609822869, "session": "R6NkhgeRFF", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609823053, "session": "FDwSBCu9yE", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609823236, "session": "czYf2ZFNhS", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609823430, "session": "OOsep99MtD", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609823624, "session": "mJNx2yldZV", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609823701, "session": "vP9bFhqVqf", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609823762, "session": "a7rfzMpuqE", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609823833, "session": "5Ds6lboaZd", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609823910, "session": "TYtlcoQ0Am", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609823984, "session": "g98U0jMbSf", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609824050, "session": "MsVvINywln", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609824114, "session": "9Pq4UlgHDd", "user": "محمدعلي", "meta": {"admin": false}}
+malformed_line_1755609824183
+malformed_line_1755609824250
+{"ts": 1755609824307, "session": "H4zbl1BYVM", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609824378, "session": "ACMlIPx78m", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609824439, "session": "qP3Qsx7Xub", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609824509, "session": "f1j2IFDGLo", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609824593, "session": "GqcVMyAHaA", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609824677, "session": "oei9FthqLf", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609824762, "session": "lxsvM4tUW6", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609824832, "session": "yX8jkK1hzU", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609824910
+{"ts": 1755609824965, "session": "PdgKHM417Q", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609825028, "session": "u1e673WAv8", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609825103, "session": "go8xtEk0zy", "user": "JeanDupont", "meta": {"admin": true}}
+malformed_line_1755609825190
+{"ts": 1755609825264, "session": "NhtXUP2h3w", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609825324, "session": "xlug3TxHqw", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609825398, "session": "dE4mnwOzPZ", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609825463, "session": "Sk2yfvXyrH", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609825530, "session": "IMBnP75qQz", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609825592, "session": "QghTv9Znrj", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609825648, "session": "ynQ4jL9uhl", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609825712, "session": "wGhgLZAbEl", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609825792, "session": "xDC1JvTvnI", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609825848, "session": "91l7GD7evr", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609825906, "session": "hUSsUS0Z7f", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609825966, "session": "79GOxVtH2x", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609826048, "session": "klZzreP14V", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609826120, "session": "JYYCDDv9CU", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609826184, "session": "RAL13DAlNZ", "user": "赵钱孙", "meta": {"admin": true}}
+malformed_line_1755609826273
+{"ts": 1755609826344, "session": "bS5ZJeo5BN", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609826418, "session": "rbp3Nfr2aF", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609826501, "session": "QuTWqQLZLQ", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609826572, "session": "TdUb31KRd1", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609826650, "session": "9wA0MzTaGr", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609826718, "session": "G1lW3FtMdG", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609826806, "session": "9nW8U5zVM7", "user": "张伟", "meta": {"admin": true}}
+malformed_line_1755609826891
+{"ts": 1755609826973, "session": "WiAMByVGi3", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609827051, "session": "kPOWmc8wrJ", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609827125, "session": "mA8Qjbpit6", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609827199, "session": "t50O6ZpZC9", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609827261, "session": "nDFKK5vj20", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609827327, "session": "P50PE7Gfyi", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609827395, "session": "EHk4iyUBCz", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609827463, "session": "xGxL1KKnRn", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609827534
+{"ts": 1755609827618, "session": "VGwadcRSWw", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609827691, "session": "feBC2cP5vQ", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609827765, "session": "RbjB1kzH3d", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609827835, "session": "P48EIxCARO", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609827910, "session": "WO3COJB62i", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609827983, "session": "zCTXXHex1r", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609828043, "session": "o99wXBgh2Y", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609828116, "session": "87gMGMiWp2", "user": "山田太郎", "meta": {"admin": true}}
+malformed_line_1755609828170
+{"ts": 1755609828243, "session": "8XmTDNPafv", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609828306, "session": "tXE7x6uUWV", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609828369, "session": "E6od3lABHI", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609828442, "session": "hkuZY7OFPe", "user": "张伟", "meta": {"admin": true}}
+malformed_line_1755609828532
+{"ts": 1755609828610, "session": "9FHggvjol5", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609828669, "session": "86gaFP6ls6", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609828754, "session": "UKK4yFkSsu", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609828839, "session": "9PZeNP5cXv", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609828912, "session": "u9Nnp5MitA", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609828987, "session": "zuoDzq0w6r", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609829059, "session": "wAuK46c3D0", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609829134, "session": "QEcQfPE3hH", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609829211, "session": "UX36vh4pgy", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609829282, "session": "sxy0NEC14K", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609829359, "session": "GJNthaGZn3", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609829443, "session": "0fWWQdRGOW", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609829514, "session": "OaiU00PSzW", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609829566, "session": "WaI9tAvjJi", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609829640, "session": "KYZgf2adEV", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609829722, "session": "K8xXg8TPby", "user": "山田太郎", "meta": {"admin": true}}
+malformed_line_1755609829787
+{"ts": 1755609829844, "session": "UoSsrbpz4C", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609829919, "session": "ZR1f8crwG6", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609829991, "session": "1kj2NtvsK1", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609830045, "session": "xefaw26Oac", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609830108, "session": "uUyQjaR8Ik", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609830180, "session": "NE2Q6NdygY", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609830254, "session": "FFeZUQfq50", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609830317, "session": "Yrsto00OLj", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609830382, "session": "EfqQLTbVHe", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609830443, "session": "MxOzaUNQ4v", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609830523, "session": "VGzs7nHxdY", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609830584, "session": "mfQ9EGXJSs", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609830652, "session": "LPXmbOvyiN", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609830714, "session": "8mtbCmfCVX", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609830787, "session": "j3I8UlbGMe", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609830855, "session": "88c7A9kjef", "user": "赵钱孙", "meta": {"admin": true}}
+malformed_line_1755609830937
+{"ts": 1755609831015, "session": "EZmbKlBmN1", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609831093, "session": "Q63QVxuyoN", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609831181, "session": "3x0S71PhOs", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609831252, "session": "VN9lOYFxAe", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609831324, "session": "pEDIJcbEe4", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609831408, "session": "m6tgE72RKL", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609831468, "session": "h7tseaIGaP", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609831534, "session": "xHpl4Lk8xV", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609831617, "session": "ERiz7aVycj", "user": "JeanDupont", "meta": {"admin": true}}
+malformed_line_1755609831682
+{"ts": 1755609831750, "session": "MYwztopCgf", "user": "山田太郎", "meta": {"admin": false}}
+malformed_line_1755609831832
+{"ts": 1755609831918, "session": "L6k2hKv2kI", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609831994, "session": "N8ODwB60O6", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609832061, "session": "0Um0dZgPvU", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609832130, "session": "iqRApi8R2c", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609832191, "session": "xR1E9XYJIR", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609832273, "session": "6NuGx8ETI9", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609832353, "session": "chEVby4TWH", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609832413, "session": "a8FfzEOyZ0", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609832474, "session": "KZG7lgP6zm", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609832553, "session": "GoDKdk5XRO", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609832632, "session": "mv4Bff0IO1", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609832711, "session": "MFjdH7xZ7y", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609832797
+{"ts": 1755609832866, "session": "6SsvTVdo1K", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609832942, "session": "nWZpgZ9xCd", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609833022, "session": "lurd2MrdWV", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609833107, "session": "kddtdnQYja", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609833188, "session": "RMEgObWnL6", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609833261, "session": "mK0GA0tgo5", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609833334, "session": "mBA4oyNHw1", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609833420, "session": "D4EreTKJMy", "user": "赵钱孙", "meta": {"admin": false}}
+malformed_line_1755609833500
+{"ts": 1755609833562, "session": "DPA6Np4gal", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609833626, "session": "J7M9kfLeXL", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609833691, "session": "BYpwMs92MS", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609833761, "session": "diMX5XzLGK", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609833826
+{"ts": 1755609833899, "session": "nPkvVp6X2K", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609833979, "session": "PtkzM2YMDo", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609834065, "session": "VZYhFHQOqz", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609834134, "session": "tQQOm2mGKo", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609834202, "session": "aQvGYF5H63", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609834276, "session": "TpjzosMHgi", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609834354, "session": "PKwXCJxMBc", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609834423, "session": "Wn2rXIhs5D", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609834501, "session": "pAi0vAZOOK", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609834556
+{"ts": 1755609834610, "session": "zfHBzsL6TB", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609834681, "session": "X66kXqXzmR", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609834737, "session": "trScZmFhHT", "user": "MariaGarcia", "meta": {"admin": true}}
+malformed_line_1755609834793
+{"ts": 1755609834874, "session": "LC0eH2qHUj", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609834930, "session": "qJK0VCc2n0", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609835000, "session": "GNI09XuRkl", "user": "JohnDoe", "meta": {"admin": true}}
+malformed_line_1755609835078
+{"ts": 1755609835135, "session": "mCtWtJCsZZ", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609835202, "session": "6LW7oMiMrI", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609835259, "session": "Nggdgfh1NL", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609835314, "session": "4dhGlsloV8", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609835366, "session": "pwF9DBTx6C", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609835420, "session": "KN3SyD0zPI", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609835475, "session": "Pt8HKEZHSQ", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609835535, "session": "9K788skbFY", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609835612, "session": "gCoy6zH7YT", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609835675, "session": "16ci34SxP0", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609835743
+{"ts": 1755609835808, "session": "tyo1U8Hy42", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609835876, "session": "UqsZtzZhOz", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609835950, "session": "YBsiEeoBmr", "user": "MariaGarcia", "meta": {"admin": false}}
+malformed_line_1755609836031
+{"ts": 1755609836114, "session": "4ujMAL50Un", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609836188, "session": "3PGW1gY29C", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609836243, "session": "zHD979znMv", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609836326, "session": "tHj8t12dMK", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609836391, "session": "LrUQI46KBC", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609836450, "session": "Zuxr8BTTEx", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609836522, "session": "bfFtY4A2cx", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609836607, "session": "JJri34eWkC", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609836685, "session": "uZRaUrXhQl", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609836757, "session": "OtyxUFLAU2", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609836825, "session": "ZXhCBJBM2g", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609836886, "session": "xnOsmdI2zk", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609836969, "session": "6MzwDSg5CL", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609837040, "session": "O95OpvsCus", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609837110, "session": "BEGlNZuhwA", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609837178, "session": "XqklJFudHf", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609837239, "session": "17R8IE4f6c", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609837310, "session": "lr5VwLHQjB", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609837400, "session": "VS0EHkFCqU", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609837485, "session": "jYeqv5h4O5", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609837544, "session": "Z33fJChR3Y", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609837619, "session": "4tj49r3kEO", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609837690, "session": "MfQW9lyKcj", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609837766, "session": "fbS2HXy7l0", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609837824, "session": "BA1mkMeGZ2", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609837886, "session": "lMXNFndcFi", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609837951, "session": "mTYshYLFUi", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609838029, "session": "sh9BESgRJo", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609838102, "session": "JuKbOBqi57", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609838158, "session": "uCmPEjKU43", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609838228, "session": "Ky0g9Xuakd", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609838290, "session": "B6PRq9D74t", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609838367, "session": "Z0AvOZ1rBp", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609838436, "session": "jFS3xYrUEW", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609838509, "session": "s6pXRgCqUP", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609838576, "session": "XBUz5tIssZ", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609838663, "session": "fpDHi9oA0p", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609838722, "session": "G4Tj0FLB6r", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609838785, "session": "F4MzdR5Jds", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609838841, "session": "MrrHfkukuM", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609838918, "session": "KjxHRxx5eo", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609838997, "session": "qiOqjEv0W6", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609839070, "session": "TPXFdohkru", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609839144, "session": "H7eGVBH3pT", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609839229, "session": "UOKtR2GTC8", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609839289, "session": "226RZwUuha", "user": "张伟", "meta": {"admin": true}}
+malformed_line_1755609839345
+{"ts": 1755609839424, "session": "e3ljVoXjWF", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609839491, "session": "26P84XToKy", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609839554, "session": "V48DrKSpzG", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609839628, "session": "JRf2Ar4zAT", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609839700, "session": "imd9FTKB2l", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609839770, "session": "WKoObIwqdc", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609839854, "session": "KJiA3HI8hB", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609839918, "session": "h401PLU6pY", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609840003, "session": "btkqijUZbd", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609840072, "session": "XQigdkzrqg", "user": "赵钱孙", "meta": {"admin": true}}
+malformed_line_1755609840130
+{"ts": 1755609840212, "session": "IPBC5Rotg7", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609840288
+{"ts": 1755609840357, "session": "vYSSGk3NqS", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609840430, "session": "LempGOTLgi", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609840486, "session": "N9PXBesnii", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609840551, "session": "A3juTj1SBs", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609840620, "session": "9vlN2DSMTa", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609840700, "session": "XpAIbAPdvA", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609840776, "session": "4T7Z7YO2EB", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609840832, "session": "n8wUlA7xdq", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609840915, "session": "YR9NV8mcJu", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609841001, "session": "6NCxhbew4g", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609841064, "session": "da2CwTR0Fn", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609841139, "session": "yzhYAAEZzb", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609841210, "session": "tDcNiGlWYq", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609841279, "session": "pdfJEtZteq", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609841344, "session": "PQJwWqXrko", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609841424, "session": "wocyVfuSzr", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609841478, "session": "e6Pi5bc0bX", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609841548, "session": "b8tUwQmvTs", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609841615, "session": "YvvsOzkyQd", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609841686, "session": "SRUGPStgNM", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609841766, "session": "VflpGUU8Op", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609841836, "session": "ENv0BNnfry", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609841917, "session": "Z0Vo1msC6F", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609841985, "session": "ss3FaNfSZY", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609842050, "session": "ErcVEj1a5o", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609842106, "session": "pjQ9iIxlWR", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609842162, "session": "mtSAesK9dN", "user": "JeanDupont", "meta": {"admin": true}}
+malformed_line_1755609842245
+{"ts": 1755609842320, "session": "Cp2X3mQbzZ", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609842395
+{"ts": 1755609842466, "session": "BMSCM9cMjT", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609842552, "session": "VtLQQT1WXh", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609842609, "session": "etYIRdeLP1", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609842674, "session": "QRMID81Eei", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609842733, "session": "ygWeenNGlO", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609842787, "session": "AjFLUPqQ9m", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609842845, "session": "bkhmFEUNzM", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609842911, "session": "nFZZw9tQG5", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609842970, "session": "lQdvJcP3Ar", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609843043
+{"ts": 1755609843116, "session": "QJAAYHVC1Z", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609843201, "session": "oBtAbOUbOI", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609843262, "session": "E5VbcOo9T3", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609843338, "session": "wupbVGp8fE", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609843425, "session": "LUm7XG9kJz", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609843511, "session": "IV3VxZ3SQe", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609843592, "session": "nL6Ds2acX2", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609843656, "session": "DKRMPJOrAy", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609843720, "session": "cjjiU6O727", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609843807, "session": "RFUGnJrqi7", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609843870, "session": "qvEsG3oRQF", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609843928, "session": "bC6sO0tqmh", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609844003, "session": "DKvU5m7MX5", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609844067, "session": "CLScEiwsf6", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609844150, "session": "cuosXWyQi2", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609844227, "session": "O3g08fEj0l", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609844285, "session": "klHm2WVo9q", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609844361, "session": "DFSXPIdJCG", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609844430, "session": "jEDVWNnpbb", "user": "محمدعلي", "meta": {"admin": false}}
+{"ts": 1755609844490, "session": "3cK30jFvr9", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609844559, "session": "MSaKqSdiKP", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609844646, "session": "F017eE6ZQa", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609844710, "session": "xJBwOENslw", "user": "JohnDoe", "meta": {"admin": false}}
+{"ts": 1755609844781, "session": "qiW0NCreY9", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609844864, "session": "zgm7C4SXav", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609844942, "session": "mmJf6Kq2Jc", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609845015, "session": "GA6h1GX4R2", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609845095, "session": "PDtexigCep", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609845174, "session": "X2u3S2NBUk", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609845250, "session": "mkzzJNOyvR", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609845329, "session": "1QxeN3VPwV", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609845395, "session": "uKBtVHjaB8", "user": "JohnDoe", "meta": {"admin": true}}
+malformed_line_1755609845465
+{"ts": 1755609845523, "session": "OmvH9Oj4ip", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609845605, "session": "9SSY8ocZQo", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609845680, "session": "S9vlSkGeLS", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609845741, "session": "hmiMfND55S", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609845826
+{"ts": 1755609845903, "session": "KZTyjzdzgj", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609845960, "session": "AcibBtqd21", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609846026, "session": "o6qWll47nX", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609846110, "session": "OKDU7yrnFp", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609846173, "session": "5Kts7rSKav", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609846236, "session": "tNYYpJwbA7", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609846293, "session": "RGNV4SC0ZM", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609846379, "session": "cBpqd6bvOX", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609846456, "session": "zplbDfKp0L", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609846537, "session": "2iSGBUqyLP", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609846614, "session": "1PzLfdtHb3", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609846682, "session": "V1l2IfCRnP", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609846749, "session": "5ATn47sTMH", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609846818, "session": "2JQBeNPrJU", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609846887
+{"ts": 1755609846948, "session": "13rGMSj4aN", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609847031, "session": "9KL07U8zrZ", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609847086, "session": "mALhlLUL5X", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609847161, "session": "wjtHBTrvkt", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609847216, "session": "Zm5eiTifdk", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609847290, "session": "KCvD37E8hR", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609847348, "session": "Wh10KJ3Fcb", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609847429, "session": "tPmeFCFN3I", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609847488, "session": "0tx52SbD9G", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609847543, "session": "ESastxaXXt", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609847613, "session": "4skY4JAr2L", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609847679, "session": "kvS91TJ9ec", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609847747, "session": "FQTgREfyUV", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609847819, "session": "X3GMTB9y6h", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609847893, "session": "WaxQIvPwAN", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609847948, "session": "DIiCweSy88", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609848006, "session": "BDjv1sa0DF", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609848063, "session": "6MjCnGiFJn", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609848125, "session": "k8O7sn6rcf", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609848208, "session": "VDnD3vzQJp", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609848269, "session": "cqsONvupXL", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609848356, "session": "AobNF0huLw", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609848434, "session": "KucfdpajSe", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609848510, "session": "2RXcVX18oZ", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609848583, "session": "IiRvc2fGim", "user": "张伟", "meta": {"admin": true}}
+malformed_line_1755609848669
+{"ts": 1755609848720, "session": "WZSRvRqdQI", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609848784, "session": "IJ5ndQTa6z", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609848870, "session": "dqpdyus37Z", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609848930, "session": "fkJ2VN0gEG", "user": "JohnDoe", "meta": {"admin": true}}
+malformed_line_1755609848996
+{"ts": 1755609849076, "session": "iNNRtmoZg2", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609849143, "session": "dGXy4peQPi", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609849216, "session": "ByMbbwosDQ", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609849300, "session": "Ysv5VjmBEG", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609849367, "session": "FFrMQNPJb9", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609849450, "session": "aQbm0XkuZp", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609849513, "session": "NvwgngERVv", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609849588, "session": "RpeLPpB7Nk", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609849670, "session": "2cTXhR28pS", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609849761, "session": "27KjOYkfrX", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609849831, "session": "f8C18jcdQ5", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609849919, "session": "YM8Bq0vn2Q", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609849994, "session": "NIG2nC0ctX", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609850083, "session": "uW8yNhSZxX", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609850159, "session": "2BxaYjxaxl", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609850230, "session": "z0lbwasTOr", "user": "MariaGarcia", "meta": {"admin": true}}
+{"ts": 1755609850311, "session": "CQHycWFaBQ", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609850393
+{"ts": 1755609850454, "session": "cufwEwgwZc", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609850521, "session": "vmUM52r73j", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609850598, "session": "zzxvtnx5lk", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609850680, "session": "mZelKrEoQi", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609850759, "session": "DOFrY1ZPAx", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609850848, "session": "vTBvmqy7Et", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609850933
+{"ts": 1755609851013, "session": "E0SciT5VHR", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609851095, "session": "ArfdgRV8fY", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609851157, "session": "cHgithZdNa", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609851230, "session": "IZi1eTkPaD", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609851301, "session": "1vZXHqWiVN", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609851381, "session": "TnEV4IQY8J", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609851451, "session": "NQoNtAWSzX", "user": "山田太郎", "meta": {"admin": true}}
+malformed_line_1755609851524
+{"ts": 1755609851591, "session": "A91YBkS3HD", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755609851676, "session": "ESKg9QJ5U0", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609851753, "session": "uSFt8cDdxf", "user": "JeanDupont", "meta": {"admin": true}}
+{"ts": 1755609851811, "session": "e5KbkM3jr8", "user": "Анна", "meta": {"admin": false}}
+{"ts": 1755609851883, "session": "Ooc8vHGklV", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609851948, "session": "lMVVyKSVEJ", "user": "赵钱孙", "meta": {"admin": true}}
+Producer finished. Generated 403 lines.
+DONE
+root@38ff7a4514c0:/app#

@@ -1,0 +1,18 @@
+Processing tasks in duration order (longest first):
++-----+---------------------------+------------+------------+
+|   # | Task Name                 | Duration   | Source     |
++=====+===========================+============+============+
+|   1 | terminal_bench_fifo_ultra | 7m 0s      | calculated |
++-----+---------------------------+------------+------------+
+Total tasks: 1
+Starting harness run
+Run ID: 2025-08-19__22-02-20
+Running task: terminal_bench_fifo_ultra
+Running docker compose command: docker compose -p terminal_bench_fifo_ultra-1-of-1-2025-08-19__22-02-20 -f /Users/mathavansg/terminal-bench/tasks/terminal_bench_fifo_ultra/docker-compose.yaml build
+Running docker compose command: docker compose -p terminal_bench_fifo_ultra-1-of-1-2025-08-19__22-02-20 -f /Users/mathavansg/terminal-bench/tasks/terminal_bench_fifo_ultra/docker-compose.yaml up -d
+Sending keys: ['bash /oracle/solution.sh', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: inf
+Blocking command completed in 32.49s.
+Sending keys: ['bash ', '/tests/run-tests.sh', '; tmux wait -S done', 'Enter'] min_timeout_sec: 0.0 max_timeout_sec: 240.0
+Blocking command completed in 6.25s.
+Running docker compose command: docker compose -p terminal_bench_fifo_ultra-1-of-1-2025-08-19__22-02-20 -f /Users/mathavansg/terminal-bench/tasks/terminal_bench_fifo_ultra/docker-compose.yaml down
+Resolved task terminal_bench_fifo_ultra

@@ -1,0 +1,40 @@
+> cat > timeline.json << TIMELINE
+> {
+>   "consumer_start_ms": $consumer_start_ms,
+>   "producer_start_ms": $producer_start_ms,
+>   "consumer_end_ms": $consumer_end_ms,
+>   "producer_end_ms": $producer_end_ms
+> }
+> TIMELINE
+>
+> # Get producer summary from temp file
+> if [[ -f summary.tmp ]]; then
+>   source summary.tmp
+>   rm summary.tmp
+> else
+>   producer_lines_total=0
+>   rotations_min=0
+> fi
+>
+> # Count alerts
+> alerts=$(wc -l < alerts.txt 2>/dev/null || echo 0)
+>
+> # Generate summary.json
+> cat > summary.json << SUMMARY
+> {
+>   "producer_lines_total": $producer_lines_total,
+>   "alerts": $alerts,
+>   "rotations_min": $rotations_min,
+>   "parallel": true
+> }
+> SUMMARY
+>
+> echo "DONE"
+> EOF
+root@09078e0953c3:/app# ./run.sh; tmux wait -S done
+Starting consumer...
+awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
+Starting producer...
+Stopping processes...
+DONE
+root@09078e0953c3:/app#

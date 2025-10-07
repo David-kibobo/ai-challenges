@@ -1,0 +1,12 @@
+'mkdir -p pipe logs\n'
+'mkfifo pipe/events.fifo\n'
+'./run.sh\n'
+'chmod +x run.sh\n'
+'./run.sh\n'
+'cat consumer.awk\n'
+'C-c\n'
+'./run.sh\n'
+'ps aux | grep run.sh\n'
+'kill $(pgrep -f run.sh) 2>/dev/null || true\n'
+'./run.sh\n'
+['bash ', '/tests/run-tests.sh', 'Enter']

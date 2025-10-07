@@ -1,0 +1,50 @@
+Previous command:
+keystrokes='ls -la summary.tmp\n' is_blocking=True timeout_sec=1.0
+
+The previous command timed out after 1.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+{"ts": 1756120907284, "session": "45RAeB", "user": "user1", "meta": {"admin": true}}
+{"ts": 1756120907310, "session": "B0JB6N", "user": "陈褚卫", "meta": {"admin": true}}
+{"ts": 1756120907341, "session": "TF0AYy", "user": "陈褚卫", "meta": {"admin": true}}
+{"ts": 1756120907368, "session": "wV8w0e", "user": "李周吴", "meta": {"admin": true}}
+ls -la summary.tmp; tmux wait -S done
+{"ts": 1756120907393, "session": "45EJ0U", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1756120907422, "session": "d4Kpxv", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1756120907450, "session": "PxtMDu", "user": "郑王冯", "meta": {"admin": true}}
+{"ts": 1756120907480, "session": "5TAmS8", "user": "user1", "meta": {"admin": true}}
+{"ts": 1756120907507, "session": "8weZ8c", "user": "陈褚卫", "meta": {"admin": true}}
+{"ts": 1756120907536, "session": "wraGdT", "user": "测试用户", "meta": {"admin": true}}
+{"ts": 1756120907562, "session": "w31w5Y", "user": "admin1", "meta": {"admin": true}}
+{"ts": 1756120907590, "session": "eYlohu", "user": "陈褚卫", "meta": {"admin": true}}
+{"ts": 1756120907617, "session": "9eZml2", "user": "测试用户", "meta": {"admin": true}}
+{"ts": 1756120907647, "session": "aNRHKN", "user": "陈褚卫", "meta": {"admin": true}}
+{"ts": 1756120907676, "session": "3f6UvM", "user": "郑王冯", "meta": {"admin": true}}
+{"ts": 1756120907708, "session": "nIQ873", "user": "陈褚卫", "meta": {"admin": true}
+{"ts": 1756120907741, "session": "D7op27", "user": "admin1", "meta": {"admin": true}}
+{"ts": 1756120907778, "session": "mppJTw", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1756120907807, "session": "TJUdDc", "user": "蒋沈韩", "meta": {"admin": true}}
+{"ts": 1756120907844, "session": "LDbaFu", "user": "郑王冯", "meta": {"admin": true}}
+{"ts": 1756120907872, "session": "kUMKq7", "user": "admin2", "meta": {"admin": true}}
+{"ts": 1756120907908, "session": "VbQXWJ", "user": "admin1", "meta": {"admin": true}}
+{"ts": 1756120907944, "session": "eK8MRj", "user": "蒋沈韩", "meta": {"admin": true}}
+{"ts": 1756120907975, "session": "JIIpo3", "user": "admin1", "meta": {"admin": true}}
+{ts: 1756120908007, session: "vherkK", user: "user2", meta: {admin: true}}
+{"ts": 1756120908036, "session": "euI2bV", "user": "user1", "meta": {"admin": true}}
+{"ts": 1756120908067, "session": "kW3BwZ", "user": "蒋沈韩", "meta": {"admin": true}}
+{"ts": 1756120908102, "session": "ySz98a", "user": "测试用户", "meta": {"admin": true}}
+{"ts": 1756120908138, "session": "M5KFKI", "user": "蒋沈韩", "meta": {"admin": true}}
+{"ts": 1756120908169, "session": "UhyFcH", "user": "陈褚卫", "meta": {"admin": true}}
+{"ts": 1756120908203, "session": "zfZBZp", "user": "user2", "meta": {"admin": true}}
+{"ts": 1756120908241, "session": "H4wjK4", "user": "user2", "meta": {"admin": true}}
+{"ts": 1756120908273, "session": "acudjd", "user": "蒋沈韩", "meta": {"admin": true}}
+{"ts": 1756120908304, "session": "hkmFez", "user": "李周吴", "meta": {"admin": true}}
+{"ts": 1756120908333, "session": "uPFVq0", "user": "蒋沈韩", "meta": {"admin": true}}
+{"ts": 1756120908364, "session": "NwHm19", "user": "admin2", "meta": {"admin": true}
+{"ts": 1756120908398, "session": "Jy35ag", "user": "user1", "meta": {"admin": true}}
+{"ts": 1756120908431, "session": "Vx44CN", "user": "李周吴", "meta": {"admin": true}}
+
+ 

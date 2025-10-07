@@ -1,0 +1,40 @@
+>
+> # Create summary.json
+> cat > summary.json << SUMMARY_END
+> {
+>   "producer_lines_total": $producer_lines_total,
+>   "alerts": $alerts,
+>   "rotations_min": $rotations_min,
+>   "parallel": $parallel
+> }
+> SUMMARY_END
+>
+> # Create timeline.json
+> cat > timeline.json << TIMELINE_END
+> {
+>   "consumer_start_ms": $consumer_start_ms,
+>   "producer_start_ms": $producer_start_ms,
+>   "consumer_end_ms": $consumer_end_ms,
+>   "producer_end_ms": $producer_end_ms
+> }
+> TIMELINE_END
+>
+> echo "DONE"
+> EOF
+root@38ff7a4514c0:/app# chmod +x run.sh; tmux wait -S done
+root@38ff7a4514c0:/app# find . -type f | sort; tmux wait -S done
+./consumer.awk
+./producer.sh
+./run.sh
+root@38ff7a4514c0:/app# ls -la pipe/ logs/; tmux wait -S done
+logs/:
+total 8
+drwxr-xr-x 2 root root 4096 Aug 19 13:16 .
+drwxr-xr-x 1 root root 4096 Aug 19 13:17 ..
+
+pipe/:
+total 8
+drwxr-xr-x 2 root root 4096 Aug 19 13:16 .
+drwxr-xr-x 1 root root 4096 Aug 19 13:17 ..
+prw-r--r-- 1 root root    0 Aug 19 13:16 events.fifo
+root@38ff7a4514c0:/app#

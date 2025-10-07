@@ -1,0 +1,40 @@
+> # Check if processes ran in parallel (overlap of at least 12 seconds)
+> # Consumer ran from consumer_start_ms to consumer_end_ms
+> # Producer ran from producer_start_ms to producer_end_ms
+> # We need to check if there was at least 12 seconds of overlap
+> parallel=false
+>
+> # Simple check: if consumer started before producer ended and ran for at least 12s
+> consumer_duration=$((consumer_end_ms - consumer_start_ms))
+> if [ "$consumer_duration" -gt 12000 ]; then
+>     parallel=true
+> fi
+>
+> # Create summary.json
+> cat > summary.json << SUMMARY_END
+> {
+>   "producer_lines_total": $producer_lines_total,
+>   "alerts": $alerts,
+>   "rotations_min": $rotations_min,
+>   "parallel": $parallel
+> }
+> SUMMARY_END
+>
+> # Create timeline.json
+> cat > timeline.json << TIMELINE_END
+> {
+>   "consumer_start_ms": $consumer_start_ms,
+>   "producer_start_ms": $producer_start_ms,
+>   "consumer_end_ms": $consumer_end_ms,
+>   "producer_end_ms": $producer_end_ms
+> }
+> TIMELINE_END
+>
+> echo "DONE"
+> EOF
+root@38ff7a4514c0:/app# chmod +x run.sh; tmux wait -S done
+root@38ff7a4514c0:/app# find . -type f | sort; tmux wait -S done
+./consumer.awk
+./producer.sh
+./run.sh
+root@38ff7a4514c0:/app#

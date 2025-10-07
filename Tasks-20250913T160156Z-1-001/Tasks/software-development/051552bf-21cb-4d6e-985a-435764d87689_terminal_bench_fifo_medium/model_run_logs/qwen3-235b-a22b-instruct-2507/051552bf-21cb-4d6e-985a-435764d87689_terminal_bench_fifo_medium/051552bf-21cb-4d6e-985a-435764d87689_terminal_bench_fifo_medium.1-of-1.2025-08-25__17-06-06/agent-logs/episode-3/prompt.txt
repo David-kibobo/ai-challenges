@@ -1,0 +1,40 @@
+>     producer_lines_total=$(cat logs/events.log* 2>/dev/null | wc -l)
+> fi
+>
+> alerts=$(wc -l < "$ALERTS" 2>/dev/null || echo 0)
+>
+> # Count rotated files >= 1536 bytes
+> rotations_min=0
+> for f in logs/events.log.*; do
+>     if [ -f "$f" ] && [ $(stat -c %s "$f") -ge 1536 ]; then
+>         rotations_min=$((rotations_min + 1))
+>     fi
+> done
+>
+> # Write summary
+> cat > "$SUMMARY" << EOF
+> {
+>   "producer_lines_total": $producer_lines_total,
+>   "alerts": $alerts,
+>   "rotations_min": $rotations_min,
+>   "parallel": true
+> }
+> EOF
+root@8af36de92545:/app#
+root@8af36de92545:/app# # Write timeline
+root@8af36de92545:/app# cat > "$TIMELINE" << EOF
+> {
+>   "consumer_start_ms": $consumer_start_ms,
+>   "producer_start_ms": $producer_start_ms,
+>   "consumer_end_ms": $consumer_end_ms,
+>   "producer_end_ms": $producer_end_ms
+> }
+> EOF
+-bash: : No such file or directory
+root@8af36de92545:/app#
+root@8af36de92545:/app# echo "DONE"
+DONE
+root@8af36de92545:/app# EOF
+-bash: EOF: command not found
+root@8af36de92545:/app# chmod +x run.sh; tmux wait -S done
+root@8af36de92545:/app#

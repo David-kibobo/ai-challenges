@@ -1,0 +1,40 @@
+>     elapsed=$((current_time_sec - start_time))
+>
+>     if [[ $elapsed -gt $TOTAL_DURATION ]]; then
+>         break
+>     fi
+>
+>     # Current timestamp in milliseconds
+>     current_time_ms=$(date +%s%3N)
+>
+>     # Random user and session
+>     user="${USERS[$((RANDOM % ${#USERS[@]}))]}"
+>     session="${SESSIONS[$((RANDOM % ${#SESSIONS[@]}))]}"
+>
+>     # 5-10% malformed lines
+>     if [[ $((RANDOM % 100)) -lt 8 ]]; then
+>         # Malformed JSON
+>         line="{\"ts\": $current_time_ms, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true"
+>     else
+>         # Valid JSON with higher chance of admin=true to trigger alerts
+>         admin_flag=$([[ $((RANDOM % 3)) -eq 0 ]] && echo "false" || echo "true")
+>         line="{\"ts\": $current_time_ms, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": $admin_flag}}"
+>     fi
+>
+>     # Output to stdout and log
+>     echo "$line"
+>     echo "$line" >> "$LOG_FILE"
+>
+>     line_count=$((line_count + 1))
+>
+>     # Rotate if needed
+>     rotate_logs
+>
+>     # Random delay between 40-70ms (correct format)
+>     delay_ms=$((RANDOM % (MAX_DELAY_MS - MIN_DELAY_MS + 1) + MIN_DELAY_MS))
+>     sleep "0.${delay_ms}"
+> done
+>
+> echo "Producer finished. Total lines: $line_count" >&2
+> EOF
+root@e0d46a4841cc:/app#

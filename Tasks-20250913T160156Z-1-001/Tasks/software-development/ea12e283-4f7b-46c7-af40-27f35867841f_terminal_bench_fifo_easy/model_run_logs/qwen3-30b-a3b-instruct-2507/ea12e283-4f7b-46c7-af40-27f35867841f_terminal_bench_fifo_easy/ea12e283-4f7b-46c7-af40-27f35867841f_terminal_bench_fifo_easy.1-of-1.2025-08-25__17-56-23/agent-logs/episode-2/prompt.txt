@@ -1,0 +1,50 @@
+Previous command:
+keystrokes='./run.sh\n' is_blocking=True timeout_sec=30.0
+
+The previous command timed out after 30.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+root@a8ab0804609c:/app# mkdir -p pipe logs; tmux wait -S done
+root@a8ab0804609c:/app# mkfifo pipe/events.fifo; tmux wait -S done
+root@a8ab0804609c:/app# ./run.sh; tmux wait -S done
+-bash: ./run.sh: Permission denied
+root@a8ab0804609c:/app# chmod +x run.sh; tmux wait -S done
+root@a8ab0804609c:/app# ./run.sh; tmux wait -S done
+awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 

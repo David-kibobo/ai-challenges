@@ -1,0 +1,40 @@
+malformed_line_1755609656535
+{"ts": 1755609656609, "session": "ySoiZqMM3n", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609656694, "session": "6RcVpJJMep", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609656749, "session": "nM1Q8m2Tdi", "user": "山田太郎", "meta": {"admin": true}}
+{"ts": 1755609656818, "session": "9sXkOEN7g3", "user": "JeanDupont", "meta": {"admin": false}}
+{"ts": 1755609656895, "session": "5c6uMPqXaS", "user": "赵钱孙", "meta": {"admin": false}}
+{"ts": 1755609656962, "session": "kumrtkgWSb", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609657036, "session": "RsH5N3Ny9K", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609657097, "session": "E7UqyalwPz", "user": "山田太郎", "meta": {"admin": false}}
+{"ts": 1755609657168, "session": "hcN8Gc6vEZ", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609657236, "session": "zoL6uAW43R", "user": "Анна", "meta": {"admin": true}}
+malformed_line_1755609657308
+{"ts": 1755609657364, "session": "Lai9uVJdBg", "user": "محمدعلي", "meta": {"admin": true}}
+{"ts": 1755609657431, "session": "A4QDob4GX1", "user": "张伟", "meta": {"admin": true}}
+{"ts": 1755609657520, "session": "ToxW344CVU", "user": "张伟", "meta": {"admin": false}}
+{"ts": 1755609657599, "session": "ru2xR73oP0", "user": "JohnDoe", "meta": {"admin": true}}
+{"ts": 1755609657658, "session": "xg0rOVrkQh", "user": "محمدعلي", "meta": {"admin": true}}
+malformed_line_1755609657718
+{"ts": 1755609657795, "session": "zj0fzwXB4r", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609657858, "session": "nuIJqtZp0R", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609657922, "session": "uZ7Jak0Jz4", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609657992, "session": "vjwskqYl60", "user": "山田太郎", "meta": {"admin": true}}
+Producer finished. Generated 406 lines.
+DONE
+root@38ff7a4514c0:/app# ls -la; tmux wait -S done
+total 40
+drwxr-xr-x 1 root root 4096 Aug 19 13:21 .
+drwxr-xr-x 1 root root 4096 Aug 19 13:15 ..
+-rw-r--r-- 1 root root   69 Aug 19 13:20 alerts.txt
+-rwxr-xr-x 1 root root 2604 Aug 19 13:18 consumer.awk
+drwxr-xr-x 2 root root 4096 Aug 19 13:20 logs
+drwxr-xr-x 2 root root 4096 Aug 19 13:16 pipe
+-rwxr-xr-x 1 root root 2347 Aug 19 13:20 producer.sh
+-rw-r--r-- 1 root root    0 Aug 19 13:20 run.lock
+-rwxr-xr-x 1 root root 2548 Aug 19 13:17 run.sh
+-rw-r--r-- 1 root root   91 Aug 19 13:21 summary.json
+-rw-r--r-- 1 root root  151 Aug 19 13:21 timeline.json
+root@38ff7a4514c0:/app# cat alerts.txt; tmux wait -S done
+ALERT محمدعلي 10 admin-sessions in 10s at 2025-08-19T13:20:56
+root@38ff7a4514c0:/app#

@@ -1,0 +1,12 @@
+{
+    "state_analysis": "Let's check the log files to see if rotation occurred.",
+    "explanation": "Checking the logs directory to see if log rotation occurred.",
+    "commands": [
+        {
+            "keystrokes": "ls -la logs/\n",
+            "is_blocking": true,
+            "timeout_sec": 2
+        }
+    ],
+    "is_task_complete": false
+}

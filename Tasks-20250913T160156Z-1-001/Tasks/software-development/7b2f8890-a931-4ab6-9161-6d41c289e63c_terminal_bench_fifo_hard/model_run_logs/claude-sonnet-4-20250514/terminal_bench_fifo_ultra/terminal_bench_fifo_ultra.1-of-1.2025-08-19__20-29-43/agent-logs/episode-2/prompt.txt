@@ -1,0 +1,40 @@
+>
+> while true; do
+>     current_time=$(date +%s%3N)
+>     elapsed=$((current_time - start_time))
+>
+>     if [[ $elapsed -gt $((TOTAL_DURATION * 1000)) ]]; then
+>         break
+>     fi
+>
+>     # Random user and session
+>     user="${USERS[$((RANDOM % ${#USERS[@]}))]}"
+>     session="${SESSIONS[$((RANDOM % ${#SESSIONS[@]}))]}"
+>
+>     # 5-10% malformed lines
+>     if [[ $((RANDOM % 100)) -lt 8 ]]; then
+>         # Malformed JSON
+>         line="{\"ts\": $current_time, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true"
+>     else
+>         # Valid JSON with random admin flag
+>         admin_flag=$([[ $((RANDOM % 2)) -eq 0 ]] && echo "true" || echo "false")
+>         line="{\"ts\": $current_time, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": $admin_flag}}"
+>     fi
+>
+>     # Output to stdout and log
+>     echo "$line"
+>     echo "$line" >> "$LOG_FILE"
+>
+>     line_count=$((line_count + 1))
+>
+>     # Rotate if needed
+>     rotate_logs
+>
+>     # Random delay between 40-70ms
+>     delay=$((RANDOM % (MAX_DELAY - MIN_DELAY + 1) + MIN_DELAY))
+>     sleep "0.0$delay"
+> done
+>
+> echo "Producer finished. Total lines: $line_count" >&2
+> EOF
+root@e0d46a4841cc:/app#

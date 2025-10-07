@@ -1,0 +1,40 @@
+root@09078e0953c3:/app# ls -la; tmux wait -S done
+total 48
+drwxr-xr-x 1 root root 4096 Aug 25 11:06 .
+drwxr-xr-x 1 root root 4096 Aug 25 11:18 ..
+-rw-r--r-- 1 root root 6148 Aug 25 11:04 .DS_Store
+-rw-rw-r-- 1 root root  371 Aug 25 11:04 Dockerfile
+-rw-r--r-- 1 root root 1961 Aug 25 11:04 consumer.awk
+-rw-rw-r-- 1 root root  432 Aug 25 11:04 docker-compose.yaml
+-rw-rw-r-- 1 root root   68 Aug 25 11:04 run-tests.sh
+-rw-rw-r-- 1 root root 4755 Aug 25 11:04 solution.sh
+-rw-rw-r-- 1 root root 3178 Aug 25 11:04 task.yaml
+drwxr-xr-x 2 root root 4096 Aug 25 11:04 tests
+root@09078e0953c3:/app#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

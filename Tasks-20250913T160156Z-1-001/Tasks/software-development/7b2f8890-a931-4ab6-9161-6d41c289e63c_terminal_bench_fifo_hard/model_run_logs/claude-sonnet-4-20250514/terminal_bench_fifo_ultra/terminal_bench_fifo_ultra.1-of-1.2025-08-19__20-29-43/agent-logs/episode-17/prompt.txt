@@ -1,0 +1,40 @@
+  "producer_start_ms": 1755615859429,
+  "consumer_end_ms": 1755615891440,
+  "producer_end_ms": 1755615891438
+}
+root@e0d46a4841cc:/app# ls -la logs/; tmux wait -S done
+total 64
+drwxr-xr-x 2 root root  4096 Aug 19 15:04 .
+drwxr-xr-x 1 root root  4096 Aug 19 15:04 ..
+-rw-r--r-- 1 root root  6668 Aug 19 15:04 events.log
+-rw-r--r-- 1 root root 12028 Aug 19 15:04 events.log.1
+-rw-r--r-- 1 root root 12067 Aug 19 15:04 events.log.2
+-rw-r--r-- 1 root root 12051 Aug 19 15:04 events.log.3
+-rw-r--r-- 1 root root 12074 Aug 19 15:04 events.log.4
+root@e0d46a4841cc:/app# cat alerts.txt 2>/dev/null || echo 'No alerts file'; tmux wait -S done
+No alerts file
+root@e0d46a4841cc:/app# wc -l logs/events.log*; tmux wait -S done
+   76 logs/events.log
+  137 logs/events.log.1
+  138 logs/events.log.2
+  137 logs/events.log.3
+  138 logs/events.log.4
+  626 total
+root@e0d46a4841cc:/app# head -5 logs/events.log.1; tmux wait -S done
+{"ts": 1755615883765, "session": "ghi789", "user": "蒋沈韩", "meta": {"admin": true}}
+{"ts": 1755615883789, "session": "stu901", "user": "charlie", "meta": {"admin": true}}
+{"ts": 1755615883820, "session": "admin2", "user": "杨朱秦", "meta": {"admin": true}}
+{"ts": 1755615883847, "session": "yz567", "user": "李周吴", "meta": {"admin": false}}
+{"ts": 1755615883875, "session": "admin4", "user": "郑王冯", "meta": {"admin": true
+root@e0d46a4841cc:/app# tail -5 logs/events.log.1; tmux wait -S done
+{"ts": 1755615887679, "session": "ghi789", "user": "郑王冯", "meta": {"admin": false}}
+{"ts": 1755615887709, "session": "jkl012", "user": "bob", "meta": {"admin": true}}
+{"ts": 1755615887741, "session": "abc123", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755615887766, "session": "admin1", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1755615887795, "session": "jkl012", "user": "alice", "meta": {"admin": true}}
+root@e0d46a4841cc:/app# echo '{"ts": 1755615883765, "session": "ghi789", "user": "赵钱孙", "meta": {"admin": true}}
+> {"ts": 1755615883766, "session": "abc123", "user": "赵钱孙", "meta": {"admin": true}}
+> {"ts": 1755615883767, "session": "def456", "user": "赵钱孙", "meta": {"admin": true}}' | awk -f consumer.awk; tmux wait -S done
+root@e0d46a4841cc:/app# cat alerts.txt 2>/dev/null || echo 'Still no alerts'; tmux wait -S done
+Still no alerts
+root@e0d46a4841cc:/app#

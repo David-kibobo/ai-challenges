@@ -1,0 +1,40 @@
+Running for 32 seconds...
+Producer finished. Total lines: 442
+Stopping producer...
+Stopping consumer...
+DONE
+Cleaning up processes...
+root@e0d46a4841cc:/app# ls -la; tmux wait -S done
+total 36
+drwxr-xr-x 1 root root 4096 Aug 19 15:01 .
+drwxr-xr-x 1 root root 4096 Aug 19 14:59 ..
+-rw-r--r-- 1 root root 3209 Aug 19 15:00 consumer.awk
+drwxr-xr-x 2 root root 4096 Aug 19 15:00 logs
+drwxr-xr-x 2 root root 4096 Aug 19 15:00 pipe
+-rwxr-xr-x 1 root root 2183 Aug 19 15:00 producer.sh
+-rw-r--r-- 1 root root    0 Aug 19 15:00 run.lock
+-rwxr-xr-x 1 root root 2497 Aug 19 15:00 run.sh
+-rw-r--r-- 1 root root   91 Aug 19 15:01 summary.json
+-rw-r--r-- 1 root root  151 Aug 19 15:01 timeline.json
+root@e0d46a4841cc:/app# cat summary.json; tmux wait -S done
+{
+  "producer_lines_total": 442,
+  "alerts": 0,
+  "rotations_min": 0,
+  "parallel": true
+}
+root@e0d46a4841cc:/app# cat timeline.json; tmux wait -S done
+{
+  "consumer_start_ms": 1755615654366,
+  "producer_start_ms": 1755615654871,
+  "consumer_end_ms": 1755615686883,
+  "producer_end_ms": 1755615686882
+}
+root@e0d46a4841cc:/app# ls -la logs/; tmux wait -S done
+total 48
+drwxr-xr-x 2 root root  4096 Aug 19 15:00 .
+drwxr-xr-x 1 root root  4096 Aug 19 15:01 ..
+-rw-r--r-- 1 root root 38886 Aug 19 15:01 events.log
+root@e0d46a4841cc:/app# wc -l logs/events.log*; tmux wait -S done
+442 logs/events.log
+root@e0d46a4841cc:/app#

@@ -1,0 +1,40 @@
+root@9b6e34b0dc97:/app# ls -la; tmux wait -S done
+total 24
+drwxr-xr-x 1 root root 4096 Aug 25 12:09 .
+drwxr-xr-x 1 root root 4096 Aug 25 12:20 ..
+-rw-r--r-- 1 root root 1961 Aug 25 12:09 consumer.awk
+-rwxr-xr-x 1 root root   81 Aug 25 12:09 consumer.sh
+-rw-r--r-- 1 root root 2159 Aug 25 12:09 producer.py
+-rw-r--r-- 1 root root 1865 Aug 25 12:09 run.sh
+root@9b6e34b0dc97:/app# mkdir -p pipe logs; tmux wait -S done
+root@9b6e34b0dc97:/app#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

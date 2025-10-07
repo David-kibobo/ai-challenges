@@ -1,0 +1,40 @@
+>     if [[ $((RANDOM % 100)) -lt 8 ]]; then
+>         # Malformed JSON
+>         line="{\"ts\": $current_time_ms, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true"
+>     else
+>         # Valid JSON with higher chance of admin=true to trigger alerts
+>         admin_flag=$([[ $((RANDOM % 3)) -eq 0 ]] && echo "false" || echo "true")
+>         line="{\"ts\": $current_time_ms, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": $admin_flag}}"
+>     fi
+>
+>     # Output to stdout and log
+>     echo "$line"
+>     echo "$line" >> "$LOG_FILE"
+>
+>     line_count=$((line_count + 1))
+>
+>     # Rotate if needed
+>     rotate_logs
+>
+>     # Correct millisecond delay: 10-20ms = 0.010-0.020 seconds
+>     delay_ms=$((RANDOM % (MAX_DELAY_MS - MIN_DELAY_MS + 1) + MIN_DELAY_MS))
+>     # Convert to proper decimal format: 10ms = 0.010s
+>     printf -v delay_sec "0.%03d" "$delay_ms"
+>     sleep "$delay_sec"
+> done
+>
+> echo "Producer finished. Total lines: $line_count" >&2
+> EOF
+root@e0d46a4841cc:/app# rm -f alerts.txt summary.json timeline.json logs/events.log* run.lock test_consumer.awk; tmux wait -S done
+root@e0d46a4841cc:/app# ./run.sh; tmux wait -S done
+Starting pipeline...
+Starting consumer...
+Starting producer...
+Both processes started. Consumer PID: 12712, Producer PID: 12722
+Running for 32 seconds...
+Producer finished. Total lines: 1316
+Stopping producer...
+Stopping consumer...
+DONE
+Cleaning up processes...
+root@e0d46a4841cc:/app#

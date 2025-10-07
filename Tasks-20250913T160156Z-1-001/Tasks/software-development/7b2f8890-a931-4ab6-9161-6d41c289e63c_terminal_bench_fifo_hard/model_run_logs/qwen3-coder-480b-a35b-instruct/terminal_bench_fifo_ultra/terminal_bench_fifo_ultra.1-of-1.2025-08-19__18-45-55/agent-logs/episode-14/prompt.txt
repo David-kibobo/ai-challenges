@@ -1,0 +1,40 @@
+{"ts": 1755609472968, "session": "fyByv8kLUv", "user": "محمدعلي", "meta": {"admin": true}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472971, "session": "H4fYFMZrZy", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472974, "session": "E2ZD9Sy2X1", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472977, "session": "R67xjhi75l", "user": "赵钱孙", "meta": {"admin": true}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472981, "session": "eLWLBdCMym", "user": "赵钱孙", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472984, "session": "50fERLgmgb", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+malformed_line_1755609472987
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472989, "session": "2MCUAURnQt", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472992, "session": "eCystO7qtW", "user": "MariaGarcia", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472995, "session": "4TdOwcxTsJ", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472999, "session": "gRXUcO0KTE", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+Producer finished. Generated 9069 lines.
+DONE
+root@38ff7a4514c0:/app# ls -la; tmux wait -S done
+total 40
+drwxr-xr-x 1 root root 4096 Aug 19 13:17 .
+drwxr-xr-x 1 root root 4096 Aug 19 13:15 ..
+-rw-r--r-- 1 root root   64 Aug 19 13:17 alerts.txt
+-rwxr-xr-x 1 root root 2614 Aug 19 13:16 consumer.awk
+drwxr-xr-x 2 root root 4096 Aug 19 13:17 logs
+drwxr-xr-x 2 root root 4096 Aug 19 13:16 pipe
+-rwxr-xr-x 1 root root 2158 Aug 19 13:16 producer.sh
+-rw-r--r-- 1 root root    0 Aug 19 13:17 run.lock
+-rwxr-xr-x 1 root root 2548 Aug 19 13:17 run.sh
+-rw-r--r-- 1 root root   92 Aug 19 13:17 summary.json
+-rw-r--r-- 1 root root  151 Aug 19 13:17 timeline.json
+root@38ff7a4514c0:/app# cat alerts.txt; tmux wait -S done
+ALERT Анна 105 admin-sessions in 10s at 2025-08-19T13:17:44
+root@38ff7a4514c0:/app#

@@ -1,0 +1,40 @@
+> while [ $(date +%s%3N) -lt $end_time ]; do
+>     # Random delay between 40-70ms
+>     sleep $(shuf -i 40-70 -n 1 | awk '{print $1/1000}')
+>
+>     # Randomly decide if this line is malformed (5-10%)
+>     if [ $(shuf -i 1-100 -n 1) -le 8 ]; then
+>         # Malformed line - missing quotes, brackets, etc.
+>         case $(shuf -i 1-3 -n 1) in
+>             1) echo "{ts: $(get_timestamp), session: abc$(shuf -i 100-999 -n 1), user: ${USERS[RANDOM % ${#USERS[@]}]}, meta: {admin: true}}" ;;
+>             2) echo "{\"ts\": $(get_timestamp), \"session\": abc$(shuf -i 100-999 -n 1), \"user\": \"${USERS[RANDOM % ${#USERS[@]}]}\", \"meta\": {\"admin\":
+true}" ;;
+>             3) echo "{\"ts\": $(get_timestamp), \"session\": abc$(shuf -i 100-999 -n 1), \"user\": \"${USERS[RANDOM % ${#USERS[@]}]}\", \"meta\": {\"admin\":
+true}}" | rev ;;
+>         esac
+>     else
+>         # Valid line
+>         USER="${USERS[RANDOM % ${#USERS[@]}]}"
+>         SESSION="abc$(shuf -i 100-999 -n 1)"
+>         TS=$(get_timestamp)
+>         ADMIN="false"
+>         if [ $(shuf -i 1-100 -n 1) -le 60 ]; then
+>             ADMIN="true"
+>         fi
+>         echo "{\"ts\": $TS, \"session\": \"$SESSION\", \"user\": \"$USER\", \"meta\": {\"admin\": $ADMIN}}"
+>     fi | tee -a "$LOG_FILE"
+>
+>     # Check log size and rotate if necessary
+>     if [ -f "$LOG_FILE" ] && [ $(stat -c %s "$LOG_FILE") -gt $MAX_SIZE ]; then
+>         rotate_logs
+>     fi
+>
+>     line_count=$((line_count + 1))
+> done
+>
+> # Output final count for supervisor
+> echo "$line_count"
+> EOF
+root@3bb2812d406a:/app#
+root@3bb2812d406a:/app# chmod +x producer.sh; tmux wait -S done
+root@3bb2812d406a:/app#

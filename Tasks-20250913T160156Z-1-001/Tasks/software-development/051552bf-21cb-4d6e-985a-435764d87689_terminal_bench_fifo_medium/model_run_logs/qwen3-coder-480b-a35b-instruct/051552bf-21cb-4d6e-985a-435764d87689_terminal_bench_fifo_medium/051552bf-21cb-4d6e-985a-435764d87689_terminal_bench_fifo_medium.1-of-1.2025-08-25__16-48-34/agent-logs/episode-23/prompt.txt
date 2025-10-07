@@ -1,0 +1,50 @@
+Previous command:
+keystrokes='C-c\n' is_blocking=True timeout_sec=1.0
+
+The previous command timed out after 1.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+{"ts": 1756120909676, "session": "rCDjZd", "user": "admin2", "meta": {"admin": true}}
+{"ts": 1756120909707, "session": "5BTEFi", "user": "李周吴", "meta": {"admin": true}}
+{"ts": 1756120909742, "session": "JnVZhe", "user": "测试用户", "meta": {"admin": true}}
+{"ts": 1756120909779, "session": "bBZE3s", "user": "测试用户", "meta": {"admin": true}}
+{"ts": 1756120909812, "session": "SC94Go", "user": "user2", "meta": {"admin": true}}
+{"ts": 1756120909841, "session": "2Q3MxZ", "user": "admin2", "meta": {"admin": true}
+{"ts": 1756120909873, "session": "zdaY3N", "user": "郑王冯", "meta": {"admin": true}}
+{"ts": 1756120909908, "session": "YMMvqk", "user": "测试用户", "meta": {"admin": true}}
+{"ts": 1756120909944, "session": "pWm4MK", "user": "user2", "meta": {"admin": true}}
+{"ts": 1756120909974, "session": "16xFZJ", "user": "蒋沈韩", "meta": {"admin": true}}
+{"ts": 1756120910007, "session": "LhktxG", "user": "admin2", "meta": {"admin": true}}
+{"ts": 1756120910038, "session": "q88Gkx", "user": "郑王冯", "meta": {"admin": true}}
+{"ts": 1756120910071, "session": "NJ9Uhg", "user": "李周吴", "meta": {"admin": true}}
+{"ts": 1756120910103, "session": "S9WiAq", "user": "admin1", "meta": {"admin": true}}
+{"ts": 1756120910136, "session": "jscdBm", "user": "李周吴", "meta": {"admin": true}}
+{"ts": 1756120910174, "session": "UstQbc", "user": "测试用户", "meta": {"admin": true}}
+{"ts": 1756120910206, "session": "KYqLRh", "user": "郑王冯", "meta": {"admin": true}}
+{"ts": 1756120910239, "session": "GVA59V", "user": "陈褚卫", "meta": {"admin": true}}
+{"ts": 1756120910269, "session": "zCxBzn", "user": "郑王冯", "meta": {"admin": true}}
+{"ts": 1756120910298, "session": "3WsueY", "user": "李周吴", "meta": {"admin": true}}
+{"ts": 1756120910331, "session": "6CH3aB", "user": "测试用户", "meta": {"admin": true}}
+{"ts": 1756120910366, "session": "CtOdyy", "user": "陈褚卫", "meta": {"admin": true}}
+{ts: 1756120910398, session: "e4IEh6", user: "陈褚卫", meta: {admin: true}}
+{"ts": 1756120910428, "session": "OyB0su", "user": "陈褚卫", "meta": {"admin": true}}
+{"ts": 1756120910462, "session": "ZhJXoW", "user": "测试用户", "meta": {"admin": true}}
+{"ts": 1756120910499, "session": "835C74", "user": "admin2", "meta": {"admin": true}}
+{"ts": 1756120910532, "session": "7EN713", "user": "测试用户", "meta": {"admin": true}}
+{"ts": 1756120910570, "session": "z0SZRT", "user": "admin1", "meta": {"admin": true}}
+{"ts": 1756120910600, "session": "FfE4KB", "user": "李周吴", "meta": {"admin": true}}
+{"ts": 1756120910630, "session": "l9Md9L", "user": "admin2", "meta": {"admin": true}}
+{"ts": 1756120910659, "session": "VSaCc2", "user": "郑王冯", "meta": {"admin": true}}
+{"ts": 1756120910693, "session": "frybGr", "user": "user2", "meta": {"admin": true}}
+{"ts": 1756120910721, "session": "ndK8KU", "user": "赵钱孙", "meta": {"admin": true}}
+{"ts": 1756120910752, "session": "mQxB3y", "user": "user2", "meta": {"admin": true}}
+{"ts": 1756120910780, "session": "LkB5u1", "user": "郑王冯", "meta": {"admin": true}}
+^C; tmux wait -S done
+
+root@09078e0953c3:/app# ; tmux wait -S done
+-bash: syntax error near unexpected token `;'
+root@09078e0953c3:/app#
+ 

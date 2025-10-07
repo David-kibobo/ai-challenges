@@ -1,0 +1,192 @@
+root@71d33cf7f63a:/app# mkdir -p pipe logs; tmux wait -S done
+root@71d33cf7f63a:/app# mkfifo pipe/events.fifo; tmux wait -S done
+root@71d33cf7f63a:/app# cat > consumer.awk << 'EOF'
+> BEGIN {
+>     window_size = 10000 # 10 seconds in ms
+>     FS = "\n"
+> }
+> {
+>     if (NF == 0) next
+>     gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0)
+>     if (!match($0, /^\{.*\}$/)) continue
+>     if (!match($0, /"meta":\{.*"admin":true/)) continue
+>
+>     # Extract user
+>     match($0, /"user":\s*"([^"]*)",/, usr)
+>     user = usr[1]
+>
+>     # Extract timestamp
+>     match($0, /"ts":\s*(\d+)/, ts)
+>     ts_ms = ts[1] + 0
+>
+>     # Skip if not valid timestamp
+>     if (ts_ms <= 0) continue
+>
+>     # Add session ID: user + session
+>     match($0, /"session":\s*"([^"]*)",/, sess)
+>     session_id = user "_" sess[1]
+>
+>     # Track sessions per user
+>     if (!(user in user_sessions)) {
+>         user_sessions[user] = ""
+>         user_count[user] = 0
+>     }
+>
+>     # Add session to set
+>     if (user_sessions[user] !~ ("\\b" session_id "\\b")) {
+>         user_sessions[user] = user_sessions[user] session_id " "
+>         user_count[user] += 1
+>     }
+>
+>     # Update timestamp
+>     last_seen[user] = ts_ms
+>
+>     # Evict old sessions (older than 10s)
+>     now = ts_ms
+>     for (u in user_sessions) {
+>         if (now - last_seen[u] > window_size) {
+>             delete user_sessions[u]
+>             delete user_count[u]
+>             delete last_seen[u]
+>         }
+>     }
+>
+>     # Check if user has ≥3 distinct admin sessions in last 10s
+>     if (user_count[user] >= 3) {
+>         # Dedup alert only once per user within window
+>         if (!alerted[user]) {
+>             alerted[user] = 1
+>             printf "ALERT %s %d admin-sessions in 10s at %s\n", user, user_count[user], strftime("%Y-%m-%dT%H:%M:%SZ", ts_ms/1000) > "alerts.txt"
+>         }
+>     }
+> }
+> END {
+>     close("alerts.txt")
+> }
+> EOF
+root@71d33cf7f63a:/app# cat > run.sh << 'EOF'
+> #!/bin/bash
+> set -euo pipefail
+>
+> LOCK_FILE="run.lock"
+> FIFO="pipe/events.fifo"
+> LOG_FILE="logs/events.log"
+> MAX_ROTATIONS=3
+>
+> # Ensure FIFO exists
+> if [[ ! -p "$FIFO" ]]; then
+>     mkfifo "$FIFO"
+> fi
+>
+> # Use flock for idempotency
+> flock -x "$LOCK_FILE" -c "
+>     # Start consumer first
+>     cat "$FIFO" | awk -f consumer.awk &
+>     CONSUMER_PID=$!
+>
+>     # Wait a moment for consumer to start
+>     sleep 0.5
+>
+>     # Start producer
+>     (
+>         start_time=$(date +%s%3N)
+>         echo \"producer_start_ms\": $start_time >> timeline.json
+>
+>         # Generate events
+>         for i in $(seq 1 1200); do
+>             # Random delay between 40-70ms
+>             sleep $(( (RANDOM % 31) + 40 ))e-3
+>
+>             # Decide if line is malformed
+>             if (( RANDOM % 100 < 10 )); then
+>                 # Malformed line: missing key, extra comma, invalid JSON
+>                 case $((RANDOM % 4)) in
+>                     0) echo '{"ts": 123456789}' ;;
+>                     1) echo '{"ts": 123456789,}' ;;
+>                     2) echo '{"ts": 123456789, "user": "张三"}' ;;
+>                     3) echo '{"ts": 123456789, "user": "李四", "meta": {"admin": true}}' ;;
+>                 esac
+>             else
+>                 # Good line with Unicode user
+>                 case $((RANDOM % 3)) in
+>                     0) user="赵钱孙" ;;
+>                     1) user="王五" ;;
+>                     2) user="李四" ;;
+>                 esac
+>
+>                 # Session ID
+>                 session_id=$(printf '%06x' $((RANDOM % 1000000)))
+>
+>                 # Admin status
+>                 if (( RANDOM % 2 == 0 )); then
+>                     admin=true
+>                 else
+>                     admin=false
+>                 fi
+>
+>                 # Timestamp
+>                 ts=$(($(date +%s%3N) - 10000)) # Simulate past
+>
+>                 # Output NDJSON
+>                 echo "{\"ts\": $ts, \"session\": \"$session_id\", \"user\": \"$user\", \"meta\": {\"admin\": $admin}}"
+>             fi
+>
+>             # Append to log file
+>             echo "$(tail -n 1)" >> "$LOG_FILE"
+>
+>             # Rotate log every ~100 lines
+>             if (( i % 100 == 0 )); then
+>                 for j in $(seq $MAX_ROTATIONS -1 1); do
+>                     prev=$((j - 1))
+>                     if [[ -f "$LOG_FILE.$prev" ]]; then
+>                         mv "$LOG_FILE.$prev" "$LOG_FILE.$j"
+>                     fi
+>                 done
+>                 if [[ -f "$LOG_FILE" ]]; then
+>                     mv "$LOG_FILE" "$LOG_FILE.1"
+>                 fi
+>             fi
+>         done
+>
+>         end_time=$(date +%s%3N)
+>         echo \"producer_end_ms\": $end_time >> timeline.json
+>
+>         # Kill consumer after producer ends
+>         kill $CONSUMER_PID 2>/dev/null || true
+>     ) &
+>     PRODUCER_PID=$!
+>
+>     # Wait until both finish or timeout
+>     wait $PRODUCER_PID
+>
+>     # Cleanup
+>     rm -f "$FIFO"
+>
+>     # Write summary
+>     total_lines=$(wc -l < <(grep -v '^$' logs/events.log | grep -v '^{' | grep -v 'malformed' | wc -l) 2>/dev/null || echo 0)
+>     total_lines=$(($total_lines + $(grep -c '^{' logs/events.log | tail -n 1)))
+>
+>     alerts=$(wc -l < alerts.txt 2>/dev/null || echo 0)
+>     rotations=$(ls -1 logs/events.log.* 2>/dev/null | wc -l)
+>
+>     cat > summary.json << EOF
+> {
+>   \"producer_lines_total\": $total_lines,
+>   \"alerts\": $alerts,
+>   \"rotations_min\": $rotations,
+>   \"parallel\": true
+> }
+> EOF
+root@71d33cf7f63a:/app#
+root@71d33cf7f63a:/app#     # Finalize timeline
+root@71d33cf7f63a:/app#     if [[ -f "timeline.json" ]]; then
+>         jq -c . < timeline.json > timeline.json.tmp && mv timeline.json.tmp timeline.json
+>     fi
+root@71d33cf7f63a:/app#
+root@71d33cf7f63a:/app#     echo \"DONE\"
+"DONE"
+root@71d33cf7f63a:/app# "
+> EOF
+> chmod +x run.sh; tmux wait -S done
+> ls -l alerts.txt logs/events.log* summary.json timeline.json; tmux wait -S done
+>

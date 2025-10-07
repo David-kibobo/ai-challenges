@@ -1,0 +1,40 @@
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472945, "session": "ZBbyiRPkOW", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472948, "session": "P7Uf8D05ua", "user": "MariaGarcia", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472951, "session": "UOn6Nvk8v5", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472955, "session": "BGIJzskd4Q", "user": "赵钱孙", "meta": {"admin": true}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472958, "session": "cidEZB9a0b", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472961, "session": "M2lR7CQuhi", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472964, "session": "BpaT97uRNj", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472968, "session": "fyByv8kLUv", "user": "محمدعلي", "meta": {"admin": true}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472971, "session": "H4fYFMZrZy", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472974, "session": "E2ZD9Sy2X1", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472977, "session": "R67xjhi75l", "user": "赵钱孙", "meta": {"admin": true}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472981, "session": "eLWLBdCMym", "user": "赵钱孙", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472984, "session": "50fERLgmgb", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+malformed_line_1755609472987
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472989, "session": "2MCUAURnQt", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472992, "session": "eCystO7qtW", "user": "MariaGarcia", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472995, "session": "4TdOwcxTsJ", "user": "Анна", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+{"ts": 1755609472999, "session": "gRXUcO0KTE", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 72: usleep: command not found
+Producer finished. Generated 9069 lines.
+DONE
+root@38ff7a4514c0:/app#

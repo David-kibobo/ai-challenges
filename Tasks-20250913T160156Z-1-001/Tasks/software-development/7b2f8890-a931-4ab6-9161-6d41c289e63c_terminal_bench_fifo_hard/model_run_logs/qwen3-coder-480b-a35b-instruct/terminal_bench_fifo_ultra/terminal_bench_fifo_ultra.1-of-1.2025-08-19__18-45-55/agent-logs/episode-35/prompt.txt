@@ -1,0 +1,40 @@
+{"ts": 1755609657858, "session": "nuIJqtZp0R", "user": "Анна", "meta": {"admin": true}}
+{"ts": 1755609657922, "session": "uZ7Jak0Jz4", "user": "MariaGarcia", "meta": {"admin": false}}
+{"ts": 1755609657992, "session": "vjwskqYl60", "user": "山田太郎", "meta": {"admin": true}}
+Producer finished. Generated 406 lines.
+DONE
+root@38ff7a4514c0:/app# ls -la; tmux wait -S done
+total 40
+drwxr-xr-x 1 root root 4096 Aug 19 13:21 .
+drwxr-xr-x 1 root root 4096 Aug 19 13:15 ..
+-rw-r--r-- 1 root root   69 Aug 19 13:20 alerts.txt
+-rwxr-xr-x 1 root root 2604 Aug 19 13:18 consumer.awk
+drwxr-xr-x 2 root root 4096 Aug 19 13:20 logs
+drwxr-xr-x 2 root root 4096 Aug 19 13:16 pipe
+-rwxr-xr-x 1 root root 2347 Aug 19 13:20 producer.sh
+-rw-r--r-- 1 root root    0 Aug 19 13:20 run.lock
+-rwxr-xr-x 1 root root 2548 Aug 19 13:17 run.sh
+-rw-r--r-- 1 root root   91 Aug 19 13:21 summary.json
+-rw-r--r-- 1 root root  151 Aug 19 13:21 timeline.json
+root@38ff7a4514c0:/app# cat alerts.txt; tmux wait -S done
+ALERT محمدعلي 10 admin-sessions in 10s at 2025-08-19T13:20:56
+root@38ff7a4514c0:/app# cat summary.json; tmux wait -S done
+{
+  "producer_lines_total": 406,
+  "alerts": 1,
+  "rotations_min": 0,
+  "parallel": true
+}
+root@38ff7a4514c0:/app# cat timeline.json; tmux wait -S done
+{
+  "consumer_start_ms": 1755609628217,
+  "producer_start_ms": 1755609628728,
+  "consumer_end_ms": 1755609660728,
+  "producer_end_ms": 1755609660728
+}
+root@38ff7a4514c0:/app# ls -la logs/; tmux wait -S done
+total 44
+drwxr-xr-x 2 root root  4096 Aug 19 13:20 .
+drwxr-xr-x 1 root root  4096 Aug 19 13:21 ..
+-rw-r--r-- 1 root root 35939 Aug 19 13:20 events.log
+root@38ff7a4514c0:/app#

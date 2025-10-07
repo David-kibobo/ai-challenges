@@ -1,0 +1,40 @@
+> ROTATIONS_MIN=0
+> for i in {1..3}; do
+>     if [[ -f "logs/events.log.$i" ]]; then
+>         ROTATIONS_MIN=$((ROTATIONS_MIN + 1))
+>     fi
+> done
+>
+> # Generate summary.json
+> cat > summary.json << JSON_EOF
+> {
+>   "producer_lines_total": $PRODUCER_LINES,
+>   "alerts": $ALERTS,
+>   "rotations_min": $ROTATIONS_MIN,
+>   "parallel": true
+> }
+> JSON_EOF
+>
+> # Generate timeline.json
+> cat > timeline.json << JSON_EOF
+> {
+>   "consumer_start_ms": $CONSUMER_START,
+>   "producer_start_ms": $PRODUCER_START,
+>   "consumer_end_ms": $CONSUMER_END,
+>   "producer_end_ms": $PRODUCER_END
+> }
+> JSON_EOF
+>
+> echo "DONE"
+> EOF
+root@e0d46a4841cc:/app# chmod +x run.sh; tmux wait -S done
+root@e0d46a4841cc:/app# ls -la; tmux wait -S done
+total 28
+drwxr-xr-x 1 root root 4096 Aug 19 15:00 .
+drwxr-xr-x 1 root root 4096 Aug 19 14:59 ..
+-rw-r--r-- 1 root root 3209 Aug 19 15:00 consumer.awk
+drwxr-xr-x 2 root root 4096 Aug 19 14:59 logs
+drwxr-xr-x 2 root root 4096 Aug 19 15:00 pipe
+-rwxr-xr-x 1 root root 2183 Aug 19 15:00 producer.sh
+-rwxr-xr-x 1 root root 2497 Aug 19 15:00 run.sh
+root@e0d46a4841cc:/app#

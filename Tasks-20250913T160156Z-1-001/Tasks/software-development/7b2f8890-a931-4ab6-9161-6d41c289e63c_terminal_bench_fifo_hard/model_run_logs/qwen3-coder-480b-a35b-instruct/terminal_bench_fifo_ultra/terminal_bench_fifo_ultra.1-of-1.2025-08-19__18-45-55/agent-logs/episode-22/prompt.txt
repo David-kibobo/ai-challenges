@@ -1,0 +1,40 @@
+{"ts": 1755609574225, "session": "weuDAVspt8", "user": "MariaGarcia", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574296, "session": "CwtEE1Qncs", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609574363
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574429, "session": "qFbtcO9g3s", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574494, "session": "HPBKEIJy4a", "user": "山田太郎", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609574564
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574629, "session": "57x5huNVho", "user": "张伟", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574699, "session": "qWb0GZkqt9", "user": "JohnDoe", "meta": {"admin": false}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574769, "session": "qYSTM7q7RD", "user": "Анна", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+malformed_line_1755609574835
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574899, "session": "TApXHmKY8A", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+{"ts": 1755609574969, "session": "aSg4sADPjY", "user": "张伟", "meta": {"admin": true}}
+./producer.sh: line 73: bc: command not found
+Producer finished. Generated 431 lines.
+DONE
+root@38ff7a4514c0:/app# ls -la; tmux wait -S done
+total 40
+drwxr-xr-x 1 root root 4096 Aug 19 13:19 .
+drwxr-xr-x 1 root root 4096 Aug 19 13:15 ..
+-rw-r--r-- 1 root root   65 Aug 19 13:19 alerts.txt
+-rwxr-xr-x 1 root root 2604 Aug 19 13:18 consumer.awk
+drwxr-xr-x 2 root root 4096 Aug 19 13:19 logs
+drwxr-xr-x 2 root root 4096 Aug 19 13:16 pipe
+-rwxr-xr-x 1 root root 2346 Aug 19 13:18 producer.sh
+-rw-r--r-- 1 root root    0 Aug 19 13:19 run.lock
+-rwxr-xr-x 1 root root 2548 Aug 19 13:17 run.sh
+-rw-r--r-- 1 root root   91 Aug 19 13:19 summary.json
+-rw-r--r-- 1 root root  151 Aug 19 13:19 timeline.json
+root@38ff7a4514c0:/app#

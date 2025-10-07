@@ -1,0 +1,40 @@
+>         }
+>         # Clean old alert timestamps
+>         if (user in user_last_alert && current_ts - user_last_alert[user] > window_size) {
+>             delete user_last_alert[user]
+>         }
+>     }
+> }
+>
+> function format_timestamp(ts_ms) {
+>     ts_sec = int(ts_ms / 1000)
+>     return strftime("%Y-%m-%dT%H:%M:%SZ", ts_sec)
+> }
+>
+> {
+>     # Process each line
+>     if (parse_json_simple($0)) {
+>         if (admin == "true") {
+>             # Clean old sessions first
+>             clean_old_sessions(ts)
+>
+>             # Add this session
+>             user_sessions[user][session] = ts
+>
+>             # Count current sessions for this user
+>             count = 0
+>             for (s in user_sessions[user]) count++
+>
+>             # Check if we need to alert (and haven't alerted recently)
+>             if (count >= alert_threshold && !(user in user_last_alert)) {
+>                 iso_time = format_timestamp(ts)
+>                 alert_line = "ALERT " user " " count " admin-sessions in 10s at " iso_time
+>                 print alert_line >> "alerts.txt"
+>                 fflush("alerts.txt")
+>                 user_last_alert[user] = ts
+>             }
+>         }
+>     }
+> }
+> EOF
+root@e0d46a4841cc:/app#
