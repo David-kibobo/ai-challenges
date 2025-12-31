@@ -1,9 +1,19 @@
-Step 1: git rm -rf --cached . (To clear the index)
+# Turing Tasks Backup Guide
 
-Step 2: find . -mindepth 2 -name ".git" -type d -exec mv {} {}_hide \;
+To backup nested git repositories (Celery, SWR, MSW, etc.) into the main 'ai-challenges' repo without using submodules:
 
-Step 3: git add .
+## The Automatic Way
+Run the custom alias:
+`turing-backup`
 
-Step 4: find . -mindepth 2 -name ".git_hide" -type d -exec sh -c 'mv "$1" "${1%_hide}"' _ {} \;
+## The Manual Way (if alias is missing)
+1. **Hide internal history:**
+   `find . -mindepth 2 -name ".git" -type d -exec mv {} {}_hide ;`
+2. **Stage files:**
+   `git add .`
+3. **Restore internal history:**
+   `find . -mindepth 2 -name ".git_hide" -type d -exec sh -c 'mv "$1" "${1%_hide}"' _ {} ;`
+4. **Push:**
+   `git commit -m "Manual update" && git push origin main --force`
 
-Step 5: git commit and git push.
+*Note: Large files like terminal-bench are ignored via .gitignore to stay under GitHub's 100MB limit.*
