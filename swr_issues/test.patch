@@ -1,0 +1,141 @@
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 0000000..7e04e4d
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,37 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++
++NEW_TEST_FILE="test/use-swr-fallback-cache.test.tsx"
++
++if [ "$#" -ge 1 ]; then
++  MODE="$1"
++elif [ "${MODE-""}" != "" ]; then
++  MODE="$MODE"
++else
++  MODE=base
++fi
++
++echo " Running SWR tests (mode: ${MODE})"
++echo "---"
++
++
++IGNORE_PATTERNS="${NEW_TEST_FILE}|e2e/"
++
++
++if [ "${MODE}" = "base" ]; then
++  echo "Running BASE tests (All original tests)"
++  pnpm test --no-watch \
++    --testPathIgnorePatterns="${IGNORE_PATTERNS}"
++  exit 0
++fi
++
++if [ "${MODE}" = "new" ]; then
++  echo "Running NEW tests"
++
++  pnpm test --verbose "${NEW_TEST_FILE}"
++  exit 0
++fi
++
++echo "Unknown MODE: ${MODE}. Use 'base' (default) or 'new'."
++exit 2
+\ No newline at end of file
+diff --git a/test/use-swr-fallback-cache.test.tsx b/test/use-swr-fallback-cache.test.tsx
+new file mode 100644
+index 0000000..827c935
+--- /dev/null
++++ b/test/use-swr-fallback-cache.test.tsx
+@@ -0,0 +1,90 @@
++/**
++ * @jest-environment jsdom
++ */
++
++import { render } from '@testing-library/react'
++import { act } from '@testing-library/react'
++import useSWR from 'swr'
++import useSWRImmutable from 'swr/immutable'
++import { SWRConfig, useSWRConfig } from 'swr'
++import React from 'react'
++
++const nextTick = async () => Promise.resolve()
++
++describe('SWR Fallback Cache Materialization', () => {
++
++    interface CacheGrabberProps {
++        children: React.ReactNode;
++        cacheRef: { current: any };
++    }
++
++    const CacheGrabber: React.FC<CacheGrabberProps> = ({ children, cacheRef }) => {
++        const config = useSWRConfig();
++        React.useEffect(() => {
++            cacheRef.current = config.cache;
++        }, [config]);
++        return <>{children}</>;
++    };
++
++
++    it('should materialize fallback data into cache and allow cache retrieval (useSWRImmutable)', async () => {
++        const key = '/immutable-key'
++        const fallbackData = 'bar'
++        const cacheRef = { current: null };
++
++        function ImmutableConsumer() {
++            useSWRImmutable(key, null);
++            return <div data-testid="ready">Ready</div>;
++        }
++
++        render(
++            <SWRConfig value={{ fallback: { [key]: fallbackData } }}>
++                <CacheGrabber cacheRef={cacheRef}>
++                    <ImmutableConsumer />
++                </CacheGrabber>
++            </SWRConfig>
++        )
++
++        await act(async () => {
++            await nextTick()
++        })
++
++        const cacheEntry = cacheRef.current?.get(key);
++
++        expect(cacheEntry).not.toBeUndefined();
++        expect(cacheEntry).not.toBeNull();
++
++        expect((cacheEntry as any).data).toBe(fallbackData);
++    })
++
++
++    it('should materialize fallback data when revalidation is disabled (useSWR)', async () => {
++        const key = '/standard-key'
++        const fallbackData = 'baz'
++        const cacheRef = { current: null };
++
++        function StandardConsumer() {
++            useSWR(key, null, { revalidateOnMount: false });
++            return <div data-testid="ready">Ready</div>;
++        }
++
++        render(
++            <SWRConfig value={{ fallback: { [key]: fallbackData } }}>
++                <CacheGrabber cacheRef={cacheRef}>
++                    <StandardConsumer />
++                </CacheGrabber>
++            </SWRConfig>
++        )
++
++        await act(async () => {
++            await nextTick()
++        })
++
++        const cacheEntry = cacheRef.current?.get(key);
++
++        expect(cacheEntry).not.toBeUndefined();
++        expect(cacheEntry).not.toBeNull();
++
++        expect((cacheEntry as any).data).toBe(fallbackData);
++    })
++})
+\ No newline at end of file

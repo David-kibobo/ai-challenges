@@ -1,0 +1,107 @@
+Problem Title
+
+Add Session Management Feature to FastAPI Users
+
+Problem Brief
+
+The fastapi-users library currently handles authentication but doesn't provide a clear way to manage multiple active sessions per user. For example, when a user logs in from several devices, there's no built-in way to list those sessions, invalidate them, or handle logout per device.
+
+The goal is to introduce a session management feature that makes this possible. We want users (and admins) to be able to view all active sessions tied to a specific account, revoke individual ones, or clear them all at once. This is especially useful for security. Like when a token is stolen or a user forgets to log out from a shared computer.
+
+The new feature should be built as an extension, similar to how the existing fastapi-users structure works. Think of it as a lightweight session store that can work both in memory (for testing) and with a real database later on.
+
+Agent Instructions
+
+Your job is to design and implement a simple Session Manager and corresponding API endpoints under /auth/sessions.
+Here's what's expected:
+
+1.SessionManager class
+    -Must be defined in fastapi_users/extensions/session_manager.py.
+    -Should provide methods to create a session, fetch sessions, and delete sessions.
+    -Each session must link a user_id to a unique token.
+    -Must have a method create_session(user_id: str, token: str) that returns session data.
+    -Should expose a FastAPI APIRouter at .router for HTTP endpoints.
+    -Should use an in-memory store; database persistence is not required.
+    -Optional expires_at field may be included for future use.
+    -Sessions should have a structure like this:
+        -Session should have a structure like this:
+            class Session:
+                id: UUID
+                user_id: UUID
+                token: str
+                created_at: datetime
+                expires_at: Optional[datetime] = None
+
+2.API Endpoints:
+Expose these routes through a router mounted at /auth/sessions (do not prefix them again in the router itself):
+    -GET /auth/sessions => return all active sessions for the authenticated user.
+    -DELETE /auth/sessions/{id} => delete a specific session.
+    -DELETE /auth/sessions =>delete all sessions for the current user.
+
+3.Authorization:
+    -All routes must require authentication via a Bearer token where the Bearer value is the session token itself.
+    -A user can only view or delete their own sessions.
+    -Attempts to delete another user’s session must return 403 Forbidden.
+    -Deleting a nonexistent session should return 404 Not Found.
+    -Missing or invalid tokens should return 401 Unauthorized.
+
+Test Assumptions
+
+Test Assumptions:
+    -Tests will import SessionManager from fastapi_users/extensions/session_manager.py.
+    -They will create an instance as SessionManager(session_db=in_memory_session_db) and mount its router at /auth/sessions.
+    -Tests expect the behavior described above through HTTP endpoints.
+    -If SessionManager cannot be imported, tests will fail.
+
+
+
+    Solution branch.
+    base commit: git checkout 8ea78fd49b8be36f42675c425bbb8e61dd2707e6
+    'solution/0307b042-a2c0-4067-a501-2c11270c97b8-v1'
+
+
+SimpleCacheFileSystem is often used where files are accessed repeatedly through slightly different URLs, such as:
+
+    -Query parameters (version identifiers, timestamps)
+
+    -Fragments or anchors
+
+    -Relative path components
+
+At the moment, the cache treats each variant as a separate file.
+Example:
+    -fsspec.open("simplecache::s3://bucket/file1")
+    -fsspec.open("simplecache::s3://bucket/file1?versionId=123")
+Both lines produce distinct cache entries even though they point to the same logical file.
+Your task is to update SimpleCacheFileSystem to avoid unbounded cache growth and ensure stable deduplication behavior.
+
+Deduplication across variants:
+    -Minor URL differences (query parameters, fragments, ./ or ../ path elements) referring to the same file must reuse a single cache entry.
+    -Parameter-order normalization is required: a=1&b=2 and b=2&a=1 must map to the same entry.
+    -Major parameters (e.g., ?version, ?dataset) should still create distinct cache entries.
+
+Bounded growth:
+    -Cache growth must remain proportional to the number of distinct logical files.
+    -Allowed extra entries (“slack”) = max(10, N // 10) where N is the number of total variants processed.
+    -For N <= 5, at most one extra entry is allowed.
+    -The same principle applies to disk-backed caches.
+Fetch vs. cache normalization:
+    -Original query parameters and values must be preserved during fetch operations.
+    -Normalization applies only when identifying cache keys, not during data retrieval.
+
+Interface and consistency:
+    -Both fs.open and top-level fsspec.open must behave consistently.
+    -Minor variations should not create new _cache entries.
+    -Variants differing in major parameters or actual content must still generate separate entries.
+Mixed-group scenario:
+- Some URL variants map to the same logical file while others are distinct.
+
+
+
+SimpleCacheFileSystem in fsspec maintains a _cache dictionary to store file references and optionally writes files to a local disk cache. Using fsspec.open (or a chained URL via SimpleCacheFileSystem.open) with multiple URL variants currently creates a new _cache entry for every unique call, even if it refers to the same underlying file.
+
+This behavior causes:
+1. Unnecessary memory growth: each URL variant produces a distinct _cache entry.
+2. Performance degradation: large or long-running applications accumulate excessive cache entries.
+3. Difficult cleanup: entries are never de-duplicated or evicted.
+4. Disk inefficiency: with cache_storage configured, each variant may create a new cached file, causing extra disk I/O.

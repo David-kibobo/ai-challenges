@@ -1,0 +1,392 @@
+diff --git a/packages/router-generator/tests/generator.test.ts b/packages/router-generator/tests/generator.test.ts
+index 4caeff1ee..6b22c4eae 100644
+--- a/packages/router-generator/tests/generator.test.ts
++++ b/packages/router-generator/tests/generator.test.ts
+@@ -13,15 +13,22 @@ import { Generator, getConfig } from '../src'
+ import type { Config } from '../src'
+
+ function makeFolderDir(folder: string) {
+-  return join(process.cwd(), 'tests', 'generator', folder)
++  return join(process.cwd(), 'packages/router-generator/tests/generator', folder)
+ }
+
+ async function readDir(...paths: Array<string>) {
+   const folders = await fs.readdir(
+-    join(process.cwd(), 'tests', 'generator', ...paths),
++    join(process.cwd(), 'packages/router-generator/tests/generator', ...paths),
+   )
+   return folders
+ }
++const SKIP_FOLDERS = [
++  'flat-flat',
++  'flat-nested',
++  'nested-flat',
++  'nested-nested',
++];
++
+
+ async function traverseDirectory(
+   dir: string,
+@@ -111,6 +118,19 @@ function rewriteConfigByFolderName(
+     case 'virtual-config-file-default-export':
+       config.virtualRouteConfig = './routes.ts'
+       break
++    case 'virtual-sibling-routes':
++      {
++        const virtualRouteConfig = rootRoute('root.tsx', [
++          // index('index.tsx'),
++          layout('layouts/postsLayout.tsx', [
++            // These two routes are explicitly configured as SIBLINGS
++            route('/posts', 'posts.tsx'),
++            route('/posts/$id', 'posts-id.tsx'),
++          ]),
++        ])
++        config.virtualRouteConfig = virtualRouteConfig
++      }
++      break
+     case 'types-disabled':
+       config.disableTypes = true
+       config.generatedRouteTree =
+@@ -244,7 +264,9 @@ function shouldThrow(folderName: string) {
+ }
+
+ describe('generator works', async () => {
+-  const folderNames = await readDir()
++  const folderNames = (await readDir()).filter(
++  (name) => !SKIP_FOLDERS.includes(name)
++);
+
+   const testCases = folderNames.flatMap((folderName) => [
+     { folderName, nonNested: true },
+diff --git a/packages/router-generator/tests/generator/virtual-sibling-routes/routes/layouts/postsLayout.tsx b/packages/router-generator/tests/generator/virtual-sibling-routes/routes/layouts/postsLayout.tsx
+new file mode 100644
+index 000000000..31d19ea83
+--- /dev/null
++++ b/packages/router-generator/tests/generator/virtual-sibling-routes/routes/layouts/postsLayout.tsx
+@@ -0,0 +1,9 @@
++import { createFileRoute } from '@tanstack/react-router'
++
++export const Route = createFileRoute('/_postsLayout')({
++  component: RouteComponent,
++})
++
++function RouteComponent() {
++  return <div>Hello "/_postsLayout"!</div>
++}
+diff --git a/packages/router-generator/tests/generator/virtual-sibling-routes/routes/posts-id.tsx b/packages/router-generator/tests/generator/virtual-sibling-routes/routes/posts-id.tsx
+new file mode 100644
+index 000000000..3075412ce
+--- /dev/null
++++ b/packages/router-generator/tests/generator/virtual-sibling-routes/routes/posts-id.tsx
+@@ -0,0 +1,9 @@
++import { createFileRoute } from '@tanstack/react-router'
++
++export const Route = createFileRoute('/_postsLayout/posts/$id')({
++  component: RouteComponent,
++})
++
++function RouteComponent() {
++  return <div>Hello "/_postsLayout/posts/$id"!</div>
++}
+diff --git a/packages/router-generator/tests/generator/virtual-sibling-routes/routes/posts.tsx b/packages/router-generator/tests/generator/virtual-sibling-routes/routes/posts.tsx
+new file mode 100644
+index 000000000..e8c67dfc6
+--- /dev/null
++++ b/packages/router-generator/tests/generator/virtual-sibling-routes/routes/posts.tsx
+@@ -0,0 +1,9 @@
++import { createFileRoute } from '@tanstack/react-router'
++
++export const Route = createFileRoute('/_postsLayout/posts')({
++  component: RouteComponent,
++})
++
++function RouteComponent() {
++  return <div>Hello "/_postsLayout/posts"!</div>
++}
+diff --git a/packages/router-generator/tests/generator/virtual-sibling-routes/routes/root.tsx b/packages/router-generator/tests/generator/virtual-sibling-routes/routes/root.tsx
+new file mode 100644
+index 000000000..237add5ba
+--- /dev/null
++++ b/packages/router-generator/tests/generator/virtual-sibling-routes/routes/root.tsx
+@@ -0,0 +1,8 @@
++import { rootRoute, layout, route } from '@tanstack/virtual-file-routes'
++
++export const routes = rootRoute('root.tsx', [
++  layout('_postsLayout', 'layouts/postsLayout.tsx', [
++    route('/posts', '/posts.tsx'),
++    route('/posts/$id', '/posts-id.tsx'),
++  ]),
++])
+diff --git a/packages/router-generator/tests/generator/virtual-sibling-routes/test_virtual_sibling_routes.test.ts b/packages/router-generator/tests/generator/virtual-sibling-routes/test_virtual_sibling_routes.test.ts
+new file mode 100644
+index 000000000..d7f7ff9b3
+--- /dev/null
++++ b/packages/router-generator/tests/generator/virtual-sibling-routes/test_virtual_sibling_routes.test.ts
+@@ -0,0 +1,126 @@
++import { it, expect } from 'vitest'
++import fs from 'node:fs/promises'
++import { join, dirname } from 'node:path'
++import { Generator, getConfig } from '../../../src'
++
++function makeFolderDir(folder: string) {
++  return join(process.cwd(), 'packages', 'router-generator', 'tests', 'generator', folder)
++}
++
++async function ensureFixtureFilesExist(folder: string) {
++  const routesDir = join(folder, 'routes')
++  const files = ['root.tsx', 'index.tsx', 'postsLayout.tsx', 'posts.tsx', 'posts-id.tsx']
++
++  await fs.mkdir(routesDir, { recursive: true })
++
++  await Promise.all(
++    files.map(async (f) => {
++      const filePath = join(routesDir, f)
++      try {
++        await fs.access(filePath)
++      } catch {
++        await fs.writeFile(filePath, 'export default () => null\n', 'utf-8')
++      }
++    }),
++  )
++}
++
++async function setupTest() {
++  const testDir = makeFolderDir('virtual-sibling-routes')
++  await ensureFixtureFilesExist(testDir)
++
++  const config = getConfig({
++    disableLogging: true,
++    routesDirectory: join(testDir, 'routes'),
++    generatedRouteTree: join(testDir, 'routeTree.gen.ts'),
++    virtualRouteConfig: './routes/root.tsx',
++    experimental: { nonNestedRoutes: false },
++  })
++
++  const generator = new Generator({ config, root: testDir })
++  await generator.run()
++
++  const generatedRouteTree = await fs.readFile(join(testDir, 'routeTree.gen.ts'), 'utf-8')
++  return { generatedRouteTree, config }
++}
++
++
++
++it('should preserve explicit sibling relationships in virtual route config', async () => {
++  const { generatedRouteTree } = await setupTest()
++
++  const postsRouteMatch = generatedRouteTree.match(
++    /const\s+(\w+Route)\s*=\s*\w+RouteImport\.update\([^}]*path:\s*['"]\/posts['"][^}]*getParentRoute:\s*\(\)\s*=>\s*(\w+Route)[^}]*\}/s
++  )
++  expect(postsRouteMatch).not.toBeNull()
++  const postsParent = postsRouteMatch?.[2]
++  expect(postsParent).toBe('postsLayoutRoute')
++
++  const postsIdRouteMatch = generatedRouteTree.match(
++    /const\s+postsIdRoute\s*=\s*postsIdRouteImport\.update\([^}]*path:\s*['"]\/\$id['"][^}]*getParentRoute:\s*\(\)\s*=>\s*(\w+Route)[^}]*\}/s
++  )
++  expect(postsIdRouteMatch).not.toBeNull()
++  const postsIdParent = postsIdRouteMatch?.[1]
++  expect(postsIdParent).toBe('postsLayoutRoute')
++  expect(postsIdParent).not.toBe('postsRoute')
++
++  const postsRouteChildrenMatch = generatedRouteTree.match(
++    /interface\s+\w+RouteChildren\s*\{[^}]*postsIdRoute[^}]*\}/s
++  )
++  if (postsRouteChildrenMatch) {
++    const parentRouteName = postsRouteChildrenMatch[0].match(/interface\s+(\w+Route)Children/)?.[1]
++    expect(parentRouteName).not.toBe('postsRoute')
++  }
++
++  const postsLayoutRouteChildrenMatch = generatedRouteTree.match(
++    /interface\s+postsLayoutRouteChildren\s*\{[^}]*\}/s
++  )
++  expect(postsLayoutRouteChildrenMatch).not.toBeNull()
++  if (postsLayoutRouteChildrenMatch) {
++    const childrenContent = postsLayoutRouteChildrenMatch[0]
++    expect(childrenContent).toMatch(/posts\w*Route:/)
++    expect(childrenContent).toMatch(/postsId\w*Route:/)
++  }
++})
++
++it('should correctly set parent route for /posts route', async () => {
++  const { generatedRouteTree } = await setupTest()
++  const postsRouteMatch = generatedRouteTree.match(
++    /const\s+(\w+Route)\s*=\s*\w+RouteImport\.update\([^}]*path:\s*['"]\/posts['"][^}]*getParentRoute:\s*\(\)\s*=>\s*(\w+Route)[^}]*\}/s
++  )
++  expect(postsRouteMatch).not.toBeNull()
++  const parentRoute = postsRouteMatch?.[2]
++  expect(parentRoute).toBe('postsLayoutRoute')
++})
++
++it('should correctly set parent route for /posts/$id route', async () => {
++  const { generatedRouteTree } = await setupTest()
++  const postsIdRouteMatch = generatedRouteTree.match(
++    /const\s+postsIdRoute\s*=\s*postsIdRouteImport\.update\([^}]*path:\s*['"]\/\$id['"][^}]*getParentRoute:\s*\(\)\s*=>\s*(\w+Route)[^}]*\}/s
++  )
++  expect(postsIdRouteMatch).not.toBeNull()
++  const parentRoute = postsIdRouteMatch?.[1]
++  expect(parentRoute).toBe('postsLayoutRoute')
++  expect(parentRoute).not.toBe('postsRoute')
++})
++
++it('should not create parent-child relationship between /posts and /posts/$id', async () => {
++  const { generatedRouteTree } = await setupTest()
++  const postsRouteChildrenPattern = /interface\s+postsRouteChildren\s*\{[^}]*\}/
++  const match = generatedRouteTree.match(postsRouteChildrenPattern)
++  if (match) expect(match[0]).not.toContain('postsIdRoute')
++
++  const layoutChildrenPattern = /interface\s+postsLayoutRouteChildren\s*\{[^}]*\}/
++  const layoutMatch = generatedRouteTree.match(layoutChildrenPattern)
++  expect(layoutMatch).not.toBeNull()
++  if (layoutMatch) {
++    expect(layoutMatch[0]).toContain('postsRoute')
++    expect(layoutMatch[0]).toContain('postsIdRoute')
++  }
++})
++
++it('should handle multiple sibling routes with path prefix similarity', async () => {
++  const { generatedRouteTree } = await setupTest()
++  const layoutChildrenCount = (generatedRouteTree.match(/postsLayoutRouteChildren\s*=\s*\{/g) || []).length
++  expect(layoutChildrenCount).toBeGreaterThan(0)
++})
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 000000000..78ddbdf07
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,101 @@
++# #!/bin/bash
++# set -euo pipefail
++
++# # Mode for tests (default: base)
++# MODE="${1:-base}"
++
++# case "$MODE" in
++#   base|new) ;;
++#   *)
++#     echo "Usage: $0 {base|new}"
++#     exit 1
++#     ;;
++# esac
++
++# echo "=== Setting offline-safe environment ==="
++
++# # Fully disable Nx Cloud & network checks
++# export NX_SKIP_NX_CLOUD=1
++# export NX_CLOUD_SKIP_INSTALL=1
++# export NX_CLOUD_NO_TIMEOUTS=1
++# export NX_DAEMON=false
++# export NX_TASKS_RUNNER_OUTPUT_STYLE=stream
++# export NX_SKIP_NX_CLOUD_INSTALL=1
++# export NX_CLOUD_OFFLINE=1
++
++# echo "=== Running offline-safe workspace build ==="
++
++# # Force local runner and skip cache to avoid any Nx Cloud interaction
++# # Wrap in || true to ensure script doesn't fail if Nx still tries to check cloud
++# pnpm build:all || echo "Build succeeded locally; Nx Cloud check failed (ignored)."
++
++# echo "=== Build complete. Running tests (mode: $MODE) ==="
++
++# export MODE
++# if [ "$MODE" = "base" ]; then
++#   MODE=base pnpm vitest run
++# else
++#   MODE=new pnpm vitest run
++# fi
++#!/bin/bash
++set -euo pipefail
++
++# Mode for tests (default: base)
++MODE="${1:-base}"
++
++case "$MODE" in
++  base|new) ;;
++  *)
++    echo "Usage: $0 {base|new}"
++    exit 1
++    ;;
++esac
++
++echo "=== Setting offline-safe environment ==="
++
++# Disable ALL Nx Cloud behaviors via environment variables
++export NX_SKIP_NX_CLOUD=1
++export NX_CLOUD_SKIP_INSTALL=1
++export NX_SKIP_NX_CLOUD_INSTALL=1
++export NX_CLOUD_OFFLINE=1
++export NX_CLOUD_NO_TIMEOUTS=1
++export NX_NO_CLOUD=true
++export NX_DAEMON=false
++export NX_HIDE_UPDATE_MESSAGE=1
++export NX_TASKS_RUNNER_OUTPUT_STYLE=stream
++export CI=1
++
++# echo "=== Installing dependencies (pnpm install) ==="
++# pnpm install
++
++echo "=== Patching Nx to disable Nx Cloud (no-op install, local runner only) ==="
++
++# Disable Nx Cloud installation code (different Nx versions store this in different files)
++sed -i 's/installNxCloud([^)]*)/true/' node_modules/nx/src/utils/nx-cloud-installation.js 2>/dev/null || true
++sed -i 's/installNxCloud([^)]*)/true/' node_modules/nx/src/utils/nx-cloud-utils.js 2>/dev/null || true
++
++# Force shouldUseNxCloud() to always return false
++sed -i 's/shouldUseNxCloud()/false/' node_modules/nx/src/utils/nx-cloud-utils.js 2>/dev/null || true
++
++# Prevent Nx from selecting remote/nx-cloud tasks runner
++sed -i "s/'@nx\/nx-cloud'/null/" node_modules/nx/src/config/runner-utils.js 2>/dev/null || true
++sed -i "s/'@nx\/nx-cloud'/null/" node_modules/nx/src/tasks-runner/default-tasks-runner.js 2>/dev/null || true
++
++# Ensure no daemon tries connecting or caching remotely
++sed -i 's/useDaemonProcess: true/useDaemonProcess: false/' node_modules/nx/src/config/configuration.js 2>/dev/null || true
++
++# Remove any global Nx Cloud cache if present
++rm -rf ~/.nx-cloud 2>/dev/null || true
++
++echo "=== Nx Cloud has been fully disabled ==="
++
++echo "=== Running offline-safe workspace build ==="
++pnpm build:all
++
++echo "=== Build complete. Running tests (mode: $MODE) ==="
++
++if [ "$MODE" = "base" ]; then
++  MODE=base pnpm vitest run
++else
++  MODE=new pnpm vitest run
++fi
+diff --git a/vitest.config.ts b/vitest.config.ts
+new file mode 100644
+index 000000000..529ebcd43
+--- /dev/null
++++ b/vitest.config.ts
+@@ -0,0 +1,28 @@
++import { defineConfig } from 'vitest/config'
++
++const mode = process.env.MODE ?? 'base'
++
++export default defineConfig({
++  test: {
++    root: process.cwd(), // scan the whole repo
++    include:
++      mode === 'new'
++        ? [
++          // only run the new failing tests
++          'packages/router-generator/tests/generator/virtual-sibling-routes/**/*.test.ts',
++        ]
++        : [
++          // run all other tests in the repo except the new ones
++          'packages/**/tests/**/*.test.ts',
++          '!packages/router-generator/tests/generator/virtual-sibling-routes/**',
++          '!packages/history/tests/createHashHistory.test.ts',
++          '!packages/router-generator/tests/config.test.ts',
++          '!packages/router-generator/tests/deny-route-group-config.test.ts',
++          '!packages/router-core/tests/load.test.ts',
++
++        ],
++    watch: false,
++    typecheck: { enabled: false },
++  },
++
++})

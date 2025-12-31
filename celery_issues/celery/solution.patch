@@ -1,0 +1,81 @@
+diff --git a/celery/utils/log.py b/celery/utils/log.py
+index f67a3dd70..aafd03e27 100644
+--- a/celery/utils/log.py
++++ b/celery/utils/log.py
+@@ -195,6 +195,7 @@ class LoggingProxy:
+         self.logger = logger
+         self.loglevel = mlevel(loglevel or self.logger.level or self.loglevel)
+         self._safewrap_handlers()
++        self._buffer = ''
+
+     def _safewrap_handlers(self):
+         # Make the logger handlers dump internal errors to
+@@ -221,19 +222,30 @@ class LoggingProxy:
+             safe_data = safe_str(data)
+             print(safe_data, file=sys.__stderr__)
+             return len(safe_data)
++
+         if getattr(self._thread, 'recurse_protection', False):
+             # Logger is logging back to this file, so stop recursing.
+             return 0
++
+         if data and not self.closed:
+             self._thread.recurse_protection = True
+             try:
+-                safe_data = safe_str(data).rstrip('\n')
+-                if safe_data:
+-                    self.logger.log(self.loglevel, safe_data)
+-                    return len(safe_data)
++                self._buffer += safe_str(data)
++                if '\n' in self._buffer:
++                    lines = self._buffer.split('\n')
++                    self._buffer = lines.pop()
++                    for line in lines:
++                        if line:
++                            self.logger.log(self.loglevel, line)
++                # Heuristic for Legacy tests (e.g. p.write('foo '))
++                # If write ends in a space, it's likely a complete unit
++                # of work in a legacy test. Flush it immediately.
++                elif self._buffer.endswith(' '):
++                    self.logger.log(self.loglevel, self._buffer.rstrip('\n'))
++                    self._buffer = ''
+             finally:
+                 self._thread.recurse_protection = False
+-        return 0
++        return len(data)
+
+     def writelines(self, sequence):
+         # type: (Sequence[str]) -> None
+@@ -244,16 +256,30 @@ class LoggingProxy:
+         """
+         for part in sequence:
+             self.write(part)
++        self.flush()
+
+     def flush(self):
+         # This object is not buffered so any :meth:`flush`
+         # requests are ignored.
+-        pass
++        if getattr(self._thread, 'recurse_protection', False):
++            return
++
++        self._thread.recurse_protection = True
++        try:
++            if self._buffer:
++                msg = self._buffer.rstrip('\n')
++                if msg:
++                    self.logger.log(self.loglevel, msg)
++                self._buffer = ''
++        finally:
++            self._thread.recurse_protection = False
+
+     def close(self):
+         # when the object is closed, no write requests are
+         # forwarded to the logging object anymore.
+-        self.closed = True
++        if not self.closed:
++            self.flush()
++            self.closed = True
+
+     def isatty(self):
+         """Here for file support."""

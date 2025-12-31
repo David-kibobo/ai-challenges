@@ -1,0 +1,12 @@
+0000000000000000000000000000000000000000 0f55245b8da5c4cc8385c2f692164a6ff52cd88e David Kibobo <dkibobo@aims.edu.gh> 1762881047 +0300	clone: from https://github.com/jd/tenacity.git
+0f55245b8da5c4cc8385c2f692164a6ff52cd88e eed7d785e667df145c0e3eeddff59af64e4e860d David Kibobo <dkibobo@aims.edu.gh> 1762881082 +0300	checkout: moving from main to eed7d78
+eed7d785e667df145c0e3eeddff59af64e4e860d eed7d785e667df145c0e3eeddff59af64e4e860d David Kibobo <dkibobo@aims.edu.gh> 1762881082 +0300	checkout: moving from eed7d785e667df145c0e3eeddff59af64e4e860d to tests/issue-534-dual-retrying-exception
+eed7d785e667df145c0e3eeddff59af64e4e860d 0f55245b8da5c4cc8385c2f692164a6ff52cd88e David Kibobo <dkibobo@aims.edu.gh> 1762882817 +0300	checkout: moving from tests/issue-534-dual-retrying-exception to main
+0f55245b8da5c4cc8385c2f692164a6ff52cd88e 0f55245b8da5c4cc8385c2f692164a6ff52cd88e David Kibobo <dkibobo@aims.edu.gh> 1762882833 +0300	checkout: moving from main to tests/issue-534-dual-retrying-exception
+0f55245b8da5c4cc8385c2f692164a6ff52cd88e 0f55245b8da5c4cc8385c2f692164a6ff52cd88e David Kibobo <dkibobo@aims.edu.gh> 1762886033 +0300	checkout: moving from tests/issue-534-dual-retrying-exception to test-retry-statistics-issue-521
+0f55245b8da5c4cc8385c2f692164a6ff52cd88e 0f55245b8da5c4cc8385c2f692164a6ff52cd88e David Kibobo <dkibobo@aims.edu.gh> 1762889869 +0300	checkout: moving from test-retry-statistics-issue-521 to test-retry-statistics-issue-521
+0f55245b8da5c4cc8385c2f692164a6ff52cd88e 0f55245b8da5c4cc8385c2f692164a6ff52cd88e David Kibobo <dkibobo@aims.edu.gh> 1762889882 +0300	checkout: moving from test-retry-statistics-issue-521 to tests/retry-statistics-wrapped
+0f55245b8da5c4cc8385c2f692164a6ff52cd88e 0f55245b8da5c4cc8385c2f692164a6ff52cd88e David Kibobo <dkibobo@aims.edu.gh> 1762889999 +0300	reset: moving to HEAD
+0f55245b8da5c4cc8385c2f692164a6ff52cd88e 0f55245b8da5c4cc8385c2f692164a6ff52cd88e David Kibobo <dkibobo@aims.edu.gh> 1762938965 +0300	checkout: moving from tests/retry-statistics-wrapped to fix/retry-statistics-wrapped
+0f55245b8da5c4cc8385c2f692164a6ff52cd88e 0f55245b8da5c4cc8385c2f692164a6ff52cd88e David Kibobo <dkibobo@aims.edu.gh> 1762947372 +0300	checkout: moving from fix/retry-statistics-wrapped to fix/retry-statistics-wrapped
+0f55245b8da5c4cc8385c2f692164a6ff52cd88e 0f55245b8da5c4cc8385c2f692164a6ff52cd88e David Kibobo <dkibobo@aims.edu.gh> 1762956974 +0300	checkout: moving from fix/retry-statistics-wrapped to fix/retry-statistics

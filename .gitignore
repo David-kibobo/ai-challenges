@@ -1,24 +1,29 @@
-# Exclude nested repos and bulky folders
-terminal-bench/
-Tasks/software-development/051552bf_21cb_4d6e_985a_435764d87689_terminal_bench_fifo_medium/
-Tasks/software-development/7b2f8890_a931_4ab6_9161_6d41c289e63c_terminal_bench_fifo_hard/
-Tasks/software-development/ea12e283_4f7b_46c7_af40_27f35867841f_terminal_bench_fifo_easy/
+# Node.js
+node_modules/
+npm-debug.log*
 
-# Archives and backups
-*.zip
-*.tar.gz
-*.rar
-
-# Byte-compiled / cache
+# Python
 __pycache__/
 *.py[cod]
-*.so
-
-# Virtual envs
 .venv/
 venv/
-ENV/
+.pytest_cache/
+.tox/
+*.egg-info/
 
-# OS files
+# Logs & Large Data
+*.log
+*.zip
+Tasks-20250913T160156Z-1-001/
+
+# System
 .DS_Store
-Thumbs.db
+**/.git.bak
+**/.git
+**/.git.bak
+terminal-bench/
+**/.git
+**/.git.bak
+terminal-bench/
+**/.git
+**/.git.bak

@@ -1,0 +1,61 @@
+Problem Title
+
+Add Session Management Feature to FastAPI Users
+
+Problem Brief
+
+The fastapi-users library currently handles authentication but doesn't provide a clear way to manage multiple active sessions per user. For example, when a user logs in from several devices, there's no built-in way to list those sessions, invalidate them, or handle logout per device.
+
+The goal is to introduce a session management feature that makes this possible. We want users (and admins) to be able to view all active sessions tied to a specific account, revoke individual ones, or clear them all at once. This is especially useful for security. Like when a token is stolen or a user forgets to log out from a shared computer.
+
+The new feature should be built as an extension, similar to how the existing fastapi-users structure works. Think of it as a lightweight session store that can work both in memory (for testing) and with a real database later on.
+
+Agent Instructions
+
+Your job is to design and implement a simple Session Manager and corresponding API endpoints under /auth/sessions.
+Here's what's expected:
+
+1.SessionManager class
+    -Must be defined in fastapi_users/extensions/session_manager.py.
+    -Should provide methods to create a session, fetch sessions, and delete sessions.
+    -Each session must link a user_id to a unique token.
+    -Must have a method create_session(user_id: str, token: str) that returns session data.
+    -Should expose a FastAPI APIRouter at .router for HTTP endpoints.
+    -Should use an in-memory store; database persistence is not required.
+    -Optional expires_at field may be included for future use.
+    -Sessions should have a structure like this:
+        -Session should have a structure like this:
+            class Session:
+                id: UUID
+                user_id: UUID
+                token: str
+                created_at: datetime
+                expires_at: Optional[datetime] = None
+
+2.API Endpoints:
+Expose these routes through a router mounted at /auth/sessions (do not prefix them again in the router itself):
+    -GET /auth/sessions => return all active sessions for the authenticated user.
+    -DELETE /auth/sessions/{id} => delete a specific session.
+    -DELETE /auth/sessions =>delete all sessions for the current user.
+
+3.Authorization:
+    -All routes must require authentication via a Bearer token where the Bearer value is the session token itself.
+    -A user can only view or delete their own sessions.
+    -Attempts to delete another user’s session must return 403 Forbidden.
+    -Deleting a nonexistent session should return 404 Not Found.
+    -Missing or invalid tokens should return 401 Unauthorized.
+
+Test Assumptions
+
+Test Assumptions:
+    -Tests will import SessionManager from fastapi_users/extensions/session_manager.py.
+    -They will create an instance as SessionManager(session_db=in_memory_session_db) and mount its router at /auth/sessions.
+    -Tests expect the behavior described above through HTTP endpoints.
+    -If SessionManager cannot be imported, tests will fail.
+
+
+
+    Solution branch.
+    base commit: git checkout dbc73ba69b01c8e162d6bc28091bf9effeb1df33, short: 22b9e18
+
+    

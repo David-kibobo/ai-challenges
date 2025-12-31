@@ -1,0 +1,202 @@
+diff --git a/fsspec/implementations/dirfs.py b/fsspec/implementations/dirfs.py
+index c0623b8..170061d 100644
+--- a/fsspec/implementations/dirfs.py
++++ b/fsspec/implementations/dirfs.py
+@@ -1,6 +1,12 @@
++from pathlib import Path
++import logging
++import asyncio
++from typing import List, Tuple, Iterable
+ from .. import filesystem
+ from ..asyn import AsyncFileSystem
+ 
++logger = logging.getLogger(__name__)
++
+ 
+ class DirFileSystem(AsyncFileSystem):
+     """Directory prefix filesystem
+@@ -200,11 +206,182 @@ class DirFileSystem(AsyncFileSystem):
+     def get_file(self, rpath, lpath, **kwargs):
+         return self.fs.get_file(self._join(rpath), lpath, **kwargs)
+ 
++    def _should_intercept_get(self, lpath: str, recursive: bool) -> bool:
++        """Return True when we should handle recursive remote-dir -> existing local-dir."""
++        if not recursive or not lpath:
++            return False
++        try:
++            return Path(lpath).is_dir()
++        except (OSError, TypeError) as e:
++            logger.debug("Failed to inspect local path %r: %s", lpath, e, exc_info=True)
++            return False
++
++    def _remote_join(self, root: str, name: str) -> str:
++        """Join remote path components using the wrapped FS separator if available."""
++        sep = getattr(self.fs, "sep", "/")
++        return sep.join((root, name))
++
++    def _remote_rel(self, rt: str, root: str) -> str:
++        """Return rt relative to root, using '.' if identical."""
++        if rt == root:
++            return "."
++        sep = getattr(self.fs, "sep", "/")
++        if rt.startswith(root + sep):
++            return rt[len(root) + 1 :]
++        if rt.startswith(root):
++            return rt[len(root) :]
++        return rt
++
++    async def _collect_files_async(
++        self, src_roots: Iterable[str], lpath: str
++    ) -> List[Tuple[str, str]]:
++        """Walk remote src_roots (async) and collect (remote_src, local_dst) pairs."""
++        files: List[Tuple[str, str]] = []
++        for root in src_roots:
++            async for rt, dirs, filenames in self.fs._walk(root):
++                rel_root = self._remote_rel(rt, root)
++                local_root = (
++                    Path(lpath) if rel_root in (".", "") else Path(lpath) / rel_root
++                )
++                local_root.mkdir(parents=True, exist_ok=True)
++                for fname in filenames:
++                    src = self._remote_join(rt, fname)
++                    dst = str(local_root / fname)
++                    files.append((src, dst))
++        return files
++
++    def _collect_files_sync(
++        self, src_roots: Iterable[str], lpath: str
++    ) -> List[Tuple[str, str]]:
++        """Synchronous counterpart to _collect_files_async."""
++        files: List[Tuple[str, str]] = []
++        for root in src_roots:
++            for rt, dirs, filenames in self.fs.walk(root):
++                rel_root = self._remote_rel(rt, root)
++                local_root = (
++                    Path(lpath) if rel_root in (".", "") else Path(lpath) / rel_root
++                )
++                local_root.mkdir(parents=True, exist_ok=True)
++                for fname in filenames:
++                    src = self._remote_join(rt, fname)
++                    dst = str(local_root / fname)
++                    files.append((src, dst))
++        return files
++
+     async def _get(self, rpath, *args, **kwargs):
+-        return await self.fs._get(self._join(rpath), *args, **kwargs)
++        """
++        Special-case handling of recursive directory-to-existing-directory copies.
++        Delegate to wrapped fs._get() for all other cases.
++        """
++        orig_args = args
++        orig_kwargs = kwargs.copy()
++        lpath = orig_args[0] if orig_args else orig_kwargs.get("lpath")
++        recursive = orig_kwargs.get("recursive", False)
++        callback = orig_kwargs.get("callback", None)
++        batch_size = orig_kwargs.get("batch_size", self.batch_size)
++        joined_rpath = self._join(rpath)
++
++        if not self._should_intercept_get(lpath, recursive):
++            return await self.fs._get(joined_rpath, *orig_args, **orig_kwargs)
++
++        try:
++            src_roots = await self.fs._expand_path(joined_rpath, recursive=True)
++        except (AttributeError, NotImplementedError, OSError, RuntimeError) as e:
++            logger.debug(
++                "Falling back to single src root %r due to _expand_path failure: %s",
++                joined_rpath,
++                e,
++                exc_info=True,
++            )
++            src_roots = [joined_rpath]
++
++        files = await self._collect_files_async(src_roots, lpath)
++
++        if callback is not None and hasattr(callback, "set_size"):
++            try:
++                callback.set_size(len(files))
++            except Exception as e:
++                logger.warning(
++                    "Callback.set_size failed for %r: %s", lpath, e, exc_info=True
++                )
++
++        if not files:
++            return
++
++        sem = asyncio.Semaphore(
++            batch_size if (batch_size and batch_size > 0) else len(files)
++        )
++
++        async def _copy_one(src_dst: Tuple[str, str]):
++            src, dst = src_dst
++            async with sem:
++                await self.fs._get_file(src, dst)
++                if callback is not None:
++                    try:
++                        if hasattr(callback, "relative_update"):
++                            callback.relative_update(1)
++                        else:
++                            callback(dst)
++                    except Exception as e:
++                        logger.warning(
++                            "Callback failed for %r -> %r: %s",
++                            src,
++                            dst,
++                            e,
++                            exc_info=True,
++                        )
++
++        await asyncio.gather(*[_copy_one(sd) for sd in files])
++        return
+ 
+     def get(self, rpath, *args, **kwargs):
+-        return self.fs.get(self._join(rpath), *args, **kwargs)
++        """
++        Synchronous counterpart of _get. Intercepts recursive remote-dir -> local-dir copies.
++        """
++        orig_args = args
++        orig_kwargs = kwargs.copy()
++        lpath = orig_args[0] if orig_args else orig_kwargs.get("lpath")
++        recursive = orig_kwargs.get("recursive", False)
++        callback = orig_kwargs.get("callback", None)
++        joined_rpath = self._join(rpath)
++
++        if not self._should_intercept_get(lpath, recursive):
++            return self.fs.get(joined_rpath, *orig_args, **orig_kwargs)
++
++        try:
++            src_roots = self.fs._expand_path(joined_rpath, recursive=True)
++        except (AttributeError, NotImplementedError, OSError, RuntimeError) as e:
++            logger.debug(
++                "Falling back to single src root %r due to _expand_path failure: %s",
++                joined_rpath,
++                e,
++                exc_info=True,
++            )
++            src_roots = [joined_rpath]
++
++        files = self._collect_files_sync(src_roots, lpath)
++
++        if callback is not None and hasattr(callback, "set_size"):
++            try:
++                callback.set_size(len(files))
++            except Exception as e:
++                logger.warning(
++                    "Callback.set_size failed for %r: %s", lpath, e, exc_info=True
++                )
++
++        for src, dst in files:
++            self.fs.get_file(src, dst)
++            if callback is not None:
++                try:
++                    if hasattr(callback, "relative_update"):
++                        callback.relative_update(1)
++                    else:
++                        callback(dst)
++                except Exception as e:
++                    logger.warning(
++                        "Callback failed for %r -> %r: %s", src, dst, e, exc_info=True
++                    )
++        return
+ 
+     async def _isfile(self, path):
+         return await self.fs._isfile(self._join(path))

@@ -1,0 +1,77 @@
+Problem Description
+-------------------
+SimpleCacheFileSystem in fsspec maintains a _cache dictionary to store file references and optionally writes files to a local disk cache. Using fsspec.open (or a chained URL via SimpleCacheFileSystem.open) with multiple URL variants currently creates a new _cache entry for every unique call, even if it refers to the same underlying file.
+
+This behavior causes:
+1. Unnecessary memory growth: each URL variant produces a distinct _cache entry.
+2. Performance degradation: large or long-running applications accumulate excessive cache entries.
+3. Difficult cleanup: entries are never de-duplicated or evicted.
+4. Disk inefficiency: with cache_storage configured, each variant may create a new cached file, causing extra disk I/O.
+
+Agent Instructions
+------------------
+SimpleCacheFileSystem is used in production where files are repeatedly accessed via URLs that differ slightly:
+
+- Query parameters (version identifiers, etc.)
+- Fragments or anchors in URLs (#section)
+- Relative path components like ./ or ../
+
+Currently, the cache treats each variant as a new file:
+Example:
+   fsspec.open("simplecache::s3://bucket/file1")
+   fsspec.open("simplecache::s3://bucket/file1?versionId=123")
+Both calls create distinct cache entries, even if they point to the same underlying file.
+
+Technical Requirements
+----------------------
+Deduplication across variants:
+- Minor URL differences (query parameters, fragments, ./ path components) referring to the same logical file must reuse the same cache entry (memory and disk).
+- Parameter-order normalization for minor query parameters is mandatory: a=1&b=2 and b=2&a=1 map to the same cache entry.
+- Major parameters (?version, ?dataset) create separate entries.
+
+Bounded growth:
+- Cache growth for repeated or chained accesses remains proportional to the number of distinct logical files.
+- Allowed extra cache entries (slack) = max(10, N // 10), where N is total variants processed. For N ≤ 5, at most 1 extra entry is allowed.
+- Disk-backed cache growth follows the same principle.
+
+Fetch vs cache normalization:
+- Preserve original query string when fetching from the source.
+- Normalization applies only to cache identity, not the fetch path.
+
+Interface usage:
+- Both fs.open with chained URLs and top-level fsspec.open behave consistently.
+
+Repeated/chained calls:
+- Minor variations do not create new _cache entries.
+- Variants differing in major parameters or content produce new entries.
+
+Regression/functional correctness:
+- Existing cache functionality for distinct files continues to work.
+- Memory and disk footprint remain stable under repeated accesses.
+
+Mixed-group scenario:
+- Some URL variants map to the same logical file while others are distinct.
+
+Success Criteria:
+- _cache no longer grows indefinitely for repeated accesses to the same file.
+- Minor URL variations are deduplicated to a single cache entry per logical file.
+- Disk-backed cache does not create redundant files.
+- Distinct-content variants correctly produce separate cache entries and files.
+- Memory footprint and disk usage remain stable.
+
+Out of Scope:
+- Full eviction policies (LRU/LFU) are not required.
+- Handling entirely different files across distinct paths remains unchanged.
+
+Rationale:
+- Prevent unnecessary memory leaks and disk I/O.
+- Improve performance in long-running processes.
+- Align caching behavior with user expectations.
+
+
+To make the tests run, the following assumptions hold:
+   -SimpleCacheFileSystem exists and uses an internal dictionary _cache.
+   -The class supports opening files both with fs.open and via fsspec.open("simplecache::...").
+   -Variants of the same URL can normalize to the same cache entry.
+   -Cache size can be observed through the _cache attribute.
+   -Disk cache (via cache_storage) follows the same rules as memory cache.

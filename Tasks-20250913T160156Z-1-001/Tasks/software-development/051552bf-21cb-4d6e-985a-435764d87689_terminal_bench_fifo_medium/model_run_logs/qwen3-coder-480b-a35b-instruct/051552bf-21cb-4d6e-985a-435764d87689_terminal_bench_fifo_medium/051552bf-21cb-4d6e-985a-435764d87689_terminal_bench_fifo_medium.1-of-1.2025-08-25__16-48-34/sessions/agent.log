@@ -1,2723 +1,0 @@
-[?2004hroot@09078e0953c3:/app# ls -la; tmux wait -S done
-[?2004ltotal 48
-drwxr-xr-x 1 root root 4096 Aug 25 11:06 .
-drwxr-xr-x 1 root root 4096 Aug 25 11:18 ..
--rw-r--r-- 1 root root 6148 Aug 25 11:04 .DS_Store
--rw-rw-r-- 1 root root  371 Aug 25 11:04 Dockerfile
--rw-r--r-- 1 root root 1961 Aug 25 11:04 consumer.awk
--rw-rw-r-- 1 root root  432 Aug 25 11:04 docker-compose.yaml
--rw-rw-r-- 1 root root   68 Aug 25 11:04 run-tests.sh
--rw-rw-r-- 1 root root 4755 Aug 25 11:04 solution.sh
--rw-rw-r-- 1 root root 3178 Aug 25 11:04 task.yaml
-drwxr-xr-x 2 root root 4096 Aug 25 11:04 tests
-[?2004hroot@09078e0953c3:/app# mkdir -p pipe; tmux wait -S done
-[?2004l[?2004hroot@09078e0953c3:/app# mkfifo pipe/events.fifo; tmux wait -S done
-[?2004l[?2004hroot@09078e0953c3:/app# cat consumer.awk; tmux wait -S done
-[?2004lBEGIN { OFS=" " }
-# Extract simple JSON fields (string/number) by regex; tolerant to spacing.
-function json_get(s, key,   pat, s2) {
-  pat="\"" key "\"[[:space:]]*:[[:space:]]*"
-  if (match(s, pat)) {
-    s2=substr(s, RSTART+RLENGTH)
-    if (key=="ts" && match(s2, /^-?[0-9]+/)) return substr(s2, RSTART, RLENGTH)
-    if (match(s2, /^\"([^\"\\]|\\.)*\"/))    return substr(s2, RSTART+1, RLENGTH-2)
-  }
-  return ""
-}
-# Detect meta.admin=true without parsing whole JSON.
-function has_admin_true(s,    pat) {
-  pat="\"meta\"[[:space:]]*:[[:space:]]*\\{[^}]*\"admin\"[[:space:]]*:[[:space:]]*true"
-  return (s ~ pat)
-}
-# ISO8601 UTC using awk's strftime()
-function iso8601(ms,    sec){ sec=ms/1000; return strftime("%Y-%m-%dT%H:%M:%SZ", sec, 1) }
-
-# Purge sessions older than now-10s for a given user; return remaining distinct count.
-function purge_old(user, now,   k, ts, idx, cnt) {
-  cnt=0
-  for (k in last_seen) {
-    if (split(k, idx, SUBSEP)==2 && idx[1]==user) {
-      ts = last_seen[k]
-      if (ts < now-10000) delete last_seen[k]
-    }
-  }
-  for (k in last_seen) if (split(k, idx, SUBSEP)==2 && idx[1]==user) cnt++
-  return cnt
-}
-
-# Process only brace-delimited lines; malformed lines are ignored safely.
-# Input must be: cat pipe/events.fifo | awk -f consumer.awk
-/^\{.*\}$/ {
-  if (!has_admin_true($0)) next
-  ts  = json_get($0, "ts") + 0
-  usr = json_get($0, "user")
-  ses = json_get($0, "session")
-  if (ts==0 || usr=="" || ses=="") next
-
-  oldc = purge_old(usr, ts)
-  last_seen[usr SUBSEP ses] = ts
-
-  newc = 0
-  for (k in last_seen) if (split(k, idx, SUBSEP)==2 && idx[1]==usr) newc++
-
-  # Emit ONE alert on threshold crossing (<3 → ≥3) with 3s per-user cooldown
-  sec = int(ts/1000)
-  if (oldc < 3 && newc >= 3) {
-    if (!(usr in last_alert_sec) || sec - last_alert_sec[usr] >= 3) {
-      print "ALERT", usr, newc, "admin-sessions in 10s at", iso8601(ts) >> "alerts.txt"
-      fflush("alerts.txt")
-      last_alert_sec[usr] = sec
-    }
-  }
-}
-[?2004hroot@09078e0953c3:/app# touch producer.sh; tmux wait -S done
-[?2004l[?2004hroot@09078e0953c3:/app# chmod +x producer.sh; tmux wait -S done
-[?2004l[?2004hroot@09078e0953c3:/app# vim producer.sh
-[?2004l-bash: vim: command not found
-[?2004hroot@09078e0953c3:/app# nano producer.sh
-[?2004l-bash: nano: command not found
-[?2004hroot@09078e0953c3:/app# cat > producer.sh << 'EOF'
-[?2004l[?2004h> #!/bin/bash
-[?2004l[?2004h> 
-[?2004l[?2004h> # Create logs directory if it doesn't exist
-[?2004l[?2004h> mkdir -p logs
-[?2004l[?2004h> 
-[?2004l[?2004h> # Initialize variables
-[?2004l[?2004h> log_file="logs/events.log"
-[?2004l[?2004h> start_time=$(date +%s%3N)
-[?2004l[?2004h> end_time=$((start_time + 31000))  # Run for ~31 seconds
-[?2004l[?2004h> line_count=0
-[?2004l[?2004h> rotation_count=0
-[?2004l[?2004h> last_rotation_size=0
-[?2004l[?2004h> 
-[?2004l[?2004h> # Function to rotate logs when size exceeds 1024 bytes
-[?2004l[?2004h> rotate_logs() {
-[?2004l[?2004h>   if [[ -f "$log_file" ]]; then
-[?2004l[?2004h>     size=$(stat -c %s "$log_file" 2>/dev/null || echo 0)
-[?2004l[?2004h>     if [[ $size -ge 1024 ]]; then
-[?2004l[?2004h>       # Rotate files: .3 -> .4 (if exists), .2 -> .3, .1 -> .2, events.log -> .1
-[?2004l[?2004h>       for i in {3..1}; do
-[?2004l[?2004h>         if [[ -f "${log_file}.$i" ]]; then
-[?2004l[?2004h>           if [[ $i -eq 3 ]]; then
-[?2004l[?2004h>             rm -f "${log_file}.$((i+1))"
-[?2004l[?2004h>             mv "${log_file}.$i" "${log_file}.$((i+1))"
-[?2004l[?2004h>           else
-[?2004l[?2004h>             mv "${log_file}.$i" "${log_file}.$((i+1))"
-[?2004l[?2004h>           fi
-[?2004l[?2004h>         fi
-[?2004l[?2004h>       done
-[?2004l[?2004h>       mv "$log_file" "${log_file}.1"
-[?2004l[?2004h>       touch "$log_file"
-[?2004l[?2004h>       rotation_count=$((rotation_count + 1))
-[?2004l[?2004h>     fi
-[?2004l[?2004h>   fi
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> # Main loop to generate events
-[?2004l[?2004h> while [[ $(date +%s%3N) -lt $end_time ]]; do
-[?2004l[?2004h>   # Generate timestamp
-[?2004l[?2004h>   ts=$(date +%s%3N)
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Generate session ID (random 6-character alphanumeric string)
-[?2004l[?2004h>   session=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Generate user (with some Unicode characters)
-[?2004l[?2004h>   users=("赵钱孙" "李周吴" "郑王冯" "陈褚卫" "蒋沈韩" "admin1" "admin2" "user1" "user2" "测试用户")
-[?2004l[?2004h>   user=${users[$RANDOM % ${#users[@]}]}
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Randomly decide if this should be a malformed line (5-10% chance)
-[?2004l[?2004h>   if [[ $((RANDOM % 100)) -lt 8 ]]; then
-[?2004l[?2004h>     # Good line
-[?2004l[?2004h>     line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}}"
-[?2004l[?2004h>   else
-[?2004l[?2004h>     # Malformed line (missing quotes, wrong brackets, etc.)
-[?2004l[?2004h>     if [[ $((RANDOM % 2)) -eq 0 ]]; then
-[?2004l[?2004h>       line="{ts: $ts, session: \"$session\", user: \"$user\", meta: {admin: true}}"  # Missing outer quotes
-[?2004l[?2004h>     else
-[?2004l[?2004h>       line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}"  # Missing closing brace
-[?2004l[?2004h>     fi
-[?2004l[?2004h>   fi
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Output to STDOUT
-[?2004l[?2004h>   echo "$line"
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Append to log file
-[?2004l[?2004h>   echo "$line" >> "$log_file"
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Rotate logs if needed
-[?2004l[?2004h>   rotate_logs
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Increment line counter
-[?2004l[?2004h>   line_count=$((line_count + 1))
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Wait for 18-24ms
-[?2004l[?2004h>   sleep_time=$((18 + RANDOM % 7))
-[?2004l[?2004h>   sleep 0.0${sleep_time}s
-[?2004l[?2004h> 
-[?2004l[?2004h> done
-[?2004l[?2004h> 
-[?2004l[?2004h> # Output summary information
-[?2004l[?2004h> rotation_count_min=0
-[?2004l[?2004h> if [[ -f "${log_file}.1" ]]; then
-[?2004l[?2004h>   rotation_count_min=$((rotation_count_min + 1))
-[?2004l[?2004h> fi
-[?2004l[?2004h> if [[ -f "${log_file}.2" ]]; then
-[?2004l[?2004h>   rotation_count_min=$((rotation_count_min + 1))
-[?2004l[?2004h> fi
-[?2004l[?2004h> if [[ -f "${log_file}.3" ]]; then
-[?2004l[?2004h>   rotation_count_min=$((rotation_count_min + 1))
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "producer_lines_total=$line_count" > summary.tmp
-[?2004l[?2004h> echo "rotations_min=$rotation_count_min" >> summary.tmp
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@09078e0953c3:/app# cat > run.sh << 'EOF'
-[?2004l[?2004h> #!/bin/bash
-[?2004l[?2004h> 
-[?2004l[?2004h> # Use flock for idempotency
-[?2004l[?2004h> exec 200<"$0"
-[?2004l[?2004h> if ! flock -n 200; then
-[?2004l[?2004h>   echo "Another instance is already running"
-[?2004l[?2004h>   exit 1
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Ensure FIFO exists
-[?2004l[?2004h> mkdir -p pipe
-[?2004l[?2004h> if [[ ! -p pipe/events.fifo ]]; then
-[?2004l[?2004h>   mkfifo pipe/events.fifo
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Clean up any previous logs
-[?2004l[?2004h> rm -f logs/events.log logs/events.log.*
-[?2004l[?2004h> mkdir -p logs
-[?2004l[?2004h> 
-[?2004l[?2004h> # Clean up alerts file
-[?2004l[?2004h> rm -f alerts.txt
-[?2004l[?2004h> 
-[?2004l[?2004h> # Start consumer first (background)
-[?2004l[?2004h> echo "Starting consumer..."
-[?2004l[?2004h> consumer_start_ms=$(date +%s%3N)
-[?2004l[?2004h> cat pipe/events.fifo | awk -f consumer.awk &
-[?2004l[?2004h> consumer_pid=$!
-[?2004l[?2004h> 
-[?2004l[?2004h> # Wait a bit to ensure consumer is ready
-[?2004l[?2004h> sleep 0.1
-[?2004l[?2004h> 
-[?2004l[?2004h> # Start producer (background)
-[?2004l[?2004h> echo "Starting producer..."
-[?2004l[?2004h> producer_start_ms=$(date +%s%3N)
-[?2004l[?2004h> ./producer.sh > pipe/events.fifo &
-[?2004l[?2004h> producer_pid=$!
-[?2004l[?2004h> 
-[?2004l[?2004h> # Set up signal traps
-[?2004l[?2004h> trap 'kill $consumer_pid $producer_pid 2>/dev/null; exit' INT TERM
-[?2004l[?2004h> 
-[?2004l[?2004h> # Let it run for ~30-31 seconds
-[?2004l[?2004h> sleep 31
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "Stopping processes..."
-[?2004l[?2004h> # Stop producer first
-[?2004l[?2004h> kill $producer_pid 2>/dev/null
-[?2004l[?2004h> wait $producer_pid 2>/dev/null
-[?2004l[?2004h> producer_end_ms=$(date +%s%3N)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Give consumer a moment to finish processing
-[?2004l[?2004h> sleep 1
-[?2004l[?2004h> 
-[?2004l[?2004h> # Stop consumer
-[?2004l[?2004h> kill $consumer_pid 2>/dev/null
-[?2004l[?2004h> wait $consumer_pid 2>/dev/null
-[?2004l[?2004h> consumer_end_ms=$(date +%s%3N)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Generate timeline.json
-[?2004l[?2004h> cat > timeline.json << TIMELINE
-[?2004l[?2004h> {
-[?2004l[?2004h>   "consumer_start_ms": $consumer_start_ms,
-[?2004l[?2004h>   "producer_start_ms": $producer_start_ms,
-[?2004l[?2004h>   "consumer_end_ms": $consumer_end_ms,
-[?2004l[?2004h>   "producer_end_ms": $producer_end_ms
-[?2004l[?2004h> }
-[?2004l[?2004h> TIMELINE
-[?2004l[?2004h> 
-[?2004l[?2004h> # Get producer summary from temp file
-[?2004l[?2004h> if [[ -f summary.tmp ]]; then
-[?2004l[?2004h>   source summary.tmp
-[?2004l[?2004h>   rm summary.tmp
-[?2004l[?2004h> else
-[?2004l[?2004h>   producer_lines_total=0
-[?2004l[?2004h>   rotations_min=0
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Count alerts
-[?2004l[?2004h> alerts=$(wc -l < alerts.txt 2>/dev/null || echo 0)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Generate summary.json
-[?2004l[?2004h> cat > summary.json << SUMMARY
-[?2004l[?2004h> {
-[?2004l[?2004h>   "producer_lines_total": $producer_lines_total,
-[?2004l[?2004h>   "alerts": $alerts,
-[?2004l[?2004h>   "rotations_min": $rotations_min,
-[?2004l[?2004h>   "parallel": true
-[?2004l[?2004h> }
-[?2004l[?2004h> SUMMARY
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "DONE"
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@09078e0953c3:/app# chmod +x run.sh; tmux wait -S done
-[?2004l[?2004hroot@09078e0953c3:/app# cat producer.sh; tmux wait -S done
-[?2004l#!/bin/bash
-
-# Create logs directory if it doesn't exist
-mkdir -p logs
-
-# Initialize variables
-log_file="logs/events.log"
-start_time=$(date +%s%3N)
-end_time=$((start_time + 31000))  # Run for ~31 seconds
-line_count=0
-rotation_count=0
-last_rotation_size=0
-
-# Function to rotate logs when size exceeds 1024 bytes
-rotate_logs() {
-  if [[ -f "$log_file" ]]; then
-    size=$(stat -c %s "$log_file" 2>/dev/null || echo 0)
-    if [[ $size -ge 1024 ]]; then
-      # Rotate files: .3 -> .4 (if exists), .2 -> .3, .1 -> .2, events.log -> .1
-      for i in {3..1}; do
-        if [[ -f "${log_file}.$i" ]]; then
-          if [[ $i -eq 3 ]]; then
-            rm -f "${log_file}.$((i+1))"
-            mv "${log_file}.$i" "${log_file}.$((i+1))"
-          else
-            mv "${log_file}.$i" "${log_file}.$((i+1))"
-          fi
-        fi
-      done
-      mv "$log_file" "${log_file}.1"
-      touch "$log_file"
-      rotation_count=$((rotation_count + 1))
-    fi
-  fi
-}
-
-# Main loop to generate events
-while [[ $(date +%s%3N) -lt $end_time ]]; do
-  # Generate timestamp
-  ts=$(date +%s%3N)
-  
-  # Generate session ID (random 6-character alphanumeric string)
-  session=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
-  
-  # Generate user (with some Unicode characters)
-  users=("赵钱孙" "李周吴" "郑王冯" "陈褚卫" "蒋沈韩" "admin1" "admin2" "user1" "user2" "测试用户")
-  user=${users[$RANDOM % ${#users[@]}]}
-  
-  # Randomly decide if this should be a malformed line (5-10% chance)
-  if [[ $((RANDOM % 100)) -lt 8 ]]; then
-    # Good line
-    line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}}"
-  else
-    # Malformed line (missing quotes, wrong brackets, etc.)
-    if [[ $((RANDOM % 2)) -eq 0 ]]; then
-      line="{ts: $ts, session: \"$session\", user: \"$user\", meta: {admin: true}}"  # Missing outer quotes
-    else
-      line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}"  # Missing closing brace
-    fi
-  fi
-  
-  # Output to STDOUT
-  echo "$line"
-  
-  # Append to log file
-  echo "$line" >> "$log_file"
-  
-  # Rotate logs if needed
-  rotate_logs
-  
-  # Increment line counter
-  line_count=$((line_count + 1))
-  
-  # Wait for 18-24ms
-  sleep_time=$((18 + RANDOM % 7))
-  sleep 0.0${sleep_time}s
-
-done
-
-# Output summary information
-rotation_count_min=0
-if [[ -f "${log_file}.1" ]]; then
-  rotation_count_min=$((rotation_count_min + 1))
-fi
-if [[ -f "${log_file}.2" ]]; then
-  rotation_count_min=$((rotation_count_min + 1))
-fi
-if [[ -f "${log_file}.3" ]]; then
-  rotation_count_min=$((rotation_count_min + 1))
-fi
-
-echo "producer_lines_total=$line_count" > summary.tmp
-echo "rotations_min=$rotation_count_min" >> summary.tmp
-[?2004hroot@09078e0953c3:/app# head -20 producer.sh; tmux wait -S done
-[?2004l#!/bin/bash
-
-# Create logs directory if it doesn't exist
-mkdir -p logs
-
-# Initialize variables
-log_file="logs/events.log"
-start_time=$(date +%s%3N)
-end_time=$((start_time + 31000))  # Run for ~31 seconds
-line_count=0
-rotation_count=0
-last_rotation_size=0
-
-# Function to rotate logs when size exceeds 1024 bytes
-rotate_logs() {
-  if [[ -f "$log_file" ]]; then
-    size=$(stat -c %s "$log_file" 2>/dev/null || echo 0)
-    if [[ $size -ge 1024 ]]; then
-      # Rotate files: .3 -> .4 (if exists), .2 -> .3, .1 -> .2, events.log -> .1
-      for i in {3..1}; do
-[?2004hroot@09078e0953c3:/app# tail -50 producer.sh; tmux wait -S done
-[?2004l  
-  # Generate user (with some Unicode characters)
-  users=("赵钱孙" "李周吴" "郑王冯" "陈褚卫" "蒋沈韩" "admin1" "admin2" "user1" "user2" "测试用户")
-  user=${users[$RANDOM % ${#users[@]}]}
-  
-  # Randomly decide if this should be a malformed line (5-10% chance)
-  if [[ $((RANDOM % 100)) -lt 8 ]]; then
-    # Good line
-    line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}}"
-  else
-    # Malformed line (missing quotes, wrong brackets, etc.)
-    if [[ $((RANDOM % 2)) -eq 0 ]]; then
-      line="{ts: $ts, session: \"$session\", user: \"$user\", meta: {admin: true}}"  # Missing outer quotes
-    else
-      line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}"  # Missing closing brace
-    fi
-  fi
-  
-  # Output to STDOUT
-  echo "$line"
-  
-  # Append to log file
-  echo "$line" >> "$log_file"
-  
-  # Rotate logs if needed
-  rotate_logs
-  
-  # Increment line counter
-  line_count=$((line_count + 1))
-  
-  # Wait for 18-24ms
-  sleep_time=$((18 + RANDOM % 7))
-  sleep 0.0${sleep_time}s
-
-done
-
-# Output summary information
-rotation_count_min=0
-if [[ -f "${log_file}.1" ]]; then
-  rotation_count_min=$((rotation_count_min + 1))
-fi
-if [[ -f "${log_file}.2" ]]; then
-  rotation_count_min=$((rotation_count_min + 1))
-fi
-if [[ -f "${log_file}.3" ]]; then
-  rotation_count_min=$((rotation_count_min + 1))
-fi
-
-echo "producer_lines_total=$line_count" > summary.tmp
-echo "rotations_min=$rotation_count_min" >> summary.tmp
-[?2004hroot@09078e0953c3:/app# cat > producer.sh << 'EOF'
-[?2004l[?2004h> #!/bin/bash
-[?2004l[?2004h> 
-[?2004l[?2004h> # Create logs directory if it doesn't exist
-[?2004l[?2004h> mkdir -p logs
-[?2004l[?2004h> 
-[?2004l[?2004h> # Initialize variables
-[?2004l[?2004h> log_file="logs/events.log"
-[?2004l[?2004h> start_time=$(date +%s%3N)
-[?2004l[?2004h> end_time=$((start_time + 31000))  # Run for ~31 seconds
-[?2004l[?2004h> line_count=0
-[?2004l[?2004h> rotation_count=0
-[?2004l[?2004h> last_rotation_size=0
-[?2004l[?2004h> 
-[?2004l[?2004h> # Function to rotate logs when size exceeds 1024 bytes
-[?2004l[?2004h> rotate_logs() {
-[?2004l[?2004h>   if [[ -f "$log_file" ]]; then
-[?2004l[?2004h>     size=$(stat -c %s "$log_file" 2>/dev/null || echo 0)
-[?2004l[?2004h>     if [[ $size -ge 1024 ]]; then
-[?2004l[?2004h>       # Rotate files: .3 -> .4 (if exists), .2 -> .3, .1 -> .2, events.log -> .1
-[?2004l[?2004h>       for i in {3..1}; do
-[?2004l[?2004h>         if [[ -f "${log_file}.$i" ]]; then
-[?2004l[?2004h>           if [[ $i -eq 3 ]]; then
-[?2004l[?2004h>             rm -f "${log_file}.$((i+1))"
-[?2004l[?2004h>             mv "${log_file}.$i" "${log_file}.$((i+1))"
-[?2004l[?2004h>           else
-[?2004l[?2004h>             mv "${log_file}.$i" "${log_file}.$((i+1))"
-[?2004l[?2004h>           fi
-[?2004l[?2004h>         fi
-[?2004l[?2004h>       done
-[?2004l[?2004h>       mv "$log_file" "${log_file}.1"
-[?2004l[?2004h>       touch "$log_file"
-[?2004l[?2004h>       rotation_count=$((rotation_count + 1))
-[?2004l[?2004h>     fi
-[?2004l[?2004h>   fi
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> # Main loop to generate events
-[?2004l[?2004h> while [[ $(date +%s%3N) -lt $end_time ]]; do
-[?2004l[?2004h>   # Generate timestamp
-[?2004l[?2004h>   ts=$(date +%s%3N)
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Generate session ID (random 6-character alphanumeric string)
-[?2004l[?2004h>   session=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Generate user (with some Unicode characters)
-[?2004l[?2004h>   users=("赵钱孙" "李周吴" "郑王冯" "陈褚卫" "蒋沈韩" "admin1" "admin2" "user1" "user2" "测试用户")
-[?2004l[?2004h>   user=${users[$RANDOM % ${#users[@]}]}
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Randomly decide if this should be a malformed line (5-10% chance)
-[?2004l[?2004h>   if [[ $((RANDOM % 100)) -lt 92 ]]; then
-[?2004l[?2004h>     # Good line (92% of the time to get ~8% malformed)
-[?2004l[?2004h>     line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}}"
-[?2004l[?2004h>   else
-[?2004l[?2004h>     # Malformed line (missing quotes, wrong brackets, etc.)
-[?2004l[?2004h>     if [[ $((RANDOM % 2)) -eq 0 ]]; then
-[?2004l[?2004h>       line="{ts: $ts, session: \"$session\", user: \"$user\", meta: {admin: true}}"  # Missing outer quotes
-[?2004l[?2004h>     else
-[?2004l[?2004h>       line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}"  # Missing closing brace
-[?2004l[?2004h>     fi
-[?2004l[?2004h>   fi
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Output to STDOUT
-[?2004l[?2004h>   echo "$line"
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Append to log file
-[?2004l[?2004h>   echo "$line" >> "$log_file"
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Rotate logs if needed
-[?2004l[?2004h>   rotate_logs
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Increment line counter
-[?2004l[?2004h>   line_count=$((line_count + 1))
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Wait for 18-24ms
-[?2004l[?2004h>   sleep_time=$((18 + RANDOM % 7))
-[?2004l[?2004h>   sleep 0.0${sleep_time}s
-[?2004l[?2004h> done
-[?2004l[?2004h> 
-[?2004l[?2004h> # Output summary information
-[?2004l[?2004h> rotation_count_min=0
-[?2004l[?2004h> if [[ -f "${log_file}.1" ]]; then
-[?2004l[?2004h>   rotation_count_min=$((rotation_count_min + 1))
-[?2004l[?2004h> fi
-[?2004l[?2004h> if [[ -f "${log_file}.2" ]]; then
-[?2004l[?2004h>   rotation_count_min=$((rotation_count_min + 1))
-[?2004l[?2004h> fi
-[?2004l[?2004h> if [[ -f "${log_file}.3" ]]; then
-[?2004l[?2004h>   rotation_count_min=$((rotation_count_min + 1))
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "producer_lines_total=$line_count" > summary.tmp
-[?2004l[?2004h> echo "rotations_min=$rotation_count_min" >> summary.tmp
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@09078e0953c3:/app# ./run.sh; tmux wait -S done
-[?2004lStarting consumer...
-awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
-Starting producer...
-Stopping processes...
-DONE
-[?2004hroot@09078e0953c3:/app# cat summary.json; tmux wait -S done
-[?2004l{
-  "producer_lines_total": 0,
-  "alerts": 10,
-  "rotations_min": 0,
-  "parallel": true
-}
-[?2004hroot@09078e0953c3:/app# cat timeline.json; tmux wait -S done
-[?2004l{
-  "consumer_start_ms": 1756120846984,
-  "producer_start_ms": 1756120847093,
-  "consumer_end_ms": 1756120879108,
-  "producer_end_ms": 1756120878099
-}
-[?2004hroot@09078e0953c3:/app# cat alerts.txt; tmux wait -S done
-[?2004lALERT user2 3 admin-sessions in 10s at 2025-08-25T11:20:47Z
-ALERT 赵钱孙 3 admin-sessions in 10s at 2025-08-25T11:20:47Z
-ALERT 李周吴 3 admin-sessions in 10s at 2025-08-25T11:20:47Z
-ALERT admin1 3 admin-sessions in 10s at 2025-08-25T11:20:47Z
-ALERT admin2 3 admin-sessions in 10s at 2025-08-25T11:20:47Z
-ALERT 陈褚卫 3 admin-sessions in 10s at 2025-08-25T11:20:47Z
-ALERT 郑王冯 3 admin-sessions in 10s at 2025-08-25T11:20:48Z
-ALERT 蒋沈韩 3 admin-sessions in 10s at 2025-08-25T11:20:48Z
-ALERT 测试用户 3 admin-sessions in 10s at 2025-08-25T11:20:48Z
-ALERT user1 3 admin-sessions in 10s at 2025-08-25T11:20:49Z
-[?2004hroot@09078e0953c3:/app# ./producer.sh; tmux wait -S done
-[?2004l{"ts": 1756120895017, "session": "jyROJh", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120895050, "session": "vfyxMp", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120895078, "session": "OgQnPt", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120895109, "session": "Mvyg1H", "user": "测试用户", "meta": {"admin": true}
-{"ts": 1756120895140, "session": "W5o0IS", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120895167, "session": "R7PHn7", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120895195, "session": "WgS9GK", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120895228, "session": "TBTqTt", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120895257, "session": "0Q7RIz", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120895286, "session": "Ts7Opq", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120895314, "session": "ECZpAF", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120895342, "session": "aRgsb4", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120895370, "session": "S9KuHH", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120895397, "session": "7uMCH9", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120895432, "session": "zV6t2q", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120895461, "session": "uJBq31", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120895497, "session": "PHiKr8", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120895529, "session": "I6i8TZ", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120895564, "session": "E4250Q", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120895597, "session": "iQAcqs", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120895628, "session": "uWYjLV", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120895658, "session": "T1vB1s", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120895686, "session": "tXEfwO", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120895720, "session": "VIOKYH", "user": "李周吴", "meta": {"admin": true}}
-{ts: 1756120895752, session: "hW8bvd", user: "测试用户", meta: {admin: true}}
-{"ts": 1756120895781, "session": "lfv0Iw", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120895815, "session": "A8EBaF", "user": "admin2", "meta": {"admin": true}}
-{ts: 1756120895848, session: "bbLFZK", user: "蒋沈韩", meta: {admin: true}}
-{"ts": 1756120895889, "session": "CkYVGc", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120895920, "session": "7LKDXh", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120895951, "session": "FprOhx", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120895982, "session": "NJntTL", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120896015, "session": "Ja2pi4", "user": "陈褚卫", "meta": {"admin": true}
-{"ts": 1756120896045, "session": "pINK4F", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120896079, "session": "TrZldW", "user": "赵钱孙", "meta": {"admin": true}
-{ts: 1756120896110, session: "7JRlSF", user: "赵钱孙", meta: {admin: true}}
-{ts: 1756120896139, session: "Fte1lk", user: "user1", meta: {admin: true}}
-{"ts": 1756120896172, "session": "vOEfg8", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120896207, "session": "QtRPpF", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120896242, "session": "RDTevW", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120896280, "session": "OWUddr", "user": "郑王冯", "meta": {"admin": true}}
-{ts: 1756120896310, session: "tTHmRS", user: "admin2", meta: {admin: true}}
-{ts: 1756120896344, session: "eJfAJR", user: "user2", meta: {admin: true}}
-{"ts": 1756120896379, "session": "SXZQw7", "user": "user2", "meta": {"admin": true}}
-{ts: 1756120896411, session: "DvGGHI", user: "user2", meta: {admin: true}}
-{"ts": 1756120896444, "session": "4Pjvch", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120896476, "session": "xUVPvA", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120896509, "session": "N9zRDl", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120896538, "session": "FSHiYi", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120896569, "session": "1P1yVF", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120896594, "session": "pVbfcA", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120896625, "session": "ofE8Vf", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120896653, "session": "zNx5Vg", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120896688, "session": "FL4FWS", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120896721, "session": "rzKWHG", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120896751, "session": "9ZRxWs", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120896778, "session": "N9wW4v", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120896827, "session": "C8uvaw", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120896854, "session": "32OkOR", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120896887, "session": "dh6cov", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120896916, "session": "iWTFiH", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120896953, "session": "5DPHiZ", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120896986, "session": "OcyULB", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120897019, "session": "vwI4KY", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120897054, "session": "NXHpIX", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120897086, "session": "CfVIlt", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120897116, "session": "XaVtAt", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120897144, "session": "FvV15o", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120897171, "session": "nOPz5V", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120897198, "session": "vA1zdI", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120897231, "session": "4u86m3", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120897263, "session": "YSHPQy", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120897298, "session": "v5ARNr", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120897333, "session": "tBoiTk", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120897363, "session": "pgeshS", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120897397, "session": "VvJmcu", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120897428, "session": "tudblK", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120897469, "session": "zpVuqm", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120897501, "session": "NBwCXV", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120897535, "session": "93kGg6", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120897563, "session": "YcrmLS", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120897593, "session": "dK5mHP", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120897625, "session": "QfUG7O", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120897658, "session": "I9pPs5", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120897693, "session": "t0rjgn", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120897721, "session": "1y55zj", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120897757, "session": "DrCSt7", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120897788, "session": "dbSZWl", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120897823, "session": "CS62WP", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120897861, "session": "qkgS9z", "user": "user1", "meta": {"admin": true}}
-{ts: 1756120897890, session: "Qx5maI", user: "admin1", meta: {admin: true}}
-{"ts": 1756120897921, "session": "mt50x9", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120897952, "session": "O1KQjn", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120897982, "session": "Uj15NF", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120898014, "session": "k4sT8h", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120898047, "session": "OxttcK", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120898081, "session": "YJFkXS", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120898113, "session": "k6qnhh", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120898146, "session": "2O6585", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120898177, "session": "2a4Xy8", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120898206, "session": "zSH7Fv", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120898242, "session": "uWrFAv", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120898274, "session": "D0IFlL", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120898304, "session": "issWJi", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120898338, "session": "UMC5vu", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120898371, "session": "PVe9Bq", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120898406, "session": "rPycEc", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120898440, "session": "EKjyCJ", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120898468, "session": "IAPQHu", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120898503, "session": "UC3O75", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120898538, "session": "BvLqeR", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120898573, "session": "oir7f3", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120898606, "session": "GxlFPm", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120898645, "session": "jm7Aa2", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120898674, "session": "jXzYUQ", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120898707, "session": "9fJg2I", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120898737, "session": "tNZ8qD", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120898772, "session": "j26lHD", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120898808, "session": "MV7fi4", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120898840, "session": "BqaIUW", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120898872, "session": "UGAeNv", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120898901, "session": "k43r25", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120898935, "session": "a9vwW2", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120898969, "session": "YzXT88", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120899003, "session": "qpoICd", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120899039, "session": "3pkPtl", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120899071, "session": "PuHvFc", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120899106, "session": "imtWAj", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120899140, "session": "xzUpvu", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120899172, "session": "ds8D9Q", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120899201, "session": "Vg0a4a", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120899231, "session": "6MSwtY", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120899259, "session": "T26a3q", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120899293, "session": "VxXs7i", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120899327, "session": "CeciUV", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120899357, "session": "1QWXdC", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120899392, "session": "YfvYUI", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120899428, "session": "128qRT", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120899462, "session": "LNpnzZ", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120899490, "session": "qUqEXQ", "user": "蒋沈韩", "meta": {"admin": true}}
-{ts: 1756120899524, session: "QsMGth", user: "陈褚卫", meta: {admin: true}}
-{"ts": 1756120899559, "session": "zWyhY0", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120899593, "session": "ByYKNt", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120899623, "session": "0F1cc1", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120899658, "session": "jRxjAk", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120899693, "session": "BGlA3S", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120899727, "session": "mJgZwk", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120899762, "session": "unu3DR", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120899792, "session": "uc7SsL", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120899832, "session": "TDPclu", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120899861, "session": "8mk8vr", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120899894, "session": "PhR6l2", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120899927, "session": "d2kfxE", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120899959, "session": "dgl0TX", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120899991, "session": "Y6PGgi", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120900021, "session": "vOCkw7", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120900057, "session": "DuOpkJ", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120900092, "session": "xIjKkp", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120900121, "session": "OBgQI4", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120900150, "session": "aJaZKF", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120900179, "session": "STsK0J", "user": "测试用户", "meta": {"admin": true}
-{"ts": 1756120900215, "session": "hewMTG", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120900242, "session": "Qf0eUO", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120900273, "session": "1SswWd", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120900301, "session": "uyD3Yn", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120900332, "session": "qsepcS", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120900359, "session": "sKWh6f", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120900391, "session": "BYwCnp", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120900423, "session": "LWFCyj", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120900455, "session": "KgNxrE", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120900487, "session": "c1qfZx", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120900519, "session": "MLZBmc", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120900551, "session": "7CsEVM", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120900589, "session": "hLrIJA", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120900618, "session": "IuPJQM", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120900652, "session": "b34xef", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120900681, "session": "WNk8gZ", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120900714, "session": "QYJ5Db", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120900742, "session": "naQkap", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120900772, "session": "1WOBsi", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120900807, "session": "lNXwnY", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120900841, "session": "5SymoS", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120900875, "session": "WBF9s3", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120900903, "session": "rZuVyh", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120900932, "session": "CM6Esp", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120900968, "session": "AxyhCA", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120900997, "session": "2NRr8o", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120901029, "session": "jGkYTI", "user": "赵钱孙", "meta": {"admin": true}
-{"ts": 1756120901058, "session": "38HmrB", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120901093, "session": "oqHSyd", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120901131, "session": "un3fTU", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120901161, "session": "KEgQXJ", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120901195, "session": "Av41O1", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120901229, "session": "M3imwd", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120901260, "session": "06Qn42", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120901294, "session": "pMCTZS", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120901329, "session": "U9mMfA", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120901372, "session": "2snUPv", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120901406, "session": "TbjZFo", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120901439, "session": "JSrMaG", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120901466, "session": "855xdm", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120901499, "session": "P4WnBk", "user": "李周吴", "meta": {"admin": true}}
-{ts: 1756120901529, session: "zyJiSv", user: "陈褚卫", meta: {admin: true}}
-{"ts": 1756120901561, "session": "U4mO7C", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120901591, "session": "xZvtVe", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120901619, "session": "KA6nqe", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120901653, "session": "2DgQwv", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120901686, "session": "VFESbg", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120901717, "session": "SimUQY", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120901752, "session": "iiA5J9", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120901783, "session": "RO63Wl", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120901813, "session": "2Msbc4", "user": "admin2", "meta": {"admin": true}
-{"ts": 1756120901840, "session": "FsnUUZ", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120901872, "session": "OSTmZp", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120901899, "session": "5GtgA1", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120901924, "session": "J2GQeI", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120901954, "session": "BJTU1Z", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120901982, "session": "su8tu5", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120902008, "session": "xw8rGo", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120902037, "session": "dP4P8n", "user": "admin1", "meta": {"admin": true}}
-{ts: 1756120902063, session: "5xHYa0", user: "user2", meta: {admin: true}}
-{"ts": 1756120902093, "session": "8yCTHL", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120902124, "session": "artXsV", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120902152, "session": "1F6w4l", "user": "user1", "meta": {"admin": true}
-{"ts": 1756120902177, "session": "JuDEla", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120902206, "session": "P24vH8", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120902242, "session": "HLUDaS", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120902276, "session": "xehZoi", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120902308, "session": "rRf9yL", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120902340, "session": "0Q6mdY", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120902371, "session": "upzIze", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120902402, "session": "mRhLdf", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120902433, "session": "pxuENd", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120902474, "session": "l0eBq9", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120902504, "session": "uj836j", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120902534, "session": "NI62sq", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120902560, "session": "BLBfOH", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120902591, "session": "GLeQk0", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120902619, "session": "dTGLi7", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120902653, "session": "3ZU1SO", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120902686, "session": "XzJqmY", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120902719, "session": "uRFeYB", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120902749, "session": "6Sw98H", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120902784, "session": "rYh9JY", "user": "赵钱孙", "meta": {"admin": true}
-{"ts": 1756120902819, "session": "voczYX", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120902857, "session": "URkrq0", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120902891, "session": "MCTdCZ", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120902921, "session": "91yU5c", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120902950, "session": "0jHU1H", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120902984, "session": "gkGiLa", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120903015, "session": "KbMfXG", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120903047, "session": "NzFOcl", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120903076, "session": "rmG7AG", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120903109, "session": "7TejnC", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120903142, "session": "AFWHYY", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120903179, "session": "C5S8E3", "user": "蒋沈韩", "meta": {"admin": true}}
-{ts: 1756120903209, session: "cGR13F", user: "郑王冯", meta: {admin: true}}
-{"ts": 1756120903251, "session": "z6IXxy", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120903280, "session": "ac1ddx", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120903313, "session": "3dSQMx", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120903341, "session": "RsRjNe", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120903369, "session": "zcBk0P", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120903407, "session": "vXQYZt", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120903437, "session": "RzXK0M", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120903468, "session": "NGTtE3", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120903501, "session": "zR5njQ", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120903530, "session": "I2a5Rt", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120903562, "session": "jvXq3g", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120903594, "session": "o9sh1d", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120903630, "session": "GQu26f", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120903663, "session": "BfrTx7", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120903695, "session": "hHgpqW", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120903726, "session": "w1eyI1", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120903759, "session": "w4T7OV", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120903791, "session": "V7SIoA", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120903823, "session": "wrbd3w", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120903858, "session": "mGuDLE", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120903887, "session": "HIYeqN", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120903918, "session": "Qe1qTn", "user": "郑王冯", "meta": {"admin": true}}
-{ts: 1756120903949, session: "SYv8s9", user: "admin1", meta: {admin: true}}
-{"ts": 1756120903980, "session": "tKOpGv", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120904017, "session": "OyJfD2", "user": "郑王冯", "meta": {"admin": true}}
-C-c
-{"ts": 1756120904045, "session": "Hj4UxJ", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120904074, "session": "hNEfkw", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120904100, "session": "WwrDv7", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120904126, "session": "HWi66w", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120904152, "session": "BQzDuI", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120904181, "session": "MYdtQO", "user": "user1", "meta": {"admin": true}}
-{ts: 1756120904215, session: "l2HSPI", user: "陈褚卫", meta: {admin: true}}
-{"ts": 1756120904240, "session": "DbYpoz", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120904272, "session": "4waORl", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120904299, "session": "NJc2gH", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120904329, "session": "mlcIC8", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120904366, "session": "fkWiQt", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120904397, "session": "PU2gP5", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120904426, "session": "MtfS5t", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120904459, "session": "ihLOgc", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120904491, "session": "6n5Jml", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120904526, "session": "LeaEeZ", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120904558, "session": "cBZ28J", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120904592, "session": "HeUyW2", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120904626, "session": "f4ALBR", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120904661, "session": "T9pZk8", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120904690, "session": "3n6Etn", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120904722, "session": "tK3e2u", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120904758, "session": "96oFQ7", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120904793, "session": "pohgFP", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120904823, "session": "fTE3OW", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120904857, "session": "ObAyK8", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120904892, "session": "gKX1C2", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120904927, "session": "Mq6unq", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120904963, "session": "3tlvaP", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120904993, "session": "Wyxby0", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120905023, "session": "mCLksl", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120905051, "session": "NROYfa", "user": "测试用户", "meta": {"admin": true}
-{"ts": 1756120905085, "session": "8Mvlfu", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120905117, "session": "PgP9Ip", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120905156, "session": "4fOvCQ", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120905187, "session": "3pJwVH", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120905215, "session": "qZ6YWP", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120905244, "session": "ZwxViY", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120905279, "session": "6AVFDR", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120905307, "session": "M7OZ1k", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120905340, "session": "u9GMbv", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120905372, "session": "3pppJm", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120905405, "session": "EjsELG", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120905439, "session": "30nFYb", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120905469, "session": "lvUHr5", "user": "郑王冯", "meta": {"admin": true}
-{"ts": 1756120905502, "session": "zqbdFc", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120905538, "session": "E6FfPK", "user": "郑王冯", "meta": {"admin": true}}
-{ts: 1756120905569, session: "FhC7LU", user: "赵钱孙", meta: {admin: true}}
-{"ts": 1756120905602, "session": "GTiFpM", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120905634, "session": "EyBCCl", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120905663, "session": "U0DfMv", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120905692, "session": "ck0k2l", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120905727, "session": "tgKBQO", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120905761, "session": "g3kD3e", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120905791, "session": "JD7bVV", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120905820, "session": "l9VPMK", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120905853, "session": "k9VPq5", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120905892, "session": "5WiHk7", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120905933, "session": "RH8m2S", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120905967, "session": "im3nya", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120905995, "session": "RCmagS", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120906027, "session": "hKowWZ", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120906061, "session": "ZRtV1C", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120906089, "session": "iFwGbS", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120906119, "session": "RRQxQi", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120906155, "session": "LqQxCn", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120906199, "session": "york1W", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120906228, "session": "EkUK2a", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120906259, "session": "jrikzl", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120906288, "session": "mwKFBR", "user": "郑王冯", "meta": {"admin": true}
-{"ts": 1756120906324, "session": "ZOtra1", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120906359, "session": "AIxeuX", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120906391, "session": "7AxNNB", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120906420, "session": "kMI7Y2", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120906452, "session": "1ZsQjH", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120906485, "session": "0PPCKM", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120906518, "session": "wnXZXC", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120906554, "session": "xggz2T", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120906585, "session": "7l06rn", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120906619, "session": "K0SlFD", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120906651, "session": "DpCVn3", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120906681, "session": "A0Aiww", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120906719, "session": "56hyiC", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120906751, "session": "nyQgbv", "user": "陈褚卫", "meta": {"admin": true}}
-{ts: 1756120906784, session: "CQEFrs", user: "admin2", meta: {admin: true}}
-{"ts": 1756120906815, "session": "YgYsL1", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120906850, "session": "H7fzh7", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120906879, "session": "wGkzRa", "user": "user2", "meta": {"admin": true}
-{"ts": 1756120906916, "session": "VDSU9l", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120906947, "session": "R4AeO8", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120906977, "session": "6YVEam", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120907008, "session": "L1QFua", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120907044, "session": "fvmv0F", "user": "李周吴", "meta": {"admin": true}}
-{ts: 1756120907077, session: "4DQ3e0", user: "user2", meta: {admin: true}}
-{"ts": 1756120907111, "session": "Ianh3w", "user": "郑王冯", "meta": {"admin": true}
-{"ts": 1756120907145, "session": "LrbA62", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120907173, "session": "UOwavj", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120907199, "session": "KhRymj", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120907227, "session": "KYwNL6", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120907256, "session": "HPoBbk", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120907284, "session": "45RAeB", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120907310, "session": "B0JB6N", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120907341, "session": "TF0AYy", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120907368, "session": "wV8w0e", "user": "李周吴", "meta": {"admin": true}}
-ls -la summary.tmp; tmux wait -S done
-{"ts": 1756120907393, "session": "45EJ0U", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120907422, "session": "d4Kpxv", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120907450, "session": "PxtMDu", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120907480, "session": "5TAmS8", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120907507, "session": "8weZ8c", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120907536, "session": "wraGdT", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120907562, "session": "w31w5Y", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120907590, "session": "eYlohu", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120907617, "session": "9eZml2", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120907647, "session": "aNRHKN", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120907676, "session": "3f6UvM", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120907708, "session": "nIQ873", "user": "陈褚卫", "meta": {"admin": true}
-{"ts": 1756120907741, "session": "D7op27", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120907778, "session": "mppJTw", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120907807, "session": "TJUdDc", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120907844, "session": "LDbaFu", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120907872, "session": "kUMKq7", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120907908, "session": "VbQXWJ", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120907944, "session": "eK8MRj", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120907975, "session": "JIIpo3", "user": "admin1", "meta": {"admin": true}}
-{ts: 1756120908007, session: "vherkK", user: "user2", meta: {admin: true}}
-{"ts": 1756120908036, "session": "euI2bV", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120908067, "session": "kW3BwZ", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120908102, "session": "ySz98a", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120908138, "session": "M5KFKI", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120908169, "session": "UhyFcH", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120908203, "session": "zfZBZp", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120908241, "session": "H4wjK4", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120908273, "session": "acudjd", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120908304, "session": "hkmFez", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120908333, "session": "uPFVq0", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120908364, "session": "NwHm19", "user": "admin2", "meta": {"admin": true}
-{"ts": 1756120908398, "session": "Jy35ag", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120908431, "session": "Vx44CN", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120908462, "session": "UccDSV", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120908492, "session": "ZcccrS", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120908520, "session": "RaJKU1", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120908548, "session": "qhsqAg", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120908577, "session": "RiUTc7", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120908613, "session": "CdHaWb", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120908640, "session": "X6j5FY", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120908669, "session": "hcKQDs", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120908699, "session": "70LY0O", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120908725, "session": "mRvcj3", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120908760, "session": "zsCV66", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120908787, "session": "WRVihk", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120908819, "session": "E6sxLg", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120908850, "session": "re0W4k", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120908885, "session": "WUv9M4", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120908915, "session": "SSChqM", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120908949, "session": "tooUU9", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120908986, "session": "fn8PXM", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120909019, "session": "VFu7ss", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120909053, "session": "lUjF6r", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120909086, "session": "dTATfl", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120909115, "session": "ZlQswt", "user": "admin1", "meta": {"admin": true}
-{"ts": 1756120909147, "session": "7s305P", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120909178, "session": "Rv30AU", "user": "赵钱孙", "meta": {"admin": true}
-{"ts": 1756120909207, "session": "2Zg7NK", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120909242, "session": "hH4adF", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120909275, "session": "1GY8JB", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120909312, "session": "V2PVtf", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120909344, "session": "RhJTUJ", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120909387, "session": "FXQd51", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120909421, "session": "8V5ihR", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120909456, "session": "2Q36QJ", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120909489, "session": "9pxulx", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120909517, "session": "38vh8K", "user": "陈褚卫", "meta": {"admin": true}
-{"ts": 1756120909546, "session": "zqaeF0", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120909575, "session": "OZM3z9", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756120909608, "session": "VDJQ0y", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120909642, "session": "Z5e08A", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120909676, "session": "rCDjZd", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120909707, "session": "5BTEFi", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120909742, "session": "JnVZhe", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120909779, "session": "bBZE3s", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120909812, "session": "SC94Go", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120909841, "session": "2Q3MxZ", "user": "admin2", "meta": {"admin": true}
-{"ts": 1756120909873, "session": "zdaY3N", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120909908, "session": "YMMvqk", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120909944, "session": "pWm4MK", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120909974, "session": "16xFZJ", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756120910007, "session": "LhktxG", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120910038, "session": "q88Gkx", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120910071, "session": "NJ9Uhg", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120910103, "session": "S9WiAq", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120910136, "session": "jscdBm", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120910174, "session": "UstQbc", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120910206, "session": "KYqLRh", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120910239, "session": "GVA59V", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120910269, "session": "zCxBzn", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120910298, "session": "3WsueY", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120910331, "session": "6CH3aB", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120910366, "session": "CtOdyy", "user": "陈褚卫", "meta": {"admin": true}}
-{ts: 1756120910398, session: "e4IEh6", user: "陈褚卫", meta: {admin: true}}
-{"ts": 1756120910428, "session": "OyB0su", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756120910462, "session": "ZhJXoW", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120910499, "session": "835C74", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120910532, "session": "7EN713", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756120910570, "session": "z0SZRT", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756120910600, "session": "FfE4KB", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756120910630, "session": "l9Md9L", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756120910659, "session": "VSaCc2", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756120910693, "session": "frybGr", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120910721, "session": "ndK8KU", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756120910752, "session": "mQxB3y", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756120910780, "session": "LkB5u1", "user": "郑王冯", "meta": {"admin": true}}
-^C; tmux wait -S done
-
-[?2004hroot@09078e0953c3:/app# ; tmux wait -S done
-[?2004l-bash: syntax error near unexpected token `;'
-[?2004hroot@09078e0953c3:/app# ls -la summary.tmp; tmux wait -S done
-[?2004lls: cannot access 'summary.tmp': No such file or directory
-[?2004hroot@09078e0953c3:/app# ls -la logs/; tmux wait -S done
-[?2004ltotal 28
-drwxr-xr-x 2 root root 4096 Aug 25 11:21 .
-drwxr-xr-x 1 root root 4096 Aug 25 11:21 ..
--rw-r--r-- 1 root root  698 Aug 25 11:21 events.log
--rw-r--r-- 1 root root 1067 Aug 25 11:21 events.log.1
--rw-r--r-- 1 root root 1056 Aug 25 11:21 events.log.2
--rw-r--r-- 1 root root 1060 Aug 25 11:21 events.log.3
--rw-r--r-- 1 root root 1047 Aug 25 11:21 events.log.4
-[?2004hroot@09078e0953c3:/app# cat > run.sh << 'EOF'
-[?2004l[?2004h> #!/bin/bash
-[?2004l[?2004h> 
-[?2004l[?2004h> # Use flock for idempotency
-[?2004l[?2004h> exec 200<"$0"
-[?2004l[?2004h> if ! flock -n 200; then
-[?2004l[?2004h>   echo "Another instance is already running"
-[?2004l[?2004h>   exit 1
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Ensure FIFO exists
-[?2004l[?2004h> mkdir -p pipe
-[?2004l[?2004h> if [[ ! -p pipe/events.fifo ]]; then
-[?2004l[?2004h>   mkfifo pipe/events.fifo
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Clean up any previous logs
-[?2004l[?2004h> rm -f logs/events.log logs/events.log.*
-[?2004l[?2004h> mkdir -p logs
-[?2004l[?2004h> 
-[?2004l[?2004h> # Clean up alerts file
-[?2004l[?2004h> rm -f alerts.txt
-[?2004l[?2004h> rm -f summary.tmp
-[?2004l[?2004h> 
-[?2004l[?2004h> # Start consumer first (background)
-[?2004l[?2004h> echo "Starting consumer..."
-[?2004l[?2004h> consumer_start_ms=$(date +%s%3N)
-[?2004l[?2004h> cat pipe/events.fifo | awk -f consumer.awk &
-[?2004l[?2004h> consumer_pid=$!
-[?2004l[?2004h> 
-[?2004l[?2004h> # Wait a bit to ensure consumer is ready
-[?2004l[?2004h> sleep 0.1
-[?2004l[?2004h> 
-[?2004l[?2004h> # Start producer (background)
-[?2004l[?2004h> echo "Starting producer..."
-[?2004l[?2004h> producer_start_ms=$(date +%s%3N)
-[?2004l[?2004h> ./producer.sh > pipe/events.fifo &
-[?2004l[?2004h> producer_pid=$!
-[?2004l[?2004h> 
-[?2004l[?2004h> # Set up signal traps
-[?2004l[?2004h> trap 'kill $consumer_pid $producer_pid 2>/dev/null; exit' INT TERM
-[?2004l[?2004h> 
-[?2004l[?2004h> # Let it run for ~30-31 seconds
-[?2004l[?2004h> sleep 31
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "Stopping processes..."
-[?2004l[?2004h> # Stop producer first
-[?2004l[?2004h> kill $producer_pid 2>/dev/null
-[?2004l[?2004h> wait $producer_pid 2>/dev/null
-[?2004l[?2004h> producer_end_ms=$(date +%s%3N)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Give consumer a moment to finish processing
-[?2004l[?2004h> sleep 1
-[?2004l[?2004h> 
-[?2004l[?2004h> # Stop consumer
-[?2004l[?2004h> kill $consumer_pid 2>/dev/null
-[?2004l[?2004h> wait $consumer_pid 2>/dev/null
-[?2004l[?2004h> consumer_end_ms=$(date +%s%3N)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Generate timeline.json
-[?2004l[?2004h> cat > timeline.json << TIMELINE
-[?2004l[?2004h> {
-[?2004l[?2004h>   "consumer_start_ms": $consumer_start_ms,
-[?2004l[?2004h>   "producer_start_ms": $producer_start_ms,
-[?2004l[?2004h>   "consumer_end_ms": $consumer_end_ms,
-[?2004l[?2004h>   "producer_end_ms": $producer_end_ms
-[?2004l[?2004h> }
-[?2004l[?2004h> TIMELINE
-[?2004l[?2004h> 
-[?2004l[?2004h> # Get producer summary from temp file
-[?2004l[?2004h> if [[ -f summary.tmp ]]; then
-[?2004l[?2004h>   source summary.tmp
-[?2004l[?2004h>   rm summary.tmp
-[?2004l[?2004h> else
-[?2004l[?2004h>   producer_lines_total=0
-[?2004l[?2004h>   rotations_min=0
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Count alerts
-[?2004l[?2004h> alerts=$(wc -l < alerts.txt 2>/dev/null || echo 0)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Generate summary.json
-[?2004l[?2004h> cat > summary.json << SUMMARY
-[?2004l[?2004h> {
-[?2004l[?2004h>   "producer_lines_total": $producer_lines_total,
-[?2004l[?2004h>   "alerts": $alerts,
-[?2004l[?2004h>   "rotations_min": $rotations_min,
-[?2004l[?2004h>   "parallel": true
-[?2004l[?2004h> }
-[?2004l[?2004h> SUMMARY
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "DONE"
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@09078e0953c3:/app# ./run.sh; tmux wait -S done
-[?2004lStarting consumer...
-awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
-Starting producer...
-Stopping processes...
-DONE
-[?2004hroot@09078e0953c3:/app# cat summary.json; tmux wait -S done
-[?2004l{
-  "producer_lines_total": 0,
-  "alerts": 10,
-  "rotations_min": 0,
-  "parallel": true
-}
-[?2004hroot@09078e0953c3:/app# cat timeline.json; tmux wait -S done
-[?2004l{
-  "consumer_start_ms": 1756120939143,
-  "producer_start_ms": 1756120939248,
-  "consumer_end_ms": 1756120971260,
-  "producer_end_ms": 1756120970254
-}
-[?2004hroot@09078e0953c3:/app# ls -la summary.tmp; tmux wait -S done
-[?2004lls: cannot access 'summary.tmp': No such file or directory
-[?2004hroot@09078e0953c3:/app# cat > producer.sh << 'EOF'
-[?2004l[?2004h> #!/bin/bash
-[?2004l[?2004h> 
-[?2004l[?2004h> # Create logs directory if it doesn't exist
-[?2004l[?2004h> mkdir -p logs
-[?2004l[?2004h> 
-[?2004l[?2004h> # Initialize variables
-[?2004l[?2004h> log_file="logs/events.log"
-[?2004l[?2004h> start_time=$(date +%s%3N)
-[?2004l[?2004h> end_time=$((start_time + 31000))  # Run for ~31 seconds
-[?2004l[?2004h> line_count=0
-[?2004l[?2004h> rotation_count=0
-[?2004l[?2004h> last_rotation_size=0
-[?2004l[?2004h> 
-[?2004l[?2004h> # Function to rotate logs when size exceeds 1024 bytes
-[?2004l[?2004h> rotate_logs() {
-[?2004l[?2004h>   if [[ -f "$log_file" ]]; then
-[?2004l[?2004h>     size=$(stat -c %s "$log_file" 2>/dev/null || echo 0)
-[?2004l[?2004h>     if [[ $size -ge 1024 ]]; then
-[?2004l[?2004h>       # Rotate files: .3 -> .4 (if exists), .2 -> .3, .1 -> .2, events.log -> .1
-[?2004l[?2004h>       for i in {3..1}; do
-[?2004l[?2004h>         if [[ -f "${log_file}.$i" ]]; then
-[?2004l[?2004h>           if [[ $i -eq 3 ]]; then
-[?2004l[?2004h>             rm -f "${log_file}.$((i+1))"
-[?2004l[?2004h>             mv "${log_file}.$i" "${log_file}.$((i+1))"
-[?2004l[?2004h>           else
-[?2004l[?2004h>             mv "${log_file}.$i" "${log_file}.$((i+1))"
-[?2004l[?2004h>           fi
-[?2004l[?2004h>         fi
-[?2004l[?2004h>       done
-[?2004l[?2004h>       mv "$log_file" "${log_file}.1"
-[?2004l[?2004h>       touch "$log_file"
-[?2004l[?2004h>       rotation_count=$((rotation_count + 1))
-[?2004l[?2004h>     fi
-[?2004l[?2004h>   fi
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> # Main loop to generate events
-[?2004l[?2004h> while [[ $(date +%s%3N) -lt $end_time ]]; do
-[?2004l[?2004h>   # Generate timestamp
-[?2004l[?2004h>   ts=$(date +%s%3N)
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Generate session ID (random 6-character alphanumeric string)
-[?2004l[?2004h>   session=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Generate user (with some Unicode characters)
-[?2004l[?2004h>   users=("赵钱孙" "李周吴" "郑王冯" "陈褚卫" "蒋沈韩" "admin1" "admin2" "user1" "user2" "测试用户")
-[?2004l[?2004h>   user=${users[$RANDOM % ${#users[@]}]}
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Randomly decide if this should be a malformed line (5-10% chance)
-[?2004l[?2004h>   if [[ $((RANDOM % 100)) -lt 92 ]]; then
-[?2004l[?2004h>     # Good line (92% of the time to get ~8% malformed)
-[?2004l[?2004h>     line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}}"
-[?2004l[?2004h>   else
-[?2004l[?2004h>     # Malformed line (missing quotes, wrong brackets, etc.)
-[?2004l[?2004h>     if [[ $((RANDOM % 2)) -eq 0 ]]; then
-[?2004l[?2004h>       line="{ts: $ts, session: \"$session\", user: \"$user\", meta: {admin: true}}"  # Missing outer quotes
-[?2004l[?2004h>     else
-[?2004l[?2004h>       line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}"  # Missing closing brace
-[?2004l[?2004h>     fi
-[?2004l[?2004h>   fi
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Output to STDOUT
-[?2004l[?2004h>   echo "$line"
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Append to log file
-[?2004l[?2004h>   echo "$line" >> "$log_file"
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Rotate logs if needed
-[?2004l[?2004h>   rotate_logs
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Increment line counter
-[?2004l[?2004h>   line_count=$((line_count + 1))
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Wait for 18-24ms
-[?2004l[?2004h>   sleep_time=$((18 + RANDOM % 7))
-[?2004l[?2004h>   sleep 0.0${sleep_time}s
-[?2004l[?2004h> done
-[?2004l[?2004h> 
-[?2004l[?2004h> # Output summary information
-[?2004l[?2004h> echo "Creating summary file..."
-[?2004l[?2004h> echo "producer_lines_total=$line_count"
-[?2004l[?2004h> echo "rotations_min=3"  # We should have at least 3 rotations
-[?2004l[?2004h> 
-[?2004l[?2004h> # Write to summary file in the current directory
-[?2004l[?2004h> echo "producer_lines_total=$line_count" > ./summary.tmp
-[?2004l[?2004h> echo "rotations_min=3" >> ./summary.tmp
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "Summary file created with $line_count lines"
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@09078e0953c3:/app# ./run.sh; tmux wait -S done
-[?2004lStarting consumer...
-awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
-Starting producer...
-Stopping processes...
-DONE
-[?2004hroot@09078e0953c3:/app# ls -la summary.tmp; tmux wait -S done
-[?2004lls: cannot access 'summary.tmp': No such file or directory
-[?2004hroot@09078e0953c3:/app# cat > run.sh << 'EOF'
-[?2004l[?2004h> #!/bin/bash
-[?2004l[?2004h> 
-[?2004l[?2004h> # Use flock for idempotency
-[?2004l[?2004h> exec 200<"$0"
-[?2004l[?2004h> if ! flock -n 200; then
-[?2004l[?2004h>   echo "Another instance is already running"
-[?2004l[?2004h>   exit 1
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Ensure FIFO exists
-[?2004l[?2004h> mkdir -p pipe
-[?2004l[?2004h> if [[ ! -p pipe/events.fifo ]]; then
-[?2004l[?2004h>   mkfifo pipe/events.fifo
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Clean up any previous logs
-[?2004l[?2004h> rm -f logs/events.log logs/events.log.*
-[?2004l[?2004h> mkdir -p logs
-[?2004l[?2004h> 
-[?2004l[?2004h> # Clean up alerts file
-[?2004l[?2004h> rm -f alerts.txt
-[?2004l[?2004h> rm -f summary.tmp
-[?2004l[?2004h> 
-[?2004l[?2004h> # Start consumer first (background)
-[?2004l[?2004h> echo "Starting consumer..."
-[?2004l[?2004h> consumer_start_ms=$(date +%s%3N)
-[?2004l[?2004h> cat pipe/events.fifo | awk -f consumer.awk &
-[?2004l[?2004h> consumer_pid=$!
-[?2004l[?2004h> 
-[?2004l[?2004h> # Wait a bit to ensure consumer is ready
-[?2004l[?2004h> sleep 0.1
-[?2004l[?2004h> 
-[?2004l[?2004h> # Start producer (background)
-[?2004l[?2004h> echo "Starting producer..."
-[?2004l[?2004h> producer_start_ms=$(date +%s%3N)
-[?2004l[?2004h> ./producer.sh > pipe/events.fifo &
-[?2004l[?2004h> producer_pid=$!
-[?2004l[?2004h> 
-[?2004l[?2004h> # Set up signal traps
-[?2004l[?2004h> trap 'kill $consumer_pid $producer_pid 2>/dev/null; exit' INT TERM
-[?2004l[?2004h> 
-[?2004l[?2004h> # Let it run for ~30-31 seconds
-[?2004l[?2004h> sleep 31
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "Stopping processes..."
-[?2004l[?2004h> # Stop producer first
-[?2004l[?2004h> kill $producer_pid 2>/dev/null
-[?2004l[?2004h> # Wait a bit longer for producer to finish
-[?2004l[?2004h> sleep 2
-[?2004l[?2004h> wait $producer_pid 2>/dev/null
-[?2004l[?2004h> producer_end_ms=$(date +%s%3N)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Give consumer a moment to finish processing
-[?2004l[?2004h> sleep 1
-[?2004l[?2004h> 
-[?2004l[?2004h> # Stop consumer
-[?2004l[?2004h> kill $consumer_pid 2>/dev/null
-[?2004l[?2004h> wait $consumer_pid 2>/dev/null
-[?2004l[?2004h> consumer_end_ms=$(date +%s%3N)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Generate timeline.json
-[?2004l[?2004h> cat > timeline.json << TIMELINE
-[?2004l[?2004h> {
-[?2004l[?2004h>   "consumer_start_ms": $consumer_start_ms,
-[?2004l[?2004h>   "producer_start_ms": $producer_start_ms,
-[?2004l[?2004h>   "consumer_end_ms": $consumer_end_ms,
-[?2004l[?2004h>   "producer_end_ms": $producer_end_ms
-[?2004l[?2004h> }
-[?2004l[?2004h> TIMELINE
-[?2004l[?2004h> 
-[?2004l[?2004h> # Get producer summary from temp file
-[?2004l[?2004h> if [[ -f summary.tmp ]]; then
-[?2004l[?2004h>   source summary.tmp
-[?2004l[?2004h>   rm summary.tmp
-[?2004l[?2004h> else
-[?2004l[?2004h>   producer_lines_total=0
-[?2004l[?2004h>   rotations_min=0
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Count alerts
-[?2004l[?2004h> alerts=$(wc -l < alerts.txt 2>/dev/null || echo 0)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Generate summary.json
-[?2004l[?2004h> cat > summary.json << SUMMARY
-[?2004l[?2004h> {
-[?2004l[?2004h>   "producer_lines_total": $producer_lines_total,
-[?2004l[?2004h>   "alerts": $alerts,
-[?2004l[?2004h>   "rotations_min": $rotations_min,
-[?2004l[?2004h>   "parallel": true
-[?2004l[?2004h> }
-[?2004l[?2004h> SUMMARY
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "DONE"
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@09078e0953c3:/app# ./run.sh; tmux wait -S done
-[?2004lStarting consumer...
-awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
-Starting producer...
-Stopping processes...
-DONE
-[?2004hroot@09078e0953c3:/app# ls -la summary.tmp; tmux wait -S done
-[?2004lls: cannot access 'summary.tmp': No such file or directory
-[?2004hroot@09078e0953c3:/app# cat summary.json; tmux wait -S done
-[?2004l{
-  "producer_lines_total": 0,
-  "alerts": 10,
-  "rotations_min": 0,
-  "parallel": true
-}
-[?2004hroot@09078e0953c3:/app# ls -la logs/; tmux wait -S done
-[?2004ltotal 28
-drwxr-xr-x 2 root root 4096 Aug 25 11:24 .
-drwxr-xr-x 1 root root 4096 Aug 25 11:24 ..
--rw-r--r-- 1 root root  863 Aug 25 11:24 events.log
--rw-r--r-- 1 root root 1033 Aug 25 11:24 events.log.1
--rw-r--r-- 1 root root 1047 Aug 25 11:24 events.log.2
--rw-r--r-- 1 root root 1034 Aug 25 11:24 events.log.3
--rw-r--r-- 1 root root 1058 Aug 25 11:24 events.log.4
-[?2004hroot@09078e0953c3:/app# cat > producer.sh << 'EOF'
-[?2004l[?2004h> #!/bin/bash
-[?2004l[?2004h> 
-[?2004l[?2004h> # Create logs directory if it doesn't exist
-[?2004l[?2004h> mkdir -p logs
-[?2004l[?2004h> 
-[?2004l[?2004h> # Initialize variables
-[?2004l[?2004h> log_file="logs/events.log"
-[?2004l[?2004h> start_time=$(date +%s%3N)
-[?2004l[?2004h> end_time=$((start_time + 31000))  # Run for ~31 seconds
-[?2004l[?2004h> line_count=0
-[?2004l[?2004h> rotation_count=0
-[?2004l[?2004h> last_rotation_size=0
-[?2004l[?2004h> 
-[?2004l[?2004h> # Function to rotate logs when size exceeds 1024 bytes
-[?2004l[?2004h> rotate_logs() {
-[?2004l[?2004h>   if [[ -f "$log_file" ]]; then
-[?2004l[?2004h>     size=$(stat -c %s "$log_file" 2>/dev/null || echo 0)
-[?2004l[?2004h>     if [[ $size -ge 1024 ]]; then
-[?2004l[?2004h>       # Rotate files: .3 -> .4 (if exists), .2 -> .3, .1 -> .2, events.log -> .1
-[?2004l[?2004h>       for i in {3..1}; do
-[?2004l[?2004h>         if [[ -f "${log_file}.$i" ]]; then
-[?2004l[?2004h>           if [[ $i -eq 3 ]]; then
-[?2004l[?2004h>             rm -f "${log_file}.$((i+1))"
-[?2004l[?2004h>             mv "${log_file}.$i" "${log_file}.$((i+1))"
-[?2004l[?2004h>           else
-[?2004l[?2004h>             mv "${log_file}.$i" "${log_file}.$((i+1))"
-[?2004l[?2004h>           fi
-[?2004l[?2004h>         fi
-[?2004l[?2004h>       done
-[?2004l[?2004h>       mv "$log_file" "${log_file}.1"
-[?2004l[?2004h>       touch "$log_file"
-[?2004l[?2004h>       rotation_count=$((rotation_count + 1))
-[?2004l[?2004h>     fi
-[?2004l[?2004h>   fi
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> # Main loop to generate events
-[?2004l[?2004h> while [[ $(date +%s%3N) -lt $end_time ]]; do
-[?2004l[?2004h>   # Generate timestamp
-[?2004l[?2004h>   ts=$(date +%s%3N)
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Generate session ID (random 6-character alphanumeric string)
-[?2004l[?2004h>   session=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Generate user (with some Unicode characters)
-[?2004l[?2004h>   users=("赵钱孙" "李周吴" "郑王冯" "陈褚卫" "蒋沈韩" "admin1" "admin2" "user1" "user2" "测试用户")
-[?2004l[?2004h>   user=${users[$RANDOM % ${#users[@]}]}
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Randomly decide if this should be a malformed line (5-10% chance)
-[?2004l[?2004h>   if [[ $((RANDOM % 100)) -lt 92 ]]; then
-[?2004l[?2004h>     # Good line (92% of the time to get ~8% malformed)
-[?2004l[?2004h>     line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}}"
-[?2004l[?2004h>   else
-[?2004l[?2004h>     # Malformed line (missing quotes, wrong brackets, etc.)
-[?2004l[?2004h>     if [[ $((RANDOM % 2)) -eq 0 ]]; then
-[?2004l[?2004h>       line="{ts: $ts, session: \"$session\", user: \"$user\", meta: {admin: true}}"  # Missing outer quotes
-[?2004l[?2004h>     else
-[?2004l[?2004h>       line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}"  # Missing closing brace
-[?2004l[?2004h>     fi
-[?2004l[?2004h>   fi
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Output to STDOUT
-[?2004l[?2004h>   echo "$line"
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Append to log file
-[?2004l[?2004h>   echo "$line" >> "$log_file"
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Rotate logs if needed
-[?2004l[?2004h>   rotate_logs
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Increment line counter
-[?2004l[?2004h>   line_count=$((line_count + 1))
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Wait for 18-24ms
-[?2004l[?2004h>   sleep_time=$((18 + RANDOM % 7))
-[?2004l[?2004h>   sleep 0.0${sleep_time}s
-[?2004l[?2004h> done
-[?2004l[?2004h> 
-[?2004l[?2004h> # Output summary information
-[?2004l[?2004h> echo "Creating summary file..."
-[?2004l[?2004h> echo "producer_lines_total=$line_count"
-[?2004l[?2004h> echo "rotations_min=3"  # We should have at least 3 rotations
-[?2004l[?2004h> 
-[?2004l[?2004h> # Write to summary file in the /app directory
-[?2004l[?2004h> echo "producer_lines_total=$line_count" > /app/summary.tmp
-[?2004l[?2004h> echo "rotations_min=3" >> /app/summary.tmp
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "Summary file created with $line_count lines"
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@09078e0953c3:/app# ./run.sh; tmux wait -S done
-[?2004lStarting consumer...
-awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
-Starting producer...
-Stopping processes...
-DONE
-[?2004hroot@09078e0953c3:/app# ls -la summary.tmp; tmux wait -S done
-[?2004lls: cannot access 'summary.tmp': No such file or directory
-[?2004hroot@09078e0953c3:/app# cat summary.json; tmux wait -S done
-[?2004l{
-  "producer_lines_total": 0,
-  "alerts": 10,
-  "rotations_min": 0,
-  "parallel": true
-}
-[?2004hroot@09078e0953c3:/app# ls -la logs/; tmux wait -S done
-[?2004ltotal 28
-drwxr-xr-x 2 root root 4096 Aug 25 11:26 .
-drwxr-xr-x 1 root root 4096 Aug 25 11:25 ..
--rw-r--r-- 1 root root   89 Aug 25 11:26 events.log
--rw-r--r-- 1 root root 1063 Aug 25 11:26 events.log.1
--rw-r--r-- 1 root root 1059 Aug 25 11:26 events.log.2
--rw-r--r-- 1 root root 1045 Aug 25 11:26 events.log.3
--rw-r--r-- 1 root root 1036 Aug 25 11:26 events.log.4
-[?2004hroot@09078e0953c3:/app# cat > producer.sh << 'EOF'
-[?2004l[?2004h> #!/bin/bash
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "Producer script started"
-[?2004l[?2004h> 
-[?2004l[?2004h> # Create logs directory if it doesn't exist
-[?2004l[?2004h> mkdir -p logs
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "Logs directory created"
-[?2004l[?2004h> 
-[?2004l[?2004h> # Initialize variables
-[?2004l[?2004h> log_file="logs/events.log"
-[?2004l[?2004h> start_time=$(date +%s%3N)
-[?2004l[?2004h> end_time=$((start_time + 31000))  # Run for ~31 seconds
-[?2004l[?2004h> line_count=0
-[?2004l[?2004h> rotation_count=0
-[?2004l[?2004h> last_rotation_size=0
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "Variables initialized"
-[?2004l[?2004h> 
-[?2004l[?2004h> # Function to rotate logs when size exceeds 1024 bytes
-[?2004l[?2004h> rotate_logs() {
-[?2004l[?2004h>   if [[ -f "$log_file" ]]; then
-[?2004l[?2004h>     size=$(stat -c %s "$log_file" 2>/dev/null || echo 0)
-[?2004l[?2004h>     if [[ $size -ge 1024 ]]; then
-[?2004l[?2004h>       # Rotate files: .3 -> .4 (if exists), .2 -> .3, .1 -> .2, events.log -> .1
-[?2004l[?2004h>       for i in {3..1}; do
-[?2004l[?2004h>         if [[ -f "${log_file}.$i" ]]; then
-[?2004l[?2004h>           if [[ $i -eq 3 ]]; then
-[?2004l[?2004h>             rm -f "${log_file}.$((i+1))"
-[?2004l[?2004h>             mv "${log_file}.$i" "${log_file}.$((i+1))"
-[?2004l[?2004h>           else
-[?2004l[?2004h>             mv "${log_file}.$i" "${log_file}.$((i+1))"
-[?2004l[?2004h>           fi
-[?2004l[?2004h>         fi
-[?2004l[?2004h>       done
-[?2004l[?2004h>       mv "$log_file" "${log_file}.1"
-[?2004l[?2004h>       touch "$log_file"
-[?2004l[?2004h>       rotation_count=$((rotation_count + 1))
-[?2004l[?2004h>     fi
-[?2004l[?2004h>   fi
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "Rotate function defined"
-[?2004l[?2004h> 
-[?2004l[?2004h> # Main loop to generate events
-[?2004l[?2004h> while [[ $(date +%s%3N) -lt $end_time ]]; do
-[?2004l[?2004h>   # Generate timestamp
-[?2004l[?2004h>   ts=$(date +%s%3N)
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Generate session ID (random 6-character alphanumeric string)
-[?2004l[?2004h>   session=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Generate user (with some Unicode characters)
-[?2004l[?2004h>   users=("赵钱孙" "李周吴" "郑王冯" "陈褚卫" "蒋沈韩" "admin1" "admin2" "user1" "user2" "测试用户")
-[?2004l[?2004h>   user=${users[$RANDOM % ${#users[@]}]}
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Randomly decide if this should be a malformed line (5-10% chance)
-[?2004l[?2004h>   if [[ $((RANDOM % 100)) -lt 92 ]]; then
-[?2004l[?2004h>     # Good line (92% of the time to get ~8% malformed)
-[?2004l[?2004h>     line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}}"
-[?2004l[?2004h>   else
-[?2004l[?2004h>     # Malformed line (missing quotes, wrong brackets, etc.)
-[?2004l[?2004h>     if [[ $((RANDOM % 2)) -eq 0 ]]; then
-[?2004l[?2004h>       line="{ts: $ts, session: \"$session\", user: \"$user\", meta: {admin: true}}"  # Missing outer quotes
-[?2004l[?2004h>     else
-[?2004l[?2004h>       line="{\"ts\": $ts, \"session\": \"$session\", \"user\": \"$user\", \"meta\": {\"admin\": true}"  # Missing closing brace
-[?2004l[?2004h>     fi
-[?2004l[?2004h>   fi
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Output to STDOUT
-[?2004l[?2004h>   echo "$line"
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Append to log file
-[?2004l[?2004h>   echo "$line" >> "$log_file"
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Rotate logs if needed
-[?2004l[?2004h>   rotate_logs
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Increment line counter
-[?2004l[?2004h>   line_count=$((line_count + 1))
-[?2004l[?2004h>   
-[?2004l[?2004h>   # Wait for 18-24ms
-[?2004l[?2004h>   sleep_time=$((18 + RANDOM % 7))
-[?2004l[?2004h>   sleep 0.0${sleep_time}s
-[?2004l[?2004h> done
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "Main loop finished with $line_count lines"
-[?2004l[?2004h> 
-[?2004l[?2004h> # Output summary information
-[?2004l[?2004h> echo "Creating summary file..."
-[?2004l[?2004h> echo "producer_lines_total=$line_count"
-[?2004l[?2004h> echo "rotations_min=3"  # We should have at least 3 rotations
-[?2004l[?2004h> 
-[?2004l[?2004h> # Write to summary file in the /app directory
-[?2004l[?2004h> echo "producer_lines_total=$line_count" > /app/summary.tmp
-[?2004l[?2004h> echo "rotations_min=3" >> /app/summary.tmp
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "Summary file created with $line_count lines"
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@09078e0953c3:/app# ./run.sh; tmux wait -S done
-[?2004lStarting consumer...
-awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
-Starting producer...
-Stopping processes...
-DONE
-[?2004hroot@09078e0953c3:/app# ls -la summary.tmp; tmux wait -S done
-[?2004lls: cannot access 'summary.tmp': No such file or directory
-[?2004hroot@09078e0953c3:/app# cat summary.json; tmux wait -S done
-[?2004l{
-  "producer_lines_total": 0,
-  "alerts": 10,
-  "rotations_min": 0,
-  "parallel": true
-}
-[?2004hroot@09078e0953c3:/app# ls -la logs/; tmux wait -S done
-[?2004ltotal 28
-drwxr-xr-x 2 root root 4096 Aug 25 11:27 .
-drwxr-xr-x 1 root root 4096 Aug 25 11:27 ..
--rw-r--r-- 1 root root  427 Aug 25 11:27 events.log
--rw-r--r-- 1 root root 1039 Aug 25 11:27 events.log.1
--rw-r--r-- 1 root root 1033 Aug 25 11:27 events.log.2
--rw-r--r-- 1 root root 1032 Aug 25 11:27 events.log.3
--rw-r--r-- 1 root root 1046 Aug 25 11:27 events.log.4
-[?2004hroot@09078e0953c3:/app# cat > run.sh << 'EOF'
-[?2004l[?2004h> #!/bin/bash
-[?2004l[?2004h> 
-[?2004l[?2004h> # Use flock for idempotency
-[?2004l[?2004h> exec 200<"$0"
-[?2004l[?2004h> if ! flock -n 200; then
-[?2004l[?2004h>   echo "Another instance is already running"
-[?2004l[?2004h>   exit 1
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Ensure FIFO exists
-[?2004l[?2004h> mkdir -p pipe
-[?2004l[?2004h> if [[ ! -p pipe/events.fifo ]]; then
-[?2004l[?2004h>   mkfifo pipe/events.fifo
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Clean up any previous logs
-[?2004l[?2004h> rm -f logs/events.log logs/events.log.*
-[?2004l[?2004h> mkdir -p logs
-[?2004l[?2004h> 
-[?2004l[?2004h> # Clean up alerts file
-[?2004l[?2004h> rm -f alerts.txt
-[?2004l[?2004h> rm -f summary.tmp
-[?2004l[?2004h> 
-[?2004l[?2004h> # Start consumer first (background)
-[?2004l[?2004h> echo "Starting consumer..."
-[?2004l[?2004h> consumer_start_ms=$(date +%s%3N)
-[?2004l[?2004h> cat pipe/events.fifo | awk -f consumer.awk &
-[?2004l[?2004h> consumer_pid=$!
-[?2004l[?2004h> 
-[?2004l[?2004h> # Wait a bit to ensure consumer is ready
-[?2004l[?2004h> sleep 0.1
-[?2004l[?2004h> 
-[?2004l[?2004h> # Start producer (background)
-[?2004l[?2004h> echo "Starting producer..."
-[?2004l[?2004h> producer_start_ms=$(date +%s%3N)
-[?2004l[?2004h> ./producer.sh &
-[?2004l[?2004h> producer_pid=$!
-[?2004l[?2004h> 
-[?2004l[?2004h> # Set up signal traps
-[?2004l[?2004h> trap 'kill $consumer_pid $producer_pid 2>/dev/null; exit' INT TERM
-[?2004l[?2004h> 
-[?2004l[?2004h> # Let it run for ~30-31 seconds
-[?2004l[?2004h> sleep 31
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "Stopping processes..."
-[?2004l[?2004h> # Stop producer first
-[?2004l[?2004h> kill $producer_pid 2>/dev/null
-[?2004l[?2004h> # Wait a bit longer for producer to finish
-[?2004l[?2004h> sleep 2
-[?2004l[?2004h> wait $producer_pid 2>/dev/null
-[?2004l[?2004h> producer_end_ms=$(date +%s%3N)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Give consumer a moment to finish processing
-[?2004l[?2004h> sleep 1
-[?2004l[?2004h> 
-[?2004l[?2004h> # Stop consumer
-[?2004l[?2004h> kill $consumer_pid 2>/dev/null
-[?2004l[?2004h> wait $consumer_pid 2>/dev/null
-[?2004l[?2004h> consumer_end_ms=$(date +%s%3N)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Generate timeline.json
-[?2004l[?2004h> cat > timeline.json << TIMELINE
-[?2004l[?2004h> {
-[?2004l[?2004h>   "consumer_start_ms": $consumer_start_ms,
-[?2004l[?2004h>   "producer_start_ms": $producer_start_ms,
-[?2004l[?2004h>   "consumer_end_ms": $consumer_end_ms,
-[?2004l[?2004h>   "producer_end_ms": $producer_end_ms
-[?2004l[?2004h> }
-[?2004l[?2004h> TIMELINE
-[?2004l[?2004h> 
-[?2004l[?2004h> # Get producer summary from temp file
-[?2004l[?2004h> if [[ -f summary.tmp ]]; then
-[?2004l[?2004h>   source summary.tmp
-[?2004l[?2004h>   rm summary.tmp
-[?2004l[?2004h> else
-[?2004l[?2004h>   producer_lines_total=0
-[?2004l[?2004h>   rotations_min=0
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Count alerts
-[?2004l[?2004h> alerts=$(wc -l < alerts.txt 2>/dev/null || echo 0)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Generate summary.json
-[?2004l[?2004h> cat > summary.json << SUMMARY
-[?2004l[?2004h> {
-[?2004l[?2004h>   "producer_lines_total": $producer_lines_total,
-[?2004l[?2004h>   "alerts": $alerts,
-[?2004l[?2004h>   "rotations_min": $rotations_min,
-[?2004l[?2004h>   "parallel": true
-[?2004l[?2004h> }
-[?2004l[?2004h> SUMMARY
-[?2004l[?2004h> 
-[?2004l[?2004h> echo "DONE"
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@09078e0953c3:/app# ./run.sh; tmux wait -S done
-[?2004lStarting consumer...
-awk: consumer.awk:8: warning: regexp escape sequence `\"' is not a known regexp operator
-Starting producer...
-Producer script started
-Logs directory created
-Variables initialized
-Rotate function defined
-{"ts": 1756121299689, "session": "PENTLA", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121299714, "session": "6ZuD22", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121299748, "session": "mjziq1", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121299796, "session": "6dpI0C", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121299833, "session": "UA4H08", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121299862, "session": "rVqnBO", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121299886, "session": "uTviUC", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121299910, "session": "gctQ11", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121299934, "session": "y0iH8m", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121299959, "session": "C7cDLa", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121299987, "session": "nahICb", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121300015, "session": "rFult3", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121300043, "session": "eEOUSh", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121300067, "session": "MCdt16", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121300100, "session": "Lwoo72", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121300131, "session": "95gQCG", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121300160, "session": "y0AnXA", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121300188, "session": "yowdY5", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121300216, "session": "nhoTJT", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121300246, "session": "2LMkq1", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121300273, "session": "UoHrGx", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121300334, "session": "S1RCeR", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121300376, "session": "iDpm6O", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121300402, "session": "1weYQq", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121300438, "session": "ivqgmh", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121300465, "session": "QsMslo", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121300494, "session": "OTjnSc", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121300524, "session": "G1dANF", "user": "郑王冯", "meta": {"admin": true}
-{"ts": 1756121300558, "session": "gnQVNC", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121300584, "session": "xZ8mHE", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121300618, "session": "0MqgSo", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121300642, "session": "UnbsyV", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121300669, "session": "mBiahd", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121300700, "session": "nqO4RA", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121300772, "session": "crLNbo", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121300886, "session": "bG0FKz", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121300914, "session": "H4qGhu", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121300943, "session": "AnYx3X", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121300969, "session": "Fd2Uch", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121300993, "session": "zAtQ9K", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121301027, "session": "9ZfRbS", "user": "蒋沈韩", "meta": {"admin": true}}
-{ts: 1756121301058, session: "xUW8Rg", user: "测试用户", meta: {admin: true}}
-{"ts": 1756121301173, "session": "AN6Yc6", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121301203, "session": "sSu6qc", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121301233, "session": "XuC6AF", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121301262, "session": "cZLU3u", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121301293, "session": "CYy3wi", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121301321, "session": "pcxx4s", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121301352, "session": "Ae9Yyp", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121301383, "session": "ZE884L", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121301412, "session": "XMbqAk", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121301439, "session": "qIiyWb", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121301466, "session": "BnV0cm", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121301501, "session": "jMDtXt", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121301526, "session": "SDr17w", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121301556, "session": "kpuaCS", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121301589, "session": "fuhxMo", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121301618, "session": "FbucXN", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121301647, "session": "4AaKdD", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121301675, "session": "Oh6pIf", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121301707, "session": "WRQq4y", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121301735, "session": "yvujYy", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121301765, "session": "dMCphC", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121301793, "session": "S4HXm5", "user": "admin1", "meta": {"admin": true}}
-{ts: 1756121301842, session: "CEuge6", user: "user1", meta: {admin: true}}
-{"ts": 1756121301887, "session": "NUPugC", "user": "赵钱孙", "meta": {"admin": true}
-{"ts": 1756121301917, "session": "Jn3EBr", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121301948, "session": "JQbAR4", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121301977, "session": "QEuUhy", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121302005, "session": "dMHA9Z", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121302031, "session": "xC2Ozv", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121302060, "session": "TtdlUZ", "user": "郑王冯", "meta": {"admin": true}
-{"ts": 1756121302095, "session": "adSN3b", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121302120, "session": "9JZMhx", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121302145, "session": "wx5oU3", "user": "陈褚卫", "meta": {"admin": true}
-{"ts": 1756121302174, "session": "qRqqof", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121302210, "session": "VVom5d", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121302265, "session": "bf8jps", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121302297, "session": "2yLuD2", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121302327, "session": "gXcPym", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121302358, "session": "3wUAFx", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121302389, "session": "v3I7yg", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121302420, "session": "Zg2vkR", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121302448, "session": "MrZvNV", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121302483, "session": "7BcwNB", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121302507, "session": "BCu8u9", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121302536, "session": "EljV72", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121302608, "session": "7WRwCK", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121302640, "session": "kOJs0b", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121302668, "session": "zWHBU9", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121302702, "session": "MTmMcc", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121302729, "session": "D5WfBr", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121302755, "session": "4jiJdg", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121302785, "session": "3yRgIz", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121302817, "session": "F7MhAg", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121302847, "session": "zxAGrc", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121302882, "session": "1pbcdu", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121302913, "session": "cwg3yS", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121302940, "session": "HvEGI6", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121302996, "session": "3HkUDK", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121303041, "session": "0vgSWg", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121303067, "session": "J2YwBm", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121303094, "session": "FhuaIR", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121303120, "session": "k8yqsV", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121303145, "session": "rgeRX1", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121303175, "session": "DVxfqZ", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121303207, "session": "ZVbo0x", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121303231, "session": "6TEZoR", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121303263, "session": "I5wNPf", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121303295, "session": "gvnaos", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121303326, "session": "rZrynR", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121303357, "session": "bfYFwa", "user": "admin2", "meta": {"admin": true}
-{"ts": 1756121303411, "session": "fYVUcw", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121303462, "session": "o3S2c8", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121303490, "session": "jZzbiz", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121303516, "session": "fum5V9", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121303546, "session": "BBIG0H", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121303575, "session": "Rx9ZwM", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121303607, "session": "QRN9T8", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121303636, "session": "7nd5nw", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121303673, "session": "khIQxr", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121303701, "session": "MC2YKa", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121303729, "session": "2Nfv4S", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121303755, "session": "u1jI5P", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121303789, "session": "NJw7ns", "user": "李周吴", "meta": {"admin": true}
-{"ts": 1756121303831, "session": "a9hCK5", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121303882, "session": "D3kFGB", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121303908, "session": "gVscOb", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121303937, "session": "vHcNlM", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121303964, "session": "SP18oC", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121303993, "session": "z8Ac2z", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121304019, "session": "VPn6lw", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121304053, "session": "LijdQV", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121304083, "session": "3OshDt", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121304113, "session": "gEYqmw", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121304139, "session": "aWpbBe", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121304167, "session": "5kOnIE", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121304196, "session": "5snihR", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121304229, "session": "9LvCfp", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121304270, "session": "EqGG2l", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121304322, "session": "ZrC4k6", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121304346, "session": "gEt2Jk", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121304373, "session": "ZDWpO9", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121304403, "session": "zXn2OH", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121304434, "session": "WvVOih", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121304460, "session": "SiGHCB", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121304491, "session": "1sqhbo", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121304521, "session": "UYzhu7", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121304545, "session": "NUFlLO", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121304573, "session": "wfnvjH", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121304603, "session": "OA8bUj", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121304634, "session": "6wB6hX", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121304664, "session": "98m1CM", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121304696, "session": "7qGNFR", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121304724, "session": "JF61DT", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121304755, "session": "uu4Mgs", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121304797, "session": "rtqMC5", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121304821, "session": "aeZ6nQ", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121304848, "session": "apB9K8", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121304878, "session": "vGuehe", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121304911, "session": "cZJb51", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121304987, "session": "5L2ei1", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121305015, "session": "cKhXCv", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121305043, "session": "UrsY6a", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121305069, "session": "xSRMZ3", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121305099, "session": "rFkF3N", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121305124, "session": "UiXtqs", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121305154, "session": "2SvzNA", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121305184, "session": "PSKUXv", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121305213, "session": "OOtB6a", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121305241, "session": "1kkMho", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121305268, "session": "478W58", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121305294, "session": "JHh1ir", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121305320, "session": "TzXWhQ", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121305350, "session": "1ihsJ6", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121305377, "session": "6zd4lX", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121305404, "session": "pTVFlW", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121305431, "session": "5998f6", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121305457, "session": "HcYOL7", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121305488, "session": "iO2vQD", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121305515, "session": "ArtQF4", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121305541, "session": "qGJg67", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121305569, "session": "udLMzY", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121305600, "session": "myLP5o", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121305633, "session": "UHkZbv", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121305713, "session": "eHOz7r", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121305742, "session": "7bz4os", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121305771, "session": "N7M2rf", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121305802, "session": "vllzRY", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121305828, "session": "fynWhL", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121305854, "session": "WXE6Au", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121305881, "session": "SPMYdW", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121305907, "session": "sHoz3r", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121305940, "session": "8PVXAA", "user": "陈褚卫", "meta": {"admin": true}}
-{ts: 1756121305966, session: "7ZTjsU", user: "赵钱孙", meta: {admin: true}}
-{ts: 1756121305996, session: "XWjL7w", user: "赵钱孙", meta: {admin: true}}
-{"ts": 1756121306026, "session": "Jb3BTk", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121306059, "session": "29oqxo", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121306091, "session": "gmIcs6", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121306117, "session": "4INcGr", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121306148, "session": "5I98t9", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121306184, "session": "YDT2UQ", "user": "测试用户", "meta": {"admin": true}}
-{ts: 1756121306213, session: "we1Lpa", user: "赵钱孙", meta: {admin: true}}
-{"ts": 1756121306242, "session": "jLib0M", "user": "user2", "meta": {"admin": true}
-{"ts": 1756121306276, "session": "KoVFSO", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121306309, "session": "MrX0Vl", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121306335, "session": "agB4I7", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121306384, "session": "EY1xFW", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121306415, "session": "fSXQjr", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121306442, "session": "dhM1iN", "user": "蒋沈韩", "meta": {"admin": true}
-{"ts": 1756121306472, "session": "LZI332", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121306503, "session": "DDhK7L", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121306532, "session": "hUIJK4", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121306563, "session": "8f3VU9", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121306588, "session": "jnMvAS", "user": "赵钱孙", "meta": {"admin": true}
-{"ts": 1756121306613, "session": "OVcDgi", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121306638, "session": "jDr4TZ", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121306665, "session": "wfJDcF", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121306692, "session": "Y4E54N", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121306721, "session": "VCLxK3", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121306753, "session": "j3Bwtt", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121306781, "session": "xe3SqR", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121306809, "session": "uyyfvx", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121306844, "session": "bEREtQ", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121306875, "session": "9ev72W", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121306907, "session": "lTeWxD", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121306935, "session": "NdiYN2", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121306963, "session": "pXhDrj", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121306995, "session": "65jRq2", "user": "测试用户", "meta": {"admin": true}
-{"ts": 1756121307036, "session": "9jNNPr", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121307068, "session": "IuCqG4", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121307096, "session": "3NYDiE", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121307126, "session": "yylzW0", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121307152, "session": "l7q5Tj", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121307183, "session": "MbQR5t", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121307214, "session": "RqM27z", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121307247, "session": "MKHLHH", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121307279, "session": "df6btG", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121307304, "session": "W7m1qp", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121307329, "session": "WtrkHJ", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121307358, "session": "3PX6BR", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121307390, "session": "fLjoo9", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121307416, "session": "6XhzZH", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121307441, "session": "sm5rig", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121307465, "session": "VfAKO0", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121307493, "session": "GsLp5b", "user": "蒋沈韩", "meta": {"admin": true}}
-{ts: 1756121307526, session: "zzUHMH", user: "user1", meta: {admin: true}}
-{"ts": 1756121307600, "session": "3Lly0Z", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121307670, "session": "mlmRHZ", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121307696, "session": "ncx3rT", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121307723, "session": "QQejAI", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121307746, "session": "yDt2TT", "user": "蒋沈韩", "meta": {"admin": true}}
-{ts: 1756121307774, session: "XgULQZ", user: "user1", meta: {admin: true}}
-{"ts": 1756121307801, "session": "UtJ7Iy", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121307825, "session": "wg6fLP", "user": "郑王冯", "meta": {"admin": true}}
-{ts: 1756121307851, session: "pw6t7p", user: "user2", meta: {admin: true}}
-{"ts": 1756121307880, "session": "c2Dhhv", "user": "李周吴", "meta": {"admin": true}
-{"ts": 1756121307905, "session": "RdJVjM", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121307933, "session": "EUBWoa", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121307963, "session": "63IHGU", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121307992, "session": "EKKFjf", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121308017, "session": "1Z5Iae", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121308044, "session": "7AfkVS", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121308102, "session": "1s3r7L", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121308144, "session": "i4WsL3", "user": "郑王冯", "meta": {"admin": true}}
-{ts: 1756121308176, session: "Ohsfmw", user: "测试用户", meta: {admin: true}}
-{"ts": 1756121308204, "session": "4u8hnL", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121308231, "session": "n86Y2s", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121308256, "session": "0Sez2z", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121308284, "session": "PY2J6N", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121308319, "session": "xMbzA9", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121308350, "session": "XRZkRC", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121308375, "session": "tG86qL", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121308402, "session": "ZM7x7m", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121308432, "session": "kDCp7y", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121308459, "session": "xvl2jD", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121308486, "session": "wOjILU", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121308519, "session": "BZjr2E", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121308548, "session": "ylqk35", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121308576, "session": "f2zjvi", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121308600, "session": "LpIIgo", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121308630, "session": "Hq66qO", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121308659, "session": "umecVr", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121308687, "session": "D2D7y8", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121308713, "session": "OGZxVE", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121308739, "session": "KAMoPq", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121308791, "session": "7h0fMN", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121308831, "session": "aFPJwK", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121308864, "session": "vNoljk", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121308892, "session": "havpKg", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121308920, "session": "zArn8X", "user": "admin1", "meta": {"admin": true}
-{"ts": 1756121308946, "session": "IjTBBV", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121308979, "session": "JnMNdw", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121309011, "session": "Ql4Hfe", "user": "user1", "meta": {"admin": true}
-{"ts": 1756121309037, "session": "7PRsoI", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121309062, "session": "pyIjNF", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121309091, "session": "r1esiv", "user": "测试用户", "meta": {"admin": true}}
-{ts: 1756121309117, session: "gMTnI9", user: "李周吴", meta: {admin: true}}
-{"ts": 1756121309145, "session": "oc34FJ", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121309172, "session": "Pop8Vg", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121309200, "session": "micCDg", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121309230, "session": "nboxrj", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121309260, "session": "YJBlcz", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121309293, "session": "cMpPIK", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121309320, "session": "UjNToN", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121309347, "session": "T2H4vW", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121309374, "session": "i88pVg", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121309406, "session": "dbJx62", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121309437, "session": "islZGV", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121309464, "session": "VpWJpm", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121309492, "session": "ZCFFdh", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121309519, "session": "BQxetU", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121309551, "session": "GlS2Q7", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121309613, "session": "yf4ABR", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121309645, "session": "gcHcSA", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121309669, "session": "hoBwLh", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121309693, "session": "TNAZ0b", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121309720, "session": "qydcVu", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121309751, "session": "dyqoGz", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121309779, "session": "meDPum", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121309807, "session": "3SmS42", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121309834, "session": "8M640J", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121309859, "session": "2Ne9Qc", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121309889, "session": "m1w4S8", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121309919, "session": "cEHV08", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121309953, "session": "ukC8By", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121309980, "session": "DaZVh8", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121310005, "session": "jbIB6a", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121310029, "session": "7Ptk1x", "user": "郑王冯", "meta": {"admin": true}
-{"ts": 1756121310055, "session": "pwXs08", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121310084, "session": "juZGkl", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121310115, "session": "kpJ4qK", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121310142, "session": "1fANtk", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121310173, "session": "ZBBAaH", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121310203, "session": "e1bgTu", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121310233, "session": "fPPZGu", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121310286, "session": "apoYKd", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121310317, "session": "ZSM9G9", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121310342, "session": "EzSZCO", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121310367, "session": "QSuKcC", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121310392, "session": "LFO1yr", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121310423, "session": "Rdkiy1", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121310454, "session": "o01eLA", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121310486, "session": "79JDBG", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121310515, "session": "vXxjcQ", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121310545, "session": "VSzoII", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121310576, "session": "nrTnyT", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121310601, "session": "9r9wxC", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121310627, "session": "bdRr74", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121310656, "session": "CPmfh8", "user": "蒋沈韩", "meta": {"admin": true}
-{"ts": 1756121310686, "session": "BrGcf4", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121310716, "session": "QMcRmi", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121310742, "session": "g8H9jr", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121310770, "session": "MDunfB", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121310800, "session": "pBpiq2", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121310826, "session": "JgyzQW", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121310857, "session": "JjZdwt", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121310885, "session": "HDmkHK", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121310911, "session": "vVI6f8", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121310947, "session": "xv7mUY", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121310994, "session": "Ie0qOH", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121311031, "session": "O1dLkw", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121311063, "session": "s6ajH8", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121311086, "session": "zVhI9x", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121311114, "session": "92FpPJ", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121311142, "session": "kK20wR", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121311170, "session": "zAUzrc", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121311195, "session": "MaeOXD", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121311226, "session": "bn73aO", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121311252, "session": "0CGioy", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121311278, "session": "NPa5Sg", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121311308, "session": "gyN5nN", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121311337, "session": "hY0m23", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121311373, "session": "AgVKfN", "user": "user1", "meta": {"admin": true}}
-{ts: 1756121311403, session: "kSIN7S", user: "admin2", meta: {admin: true}}
-{ts: 1756121311432, session: "zSMeE9", user: "user1", meta: {admin: true}}
-{"ts": 1756121311481, "session": "MhVbiG", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121311510, "session": "2y7c0b", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121311548, "session": "8dEBF5", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121311577, "session": "lMKGof", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121311604, "session": "kCN6cO", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121311632, "session": "jN35Mh", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121311662, "session": "6Z4moj", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121311688, "session": "IC4Tnw", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121311714, "session": "mqm1mB", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121311747, "session": "Fcifbq", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121311772, "session": "M498Pm", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121311806, "session": "Qf9IJt", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121311894, "session": "qNWdBK", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121311921, "session": "c4Viym", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121311948, "session": "XaVcQI", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121311977, "session": "cmxGIb", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121312006, "session": "lBRCLR", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121312037, "session": "kzti8g", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121312065, "session": "b3FxTE", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121312098, "session": "6XAtTL", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121312128, "session": "CibATD", "user": "admin2", "meta": {"admin": true}
-{"ts": 1756121312158, "session": "yQpMQ3", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121312189, "session": "3clvbC", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121312219, "session": "juVLbg", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121312248, "session": "jcuRGS", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121312273, "session": "hw8FPq", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121312299, "session": "jwfVDr", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121312326, "session": "Jtq2IN", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121312363, "session": "RaJzRk", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121312393, "session": "renQbP", "user": "admin2", "meta": {"admin": true}}
-{ts: 1756121312421, session: "b6sTvw", user: "测试用户", meta: {admin: true}}
-{"ts": 1756121312448, "session": "m35y8Q", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121312475, "session": "FHfrrv", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121312512, "session": "uOcqug", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121312565, "session": "avZUw1", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121312590, "session": "XjZ5dx", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121312616, "session": "0bQrmv", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121312643, "session": "l9FpUr", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121312669, "session": "Pm2GfK", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121312699, "session": "d8Fhez", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121312725, "session": "6PV8fT", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121312754, "session": "1SNiSE", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121312789, "session": "dkIBkJ", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121312814, "session": "aeCmmm", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121312840, "session": "Lhcrx6", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121312874, "session": "TtuMqy", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121312903, "session": "E5P70d", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121312935, "session": "o0H0le", "user": "user1", "meta": {"admin": true}
-{"ts": 1756121312966, "session": "B5Ubpd", "user": "测试用户", "meta": {"admin": true}
-{"ts": 1756121312995, "session": "bBUqvw", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121313027, "session": "JRGPvt", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121313057, "session": "NzSsmz", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121313100, "session": "O9c2tZ", "user": "测试用户", "meta": {"admin": true}
-{"ts": 1756121313149, "session": "fFFsTJ", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121313191, "session": "7hgfgW", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121313216, "session": "0uA0eu", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121313246, "session": "qP5eAQ", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121313274, "session": "nPnV7T", "user": "陈褚卫", "meta": {"admin": true}}
-{ts: 1756121313302, session: "3REcPq", user: "李周吴", meta: {admin: true}}
-{"ts": 1756121313330, "session": "8oSjSl", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121313363, "session": "41Mgih", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121313393, "session": "7CsOmQ", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121313425, "session": "lQnLwS", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121313453, "session": "k8CWa6", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121313485, "session": "TRHYNN", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121313510, "session": "I8KTxn", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121313536, "session": "6N29lT", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121313565, "session": "hGPkiE", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121313597, "session": "hiR8b6", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121313633, "session": "ktZa62", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121313658, "session": "Vlst4F", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121313685, "session": "Kbem2R", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121313715, "session": "xFPCOo", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121313777, "session": "cXYUsF", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121313806, "session": "jYE9kj", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121313836, "session": "cDZpuX", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121313860, "session": "rCDVJx", "user": "user2", "meta": {"admin": true}
-{"ts": 1756121313892, "session": "cRSKmk", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121313924, "session": "61nj2A", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121313949, "session": "uu3ke5", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121313979, "session": "TunCYE", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121314006, "session": "8jCkPi", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121314032, "session": "txyR7Z", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121314058, "session": "6TmZ5d", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121314101, "session": "k99KEw", "user": "蒋沈韩", "meta": {"admin": true}}
-{ts: 1756121314141, session: "Olhc99", user: "user1", meta: {admin: true}}
-{"ts": 1756121314169, "session": "GYl03R", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121314197, "session": "GOPIfl", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121314223, "session": "MqWk9w", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121314248, "session": "FhJcJK", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121314278, "session": "SSm5mr", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121314308, "session": "3S0lTY", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121314334, "session": "kwsoZE", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121314370, "session": "dCJwNe", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121314405, "session": "Q1DHlS", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121314437, "session": "bIUX32", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121314466, "session": "bNHCmq", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121314495, "session": "SVVCYJ", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121314529, "session": "R6AWa3", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121314558, "session": "4sbI9p", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121314586, "session": "JCmbnm", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121314612, "session": "1nm9bc", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121314639, "session": "r0KRR8", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121314671, "session": "oSNzIJ", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121314699, "session": "lSOe2v", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121314738, "session": "XH2NbM", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121314810, "session": "q9rFJu", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121314840, "session": "O5WP7M", "user": "郑王冯", "meta": {"admin": true}}
-{ts: 1756121314867, session: "WsfRsq", user: "蒋沈韩", meta: {admin: true}}
-{"ts": 1756121314898, "session": "OEbwNV", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121314928, "session": "wMnr3N", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121314955, "session": "w05D0L", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121314990, "session": "EfT7Hd", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121315020, "session": "4qR48p", "user": "user1", "meta": {"admin": true}}
-{ts: 1756121315047, session: "CxI1A0", user: "蒋沈韩", meta: {admin: true}}
-{"ts": 1756121315077, "session": "WOPBWR", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121315107, "session": "AE74nt", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121315140, "session": "hBQIS2", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121315169, "session": "K9G3jp", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121315195, "session": "RZrlku", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121315227, "session": "aT263F", "user": "郑王冯", "meta": {"admin": true}
-{"ts": 1756121315263, "session": "BbZuf5", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121315324, "session": "J08aYL", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121315353, "session": "ERCcJU", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121315377, "session": "ozbJxl", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121315407, "session": "n6kDzI", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121315437, "session": "Sfx245", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121315464, "session": "8xAtU3", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121315496, "session": "Nueq6s", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121315527, "session": "pRC1P6", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121315558, "session": "ixfeSk", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121315585, "session": "FezdHS", "user": "user1", "meta": {"admin": true}}
-{ts: 1756121315617, session: "kelSQj", user: "赵钱孙", meta: {admin: true}}
-{"ts": 1756121315647, "session": "Kr4sym", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121315678, "session": "BcmfT2", "user": "admin1", "meta": {"admin": true}
-{"ts": 1756121315710, "session": "PJ6h98", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121315743, "session": "yNdr3K", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121315769, "session": "c8OVJM", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121315799, "session": "gAKWbc", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121315828, "session": "An7BRf", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121315857, "session": "P2mVWS", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121315885, "session": "TEiNtg", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121315915, "session": "Z5lj1J", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121315943, "session": "CZOprd", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121315971, "session": "Ydj2jh", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121316031, "session": "UkdXyU", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121316064, "session": "0qNIW3", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121316093, "session": "0BvC7J", "user": "user2", "meta": {"admin": true}
-{"ts": 1756121316124, "session": "BeZloJ", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121316158, "session": "0Om5Ks", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121316186, "session": "uoILzl", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121316212, "session": "3H76hF", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121316249, "session": "tlWxgC", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121316282, "session": "ljsj9V", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121316307, "session": "WYm8xG", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121316331, "session": "68w6Kd", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121316360, "session": "EO7Q2w", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121316390, "session": "e2I2Pf", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121316415, "session": "7kC26m", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121316441, "session": "s9D9MS", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121316468, "session": "eAT87a", "user": "user2", "meta": {"admin": true}
-{"ts": 1756121316502, "session": "6Sm5A0", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121316528, "session": "upMvR6", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121316582, "session": "nBiDYX", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121316622, "session": "yXHUq1", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121316649, "session": "lUGQXH", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121316672, "session": "BNWpL6", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121316697, "session": "q79tdx", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121316721, "session": "u41Q9K", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121316749, "session": "zFOops", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121316775, "session": "Q7VvQa", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121316806, "session": "ZhtAuT", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121316829, "session": "yjEI4p", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121316855, "session": "vWPKBT", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121316885, "session": "NJ2M12", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121316913, "session": "WjDVle", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121316941, "session": "VjO27y", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121316968, "session": "7seZVL", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121316991, "session": "gwzBj0", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121317013, "session": "WlELDg", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121317039, "session": "olcZAt", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121317069, "session": "2rG3uq", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121317094, "session": "gzSDWx", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121317127, "session": "KfNZXg", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121317155, "session": "GfgJ1W", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121317180, "session": "xKmz82", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121317234, "session": "ltl6EZ", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121317276, "session": "9pzgFl", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121317304, "session": "tfGGQg", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121317331, "session": "SIapIM", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121317360, "session": "x5J2YZ", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121317390, "session": "5XJoaW", "user": "admin1", "meta": {"admin": true}
-{"ts": 1756121317420, "session": "x7faxs", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121317451, "session": "kaP5DY", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121317479, "session": "UlpiHA", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121317510, "session": "DcLEMp", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121317536, "session": "Reun2f", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121317570, "session": "HZjMBp", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121317599, "session": "rM1ULy", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121317628, "session": "AWv6Nm", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121317658, "session": "dyI9N6", "user": "赵钱孙", "meta": {"admin": true}}
-{ts: 1756121317685, session: "Q2peyq", user: "李周吴", meta: {admin: true}}
-{"ts": 1756121317712, "session": "qqsIkc", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121317738, "session": "GZqpVR", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121317766, "session": "Tx8UaJ", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121317798, "session": "iMENAa", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121317859, "session": "AK6bjd", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121317886, "session": "cZ1PWl", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121317915, "session": "izRwGb", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121317944, "session": "lLLdwT", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121317969, "session": "vTo5iB", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121317995, "session": "afZz5R", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121318024, "session": "vmzoH9", "user": "user2", "meta": {"admin": true}
-{"ts": 1756121318060, "session": "dKeZl5", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121318090, "session": "lVxXMG", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121318121, "session": "2tf61J", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121318157, "session": "2ZB7Qo", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121318189, "session": "edsQrK", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121318220, "session": "o2mEkq", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121318254, "session": "teqhWr", "user": "测试用户", "meta": {"admin": true}}
-{ts: 1756121318284, session: "1XQhk5", user: "测试用户", meta: {admin: true}}
-{"ts": 1756121318313, "session": "RTj0Dn", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121318346, "session": "EGyj3f", "user": "admin1", "meta": {"admin": true}
-{"ts": 1756121318380, "session": "1DMvbc", "user": "user2", "meta": {"admin": true}}
-{ts: 1756121318414, session: "crmtGT", user: "测试用户", meta: {admin: true}}
-{"ts": 1756121318455, "session": "iYljMh", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121318488, "session": "I72Fx2", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121318516, "session": "HzHSXB", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121318542, "session": "JAt8zg", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121318572, "session": "olwPtP", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121318602, "session": "MCqkfh", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121318633, "session": "QN6CuP", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121318667, "session": "Ku8NIi", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121318694, "session": "Ix6cyL", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121318722, "session": "xkiBHg", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121318748, "session": "bFy8FW", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121318779, "session": "Vnv1cC", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121318820, "session": "OW1RZT", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121318853, "session": "q6gcaH", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121318891, "session": "X52xC5", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121318933, "session": "xKysoY", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121318966, "session": "0POKcF", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121318997, "session": "XzJu6T", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121319031, "session": "gy9ynd", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121319056, "session": "66Gc4w", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121319081, "session": "RpBbs8", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121319109, "session": "M5BNb6", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121319139, "session": "lgjM45", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121319164, "session": "eRj2GY", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121319196, "session": "7Mcb0F", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121319222, "session": "uQzwpK", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121319253, "session": "IfmzZe", "user": "测试用户", "meta": {"admin": true}
-{"ts": 1756121319284, "session": "X6g2VB", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121319316, "session": "OlzIB4", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121319349, "session": "WCQIMz", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121319385, "session": "b2sBVq", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121319415, "session": "0hfYfo", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121319451, "session": "dQZ3sL", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121319483, "session": "Q0dJXs", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121319518, "session": "VmNAKV", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121319554, "session": "yKqpUv", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121319589, "session": "Mry7rn", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121319618, "session": "N0To96", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121319651, "session": "SXHWBA", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121319679, "session": "iaCqXn", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121319714, "session": "E64mBQ", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121319746, "session": "Q1QLGg", "user": "陈褚卫", "meta": {"admin": true}
-{"ts": 1756121319775, "session": "3xm8Rc", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121319805, "session": "75RqMY", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121319837, "session": "Rvp6S5", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121319867, "session": "CUgY4A", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121319902, "session": "d9R3cB", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121319933, "session": "qnTeqL", "user": "赵钱孙", "meta": {"admin": true}}
-{ts: 1756121319969, session: "1XrB36", user: "admin2", meta: {admin: true}}
-{"ts": 1756121319997, "session": "InCDAu", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121320029, "session": "U0z7wE", "user": "蒋沈韩", "meta": {"admin": true}
-{"ts": 1756121320061, "session": "Z7UUoj", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121320092, "session": "CG55Bb", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121320126, "session": "4E2ffU", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121320163, "session": "oG95xU", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121320195, "session": "63VkeP", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121320230, "session": "xgY08J", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121320262, "session": "T7kAY7", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121320293, "session": "Qy2r5n", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121320326, "session": "uFw8so", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121320365, "session": "LGjnNy", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121320398, "session": "yqNnIB", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121320430, "session": "MA76uG", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121320465, "session": "J0X12n", "user": "admin1", "meta": {"admin": true}}
-{ts: 1756121320499, session: "rYXyIc", user: "admin1", meta: {admin: true}}
-{"ts": 1756121320535, "session": "HYGson", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121320566, "session": "dw2vx4", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121320598, "session": "TaQXO7", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121320624, "session": "yW5FRR", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121320659, "session": "NYnyJX", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121320696, "session": "jMsaGX", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121320731, "session": "wB4anu", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121320772, "session": "FdEw03", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121320805, "session": "hfrhQ1", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121320836, "session": "HLLuHF", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121320870, "session": "eAyEVP", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121320898, "session": "0NXnVQ", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121320930, "session": "2KmJ7d", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121320960, "session": "LIOTTE", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121320994, "session": "01QEE5", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121321027, "session": "x4Gzrk", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121321053, "session": "u6Yy4A", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121321083, "session": "shnTPI", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121321107, "session": "xeBmdo", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121321143, "session": "uuxp05", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121321168, "session": "t0YLp7", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121321198, "session": "3ajt7X", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121321226, "session": "Df14uL", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121321257, "session": "9qQgas", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121321287, "session": "aL2ZOq", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121321317, "session": "C93CnV", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121321356, "session": "RRlpTm", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121321384, "session": "NqHSU6", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121321416, "session": "lErKbZ", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121321445, "session": "tIhI5M", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121321477, "session": "BZKXrQ", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121321515, "session": "xxGMfi", "user": "郑王冯", "meta": {"admin": true}
-{"ts": 1756121321545, "session": "tb5tTL", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121321577, "session": "DoR0oI", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121321611, "session": "8aDv2m", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121321645, "session": "vz2EVB", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121321678, "session": "6EFJ6b", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121321708, "session": "zF9YPw", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121321736, "session": "1O8N44", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121321768, "session": "sWnX20", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121321794, "session": "GntcTg", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121321825, "session": "BdqnCp", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121321855, "session": "4fInI9", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121321892, "session": "CX3RUj", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121321924, "session": "F5YLg5", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121321953, "session": "OFnn6R", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121321982, "session": "D8X5Et", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121322017, "session": "Ludl6C", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121322045, "session": "nst95C", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121322075, "session": "8gYLyp", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121322102, "session": "Kr4B2k", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121322129, "session": "vWMULb", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121322170, "session": "zPuqr8", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121322215, "session": "rMGbfl", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121322242, "session": "dW9Z8T", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121322277, "session": "pfCWn9", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121322305, "session": "EEcRwu", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121322338, "session": "yzCGes", "user": "admin2", "meta": {"admin": true}
-{"ts": 1756121322369, "session": "2gscX9", "user": "测试用户", "meta": {"admin": true}}
-{ts: 1756121322402, session: "J69Cu0", user: "郑王冯", meta: {admin: true}}
-{"ts": 1756121322434, "session": "2dDmTH", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121322468, "session": "LVHfCy", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121322505, "session": "KFlWzU", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121322537, "session": "MqhkEy", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121322568, "session": "bQFMDG", "user": "user1", "meta": {"admin": true}
-{"ts": 1756121322604, "session": "Zhizgx", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121322632, "session": "4Tmz7R", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121322673, "session": "PIrrL6", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121322703, "session": "olnDxU", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121322733, "session": "rEPTGF", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121322762, "session": "opn6H8", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121322794, "session": "Vdto7R", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121322825, "session": "az1BZz", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121322858, "session": "GOioly", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121322895, "session": "SttPM5", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121322931, "session": "jRYl6q", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121322960, "session": "gpLENI", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121322993, "session": "wkpNJk", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121323021, "session": "Qi2FrA", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121323052, "session": "gmlqpg", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121323078, "session": "8l45xT", "user": "郑王冯", "meta": {"admin": true}
-{"ts": 1756121323106, "session": "MYzFVp", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121323133, "session": "cbSFcz", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121323162, "session": "YBSfv9", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121323195, "session": "rlSeOK", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121323227, "session": "XugDLr", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121323255, "session": "jiaJE5", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121323285, "session": "Pdnlia", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121323321, "session": "F9MTuT", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121323355, "session": "mK6f1M", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121323385, "session": "fG2tAh", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121323423, "session": "gcecIZ", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121323450, "session": "ntuvOz", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121323478, "session": "p2Tgzu", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121323509, "session": "MiAVNM", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121323540, "session": "sGsjIQ", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121323569, "session": "vdHtjR", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121323602, "session": "Z8r9EB", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121323639, "session": "MNV1bo", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121323669, "session": "bnOvYy", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121323699, "session": "lf0EZr", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121323729, "session": "4z2ewK", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121323762, "session": "vQUbvS", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121323800, "session": "IQtvdv", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121323834, "session": "BY1jD4", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121323868, "session": "3RDSYT", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121323900, "session": "zopbPX", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121323932, "session": "k6cmZe", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121323963, "session": "Ap6Pzo", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121323995, "session": "58nxA5", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121324029, "session": "SGVgdm", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121324063, "session": "fNtpIq", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121324098, "session": "zZ4iEu", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121324132, "session": "AIaVHS", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121324162, "session": "42MZVg", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121324201, "session": "E5xTjU", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121324230, "session": "NEYxhj", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121324259, "session": "jZaeCD", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121324293, "session": "bCtth3", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121324326, "session": "6S0ybl", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121324358, "session": "tO0x9k", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121324390, "session": "Z5H8Od", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121324425, "session": "HcLtkK", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121324459, "session": "DXbifq", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121324493, "session": "o1s5vj", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121324525, "session": "jczOq5", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121324556, "session": "z3Khgg", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121324593, "session": "QxLoQP", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121324621, "session": "qjJ8jR", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121324651, "session": "EWhgys", "user": "蒋沈韩", "meta": {"admin": true}
-{"ts": 1756121324680, "session": "8VORp0", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121324713, "session": "goXPcd", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121324747, "session": "7ITDtH", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121324781, "session": "PHsgwq", "user": "郑王冯", "meta": {"admin": true}
-{"ts": 1756121324814, "session": "8DSARu", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121324848, "session": "zRzjSG", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121324878, "session": "5V5EUV", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121324908, "session": "UPSGe3", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121324937, "session": "rd5iSr", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121324974, "session": "3EgxF3", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121325008, "session": "GPTmCB", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121325041, "session": "wEnLtI", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121325076, "session": "E4f8n1", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121325106, "session": "5RlAl2", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121325141, "session": "mlyRAx", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121325171, "session": "60hYke", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121325206, "session": "f3aqqN", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121325236, "session": "38td5T", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121325264, "session": "wsB1Co", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121325296, "session": "Ig8eOG", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121325327, "session": "SBLYD1", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121325366, "session": "pyfywY", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121325399, "session": "sruL7C", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121325430, "session": "eOeX5C", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121325460, "session": "Ew3Hoz", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121325492, "session": "B9VZAo", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121325527, "session": "RhvGSJ", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121325557, "session": "O7uarq", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121325592, "session": "PioYTD", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121325625, "session": "CYLe1j", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121325659, "session": "hBih4Y", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121325690, "session": "H2fzrG", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121325720, "session": "qWuPJS", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121325758, "session": "H8ykhm", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121325790, "session": "fpGQHG", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121325819, "session": "xecp8p", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121325855, "session": "yFlGG4", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121325890, "session": "QjeIct", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121325923, "session": "josHCW", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121325953, "session": "tfOcU1", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121325986, "session": "DnZywl", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121326018, "session": "ybKzcc", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121326051, "session": "KyImfo", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121326085, "session": "RdVn9n", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121326123, "session": "TbjXNz", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121326162, "session": "wolPNA", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121326194, "session": "JR01sO", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121326227, "session": "PxHdTn", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121326262, "session": "83cuVA", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121326292, "session": "kCQ6co", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121326330, "session": "5C9jt2", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121326363, "session": "cZ21zx", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121326395, "session": "FZX6ho", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121326425, "session": "YZWDjH", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121326456, "session": "FsYICT", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121326490, "session": "pAbJqy", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121326522, "session": "WeBp9T", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121326560, "session": "URIWJS", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121326590, "session": "xYfTP4", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121326623, "session": "ZPDOkw", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121326658, "session": "1xwbzL", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121326688, "session": "2fbvXt", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121326725, "session": "Ocw8ca", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121326755, "session": "5lRZGK", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121326783, "session": "4zlJkU", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121326816, "session": "P83gvN", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121326851, "session": "5lL2Pc", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121326883, "session": "AxFvDI", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121326916, "session": "taC0kk", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121326953, "session": "GGZMO8", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121326988, "session": "09caHH", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121327019, "session": "7ITuUL", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121327051, "session": "UlM9kV", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121327085, "session": "xrcsiM", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121327114, "session": "dX4dUx", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121327148, "session": "URkSOM", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121327185, "session": "yzjOoj", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121327220, "session": "qZ1EFj", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121327251, "session": "0vrtH6", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121327281, "session": "fhkiqL", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121327316, "session": "gbv71P", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121327354, "session": "ViyCjg", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121327384, "session": "C4KkSi", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121327416, "session": "1STCx1", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121327450, "session": "TNvExQ", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121327484, "session": "Dk7kuP", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121327517, "session": "sO5jTo", "user": "赵钱孙", "meta": {"admin": true}
-{"ts": 1756121327545, "session": "WkDR4x", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121327577, "session": "toc8dv", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121327615, "session": "kBvZOe", "user": "蒋沈韩", "meta": {"admin": true}
-{"ts": 1756121327647, "session": "8CakgN", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121327681, "session": "4HiqOw", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121327714, "session": "sP8S7D", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121327756, "session": "WJXaD6", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121327789, "session": "lkCDmY", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121327822, "session": "IZzmOy", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121327850, "session": "qC9vJX", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121327884, "session": "MwpwvJ", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121327919, "session": "ctk0YG", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121327952, "session": "LNSrb6", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121327985, "session": "OUOfA0", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121328014, "session": "a12wee", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121328045, "session": "pVAjqk", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121328078, "session": "aBwEa8", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121328111, "session": "kfKo6L", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121328148, "session": "8aelJ5", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121328178, "session": "bSQ8s7", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121328206, "session": "RXpPaz", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121328237, "session": "sKuhoz", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121328272, "session": "TVctZz", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121328302, "session": "bZZDtI", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121328337, "session": "U3SpkH", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121328370, "session": "p5DovQ", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121328400, "session": "432ukg", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121328434, "session": "tE8Fgq", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121328467, "session": "s5d4gD", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121328497, "session": "HMInt7", "user": "测试用户", "meta": {"admin": true}
-{"ts": 1756121328537, "session": "7JeMpT", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121328572, "session": "IPh319", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121328608, "session": "P4KWFW", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121328640, "session": "8SAhdP", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121328668, "session": "pljRMO", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121328699, "session": "KWRjID", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121328731, "session": "mb7HFq", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121328763, "session": "jE0BTy", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121328795, "session": "CvkKUt", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121328833, "session": "9o0r5H", "user": "赵钱孙", "meta": {"admin": true}}
-{ts: 1756121328863, session: "DvSwWf", user: "user2", meta: {admin: true}}
-{"ts": 1756121328897, "session": "dVA8yd", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121328938, "session": "vL8GPx", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121328971, "session": "xBlEG9", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121329000, "session": "iCmPqr", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121329033, "session": "b5dE71", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121329069, "session": "nDC44z", "user": "user1", "meta": {"admin": true}
-{ts: 1756121329101, session: "RM1rVg", user: "陈褚卫", meta: {admin: true}}
-{"ts": 1756121329130, "session": "wn6Wui", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121329161, "session": "Gi8hW1", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121329193, "session": "E1lGso", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121329227, "session": "XgyIzz", "user": "蒋沈韩", "meta": {"admin": true}}
-{ts: 1756121329258, session: "ZYmFBH", user: "admin1", meta: {admin: true}}
-{"ts": 1756121329290, "session": "u79A8g", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121329318, "session": "0tkGK1", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121329358, "session": "Ipk0a1", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121329388, "session": "zTJqWm", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121329423, "session": "0ezGQB", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121329454, "session": "rUdiCE", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121329483, "session": "0hldfD", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121329514, "session": "tAs60b", "user": "测试用户", "meta": {"admin": true}
-{"ts": 1756121329546, "session": "qrXOAr", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121329575, "session": "n3pmuK", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121329609, "session": "FjZHdH", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121329640, "session": "9rO2J9", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121329672, "session": "r1uxmQ", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121329701, "session": "B3kDIu", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121329737, "session": "7KcpcT", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121329769, "session": "TmcrGd", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121329799, "session": "hRXBQP", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121329833, "session": "Wzboyx", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121329862, "session": "h2OD11", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121329891, "session": "4udPKP", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121329922, "session": "pc1hEc", "user": "admin1", "meta": {"admin": true}
-{"ts": 1756121329957, "session": "uOSObe", "user": "user1", "meta": {"admin": true}}
-{"ts": 1756121329989, "session": "fiK3Oi", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121330024, "session": "M7uPYr", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121330053, "session": "y7BnDj", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121330088, "session": "6Iysn3", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121330123, "session": "fyqryp", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121330154, "session": "RArDTw", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121330184, "session": "eXciYe", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121330215, "session": "PEbfKz", "user": "测试用户", "meta": {"admin": true}}
-{"ts": 1756121330247, "session": "TAownC", "user": "陈褚卫", "meta": {"admin": true}}
-{ts: 1756121330275, session: "G6uozv", user: "蒋沈韩", meta: {admin: true}}
-{"ts": 1756121330303, "session": "BlSThd", "user": "郑王冯", "meta": {"admin": true}}
-{"ts": 1756121330335, "session": "XpDNl1", "user": "赵钱孙", "meta": {"admin": true}}
-{"ts": 1756121330368, "session": "IOVQMJ", "user": "陈褚卫", "meta": {"admin": true}}
-{"ts": 1756121330400, "session": "tsYD1c", "user": "郑王冯", "meta": {"admin": true}
-{"ts": 1756121330437, "session": "jPLkPj", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121330465, "session": "ZAiQG7", "user": "admin1", "meta": {"admin": true}}
-{"ts": 1756121330504, "session": "BvpClx", "user": "admin2", "meta": {"admin": true}}
-{"ts": 1756121330533, "session": "gwZ7UV", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121330567, "session": "4kzidt", "user": "user2", "meta": {"admin": true}}
-{"ts": 1756121330597, "session": "XUIDBu", "user": "李周吴", "meta": {"admin": true}}
-{"ts": 1756121330628, "session": "U18SLM", "user": "蒋沈韩", "meta": {"admin": true}}
-{"ts": 1756121330663, "session": "WemJky", "user": "李周吴", "meta": {"admin": true}}
-Stopping processes...

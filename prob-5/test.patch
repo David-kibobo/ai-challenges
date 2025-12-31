@@ -1,0 +1,435 @@
+diff --git a/package.json b/package.json
+index e19e9d6b..d14b9ced 100644
+--- a/package.json
++++ b/package.json
+@@ -311,6 +311,7 @@
+     "vitest": "^3.2.4",
+     "vitest-environment-miniflare": "^2.14.4",
+     "webpack": "^5.95.0",
++    "eventsource": "^2.0.2",
+     "webpack-http-server": "^0.5.0"
+   },
+   "peerDependencies": {
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 00000000..53d54758
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,48 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++# Determine mode
++if [ "$#" -ge 1 ]; then
++  MODE="$1"
++elif [ "${MODE-""}" != "" ]; then
++  MODE="$MODE"
++else
++  MODE=base
++fi
++
++echo "Running tests (mode: ${MODE})"
++
++
++EXCLUDES=(
++  "third-party/axios-error-response.test.ts"
++  "third-party/axios-upload.node.test.ts"
++  "msw-api/setup-server/resetHandlers.node.test.ts"
++  "msw-api/setup-server/scenarios/fall-through.node.test.ts"
++  "msw-api/setup-server/scenarios/on-unhandled-request/callback.node.test.ts"
++  "msw-api/setup-server/scenarios/on-unhandled-request/default.node.test.ts"
++)
++
++
++EXCLUDE_ARGS=()
++for pat in "${EXCLUDES[@]}"; do
++  EXCLUDE_ARGS+=( "--exclude=${pat}" )
++done
++
++if [ "${MODE}" = "base" ]; then
++  echo "Running base tests"
++  pnpm -s build
++
++
++  pnpm -s vitest --run --config=./test/node/vitest.config.ts "${EXCLUDE_ARGS[@]}"
++  exit 0
++fi
++
++if [ "${MODE}" = "new" ]; then
++  echo "Running experimental tests"
++  pnpm -s build
++  pnpm -s vitest --run --config=./test/experimental/vitest.config.ts || exit 1
++  exit 0
++fi
++
++echo "Unknown MODE: ${MODE}. Use MODE=base or MODE=new"
++exit 2
+diff --git a/test/experimental/setup-eventsource.ts b/test/experimental/setup-eventsource.ts
+new file mode 100644
+index 00000000..8c243762
+--- /dev/null
++++ b/test/experimental/setup-eventsource.ts
+@@ -0,0 +1,5 @@
++import EventSource from 'eventsource'
++
++;(globalThis as any).EventSource = EventSource as any
++
++export {}
+diff --git a/test/experimental/sse/sse-handler-matching.node.test.ts b/test/experimental/sse/sse-handler-matching.node.test.ts
+new file mode 100644
+index 00000000..1eac9837
+--- /dev/null
++++ b/test/experimental/sse/sse-handler-matching.node.test.ts
+@@ -0,0 +1,169 @@
++import { setupServer } from 'msw/node'
++import { sse } from 'msw'
++import { test, expect } from 'vitest'
++
++test('sse: handler-matching after resetHandlers (node)', async () => {
++  const received: string[] = []
++  let startIndex = 0
++
++  let resolveAClosed: () => void
++  const aClosed = new Promise<void>((res) => {
++    resolveAClosed = res
++  })
++
++  const aHandler = ({ client }: any) => {
++    let count = 0
++    const timer = setInterval(() => {
++      try {
++        // Send a simple string payload to avoid JSON assumptions in tests.
++        client.send((`A:${++count}`) as any)
++      } catch {
++        void 0
++      }
++    }, 50)
++
++    const lease = setTimeout(() => clearInterval(timer), 5000)
++
++    try {
++      ;(client as any).on('close', () => {
++        clearInterval(timer)
++        clearTimeout(lease)
++        resolveAClosed()
++      })
++    } catch {
++    }
++  }
++
++  const server = setupServer(
++    sse('/stream', aHandler),
++    sse('http://localhost/stream', aHandler),
++  )
++  server.listen()
++
++  try {
++    const esA = new EventSource('http://localhost/stream')
++
++    // Resolve when the first message arrives (event-driven, no fixed sleeps).
++    const firstMessage = new Promise<void>((resolve) => {
++      const handler = (e: MessageEvent) => {
++        try {
++          received.push(String((e as any).data))
++        } catch {
++          void 0
++        }
++        esA.removeEventListener('message', handler as any)
++        resolve()
++      }
++      esA.addEventListener('message', handler as any)
++    })
++
++    esA.onerror = () => {
++      try {
++        ;(esA as any).close()
++      } catch {
++        esA.onmessage = null
++      }
++    }
++
++    await Promise.race([firstMessage, new Promise((res) => setTimeout(res, 1000))])
++
++    try {
++      const closeFn = (esA as any).close
++      if (typeof closeFn === 'function') {
++        closeFn.call(esA)
++      } else {
++        esA.onmessage = null
++      }
++    } catch {
++      esA.onmessage = null
++    }
++
++    const waitForClientClosed = new Promise<void>((resolve, reject) => {
++      const timeout = setTimeout(() => reject(new Error('Client did not reach CLOSED state in time')), 5000)
++      const check = () => {
++        try {
++          if ((esA as any).readyState === 2) {
++            clearTimeout(timeout)
++            resolve()
++            return
++          }
++        } catch {
++        }
++        setTimeout(check, 20)
++      }
++      check()
++    })
++
++    await Promise.race([
++      aClosed.catch(() => {}),
++      waitForClientClosed,
++    ])
++
++    startIndex = received.length
++
++    const bHandler = ({ client }: any) => {
++      let count = 0
++      const timer = setInterval(() => {
++        try {
++          client.send((`B:${++count}`) as any)
++        } catch {
++          void 0
++        }
++      }, 50)
++      const stop = setTimeout(() => {
++        try {
++          client.close()
++        } catch {
++          void 0
++        }
++        clearInterval(timer)
++        clearTimeout(stop)
++      }, 500)
++    }
++
++    try {
++      (server as any).resetHandlers(
++        sse('/stream', bHandler),
++      )
++    } catch {}
++
++    const esB = new EventSource('http://localhost/stream')
++
++    // Wait for at least one 'B:' message (event-driven). Timeout protects from hangs.
++    const gotB = new Promise<void>((resolve, reject) => {
++      const timeout = setTimeout(() => reject(new Error('Did not receive B message in time')), 2000)
++      const handler = (e: MessageEvent) => {
++        try {
++          received.push(String((e as any).data))
++          if (String((e as any).data).startsWith('B:')) {
++            clearTimeout(timeout)
++            esB.removeEventListener('message', handler as any)
++            resolve()
++            return
++          }
++        } catch {
++          void 0
++        }
++      }
++      esB.addEventListener('message', handler as any)
++    })
++
++    esB.onerror = () => esB.close()
++
++    await Promise.race([gotB.catch(() => void 0), new Promise((res) => setTimeout(res, 2000))])
++  } finally {
++    server.close()
++  }
++
++  const pre = received.slice(0, startIndex)
++  const post = received.slice(startIndex)
++
++  const preSawA = pre.some(ev => typeof ev === 'string' && ev.startsWith('A:'))
++  expect(preSawA).toBe(true)
++
++  const sawB = post.some(ev => typeof ev === 'string' && ev.startsWith('B:'))
++  const sawA = post.some(ev => typeof ev === 'string' && ev.startsWith('A:'))
++
++  expect(sawB).toBe(true)
++  expect(sawA).toBe(false)
++})
+\ No newline at end of file
+diff --git a/test/experimental/sse/sse-handler-matching.test.ts b/test/experimental/sse/sse-handler-matching.test.ts
+new file mode 100644
+index 00000000..396be8f1
+--- /dev/null
++++ b/test/experimental/sse/sse-handler-matching.test.ts
+@@ -0,0 +1,159 @@
++import { setupServer } from 'msw/node'
++import { sse } from 'msw'
++import { test, expect } from 'vitest'
++
++test('sse: handler-matching after resetHandlers (browser-like)', async () => {
++  const received: string[] = []
++  let startIndex = 0
++
++  let resolveAClosed: () => void
++  const aClosed = new Promise<void>((res) => {
++    resolveAClosed = res
++  })
++
++  const server = setupServer(
++    sse(/(?:https?:\/\/localhost)?\/stream$/, ({ client }) => {
++      let count = 0
++      const timer = setInterval(() => {
++        try {
++          client.send((`A:${++count}`) as any)
++        } catch {
++          void 0
++        }
++      }, 50)
++      const lease = setTimeout(() => clearInterval(timer), 5000)
++      try {
++        ;(client as any).on('close', () => {
++          clearInterval(timer)
++          clearTimeout(lease)
++          resolveAClosed()
++        })
++      } catch {
++      }
++    }),
++  )
++
++  server.listen()
++  try {
++    const esA = new EventSource('http://localhost/stream')
++
++    const firstMessage = new Promise<void>((resolve) => {
++      const handler = (e: MessageEvent) => {
++        try {
++          received.push(String((e as any).data))
++        } catch {
++          void 0
++        }
++        esA.removeEventListener('message', handler as any)
++        resolve()
++      }
++      esA.addEventListener('message', handler as any)
++    })
++
++    esA.onerror = () => esA.close()
++
++    await Promise.race([firstMessage, new Promise((res) => setTimeout(res, 1000))])
++
++    try {
++      const closeFn = (esA as any).close
++      if (typeof closeFn === 'function') {
++        closeFn.call(esA)
++      } else {
++        esA.onmessage = null
++      }
++    } catch {
++      esA.onmessage = null
++    }
++
++    const waitForClientClosed = new Promise<void>((resolve, reject) => {
++      const timeout = setTimeout(() => reject(new Error('Client did not reach CLOSED state in time')), 5000)
++      const check = () => {
++        try {
++          if ((esA as any).readyState === 2) {
++            clearTimeout(timeout)
++            resolve()
++            return
++          }
++        } catch {
++        }
++        setTimeout(check, 20)
++      }
++      check()
++    })
++
++    await Promise.race([
++      aClosed.catch(() => {}),
++      waitForClientClosed,
++    ])
++
++    startIndex = received.length
++
++    const bHandler = ({ client }: any) => {
++      let count = 0
++      const timer = setInterval(() => {
++        try {
++          client.send((`B:${++count}`) as any)
++        } catch {
++          void 0
++        }
++      }, 50)
++      const stop = setTimeout(() => {
++        try {
++          client.close()
++        } catch {
++          void 0
++        }
++        clearInterval(timer)
++        clearTimeout(stop)
++      }, 500)
++    }
++
++    try {
++      (server as any).resetHandlers(
++        sse('/stream', bHandler),
++      )
++    } catch {}
++
++    const esB = new EventSource('http://localhost/stream')
++
++    const gotB = new Promise<void>((resolve, reject) => {
++      const timeout = setTimeout(() => reject(new Error('Did not receive B message in time')), 2000)
++      const handler = (e: MessageEvent) => {
++        try {
++          received.push(String((e as any).data))
++          if (String((e as any).data).startsWith('B:')) {
++            clearTimeout(timeout)
++            esB.removeEventListener('message', handler as any)
++            resolve()
++            return
++          }
++        } catch {
++          void 0
++        }
++      }
++      esB.addEventListener('message', handler as any)
++    })
++
++    esB.onerror = () => esB.close()
++
++    await Promise.race([gotB.catch(() => void 0), new Promise((res) => setTimeout(res, 2000))])
++  } finally {
++    try {
++      server.close()
++    } catch {
++      void 0
++    }
++  }
++
++  const pre = received.slice(0, startIndex)
++  const post = received.slice(startIndex)
++
++  const preSawA = pre.some(ev => typeof ev === 'string' && ev.startsWith('A:'))
++  expect(preSawA).toBe(true)
++
++  const sawB = post.some(ev => typeof ev === 'string' && ev.startsWith('B:'))
++  const sawA = post.some(ev => typeof ev === 'string' && ev.startsWith('A:'))
++
++  expect(sawB).toBe(true)
++  expect(sawA).toBe(false)
++})
+diff --git a/test/experimental/vitest.config.ts b/test/experimental/vitest.config.ts
+new file mode 100644
+index 00000000..150d5d2f
+--- /dev/null
++++ b/test/experimental/vitest.config.ts
+@@ -0,0 +1,11 @@
++import { defineConfig } from 'vitest/config'
++
++export default defineConfig({
++  test: {
++    dir: './test/experimental',
++    globals: true,
++    environment: 'node',
++    setupFiles: ['./test/experimental/setup-eventsource.ts'],
++    testTimeout: 20000,
++  },
++})

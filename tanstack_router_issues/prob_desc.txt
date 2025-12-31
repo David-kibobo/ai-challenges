@@ -1,0 +1,19 @@
+Problem Brief:
+In the TanStack Router repository, developers can define virtual routes with explicit parent-child relationships using a layout configuration. However, when two routes are configured as siblings under the same layout, the router may automatically nest one route under the other based on path prefix matching, ignoring the explicitly declared sibling relationship.
+
+This behavior can cause pages that should be siblings (for example, /posts and /posts/$id) to be treated as parent and child, affecting programmatic access to parent and children routes, navigation logic, and route-based rendering.
+
+Agent Instructions:
+Implement or adjust the route generation logic so that:
+    -Explicit configuration always determines the hierarchy.
+    -Sibling routes defined under the same layout must remain siblings.
+    -Routes nest only when explicitly declared as children.
+    -Path structure, prefix similarity, or dynamic segments must not cause automatic nesting.
+    -The generated route tree must match the configured structure.
+    -Parent references and child collections must reflect the declared relationships.
+
+Test Assumptions:
+
+Tests will inspect the generated route tree programmatically and verify that siblings remain siblings and parents are correctly assigned.
+
+Both static and dynamic routes must follow the explicit configuration.

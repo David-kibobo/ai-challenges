@@ -1,0 +1,29 @@
+FROM public.ecr.aws/x8v8d7g8/mars-base:latest
+
+WORKDIR /app
+
+ENV NODE_ENV=development
+
+# Base commit to checkout in the fresh clone (override with --build-arg if needed)
+ARG BASE_COMMIT="063564ee43f068372fa7c2c9152ceb82ade7cc8f"
+
+# Clone upstream repo and checkout the base commit first
+RUN git clone https://github.com/mswjs/msw.git /app/msw \
+    && git -C /app/msw fetch --all \
+    && git -C /app/msw checkout ${BASE_COMMIT}
+
+# Copy the patch and overlay our workspace into the cloned repo so local
+# modified files (tests, scripts) replace the upstream files before install.
+# NOTE: this will copy files from the build context into `/app/msw`.
+COPY test.patch /app/test.patch
+COPY . /app/msw/
+
+# Attempt to apply the patch (non-fatal) then install inside the cloned repo
+RUN git -C /app/msw apply /app/test.patch || true
+RUN cd /app/msw && pnpm install
+
+# Ensure the repository test script from the workspace is present, then make it executable
+COPY msw/test.sh /app/msw/test.sh
+RUN chmod +x /app/msw/test.sh || true
+
+CMD ["bash", "-lc", "cd /app/msw && ./test.sh base"]

@@ -1,0 +1,56 @@
+# Dockerfile — clean clone from base commit, apply patch, test workspace
+FROM public.ecr.aws/x8v8d7g8/mars-base:latest
+
+WORKDIR /app
+
+# --- Environment variables ---
+ENV NODE_ENV=development
+ENV NPM_CONFIG_PRODUCTION=false
+ENV MODE=base
+
+# Disable Nx Cloud for offline test runs
+ENV NX_SKIP_NX_CLOUD=true
+ENV NX_CLOUD_SKIP_INSTALL=true
+ENV NX_DAEMON=false
+ENV NX_TASKS_RUNNER_OUTPUT_STYLE=stream
+ENV NX_CLOUD_NO_TIMEOUTS=true
+ENV NX_CLOUD_OFFLINE=1
+ENV NX_SKIP_NX_CLOUD_INSTALL=1
+ENV NX_NO_CLOUD=true
+ENV NX_HIDE_UPDATE_MESSAGE=1
+ENV CI=1
+
+# --- Upgrade Node to >= 22.12 ---
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get update && apt-get install -y nodejs ca-certificates \
+    && node -v \
+    && npm -v
+
+# --- Install git for cloning and other tools ---
+RUN apt-get update && apt-get install -y git curl unzip && rm -rf /var/lib/apt/lists/*
+
+# Install Corepack and pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# --- Clone the upstream MSW repository ---
+RUN git clone https://github.com/mswjs/msw.git /app/msw
+WORKDIR /app/msw
+
+# If you have a specific base commit, set it via build-arg (optional)
+# Default to the provided base commit for reproducible builds
+ARG BASE_COMMIT="063564ee43f068372fa7c2c9152ceb82ade7cc8f"
+RUN git -C /app/msw fetch --all && git -C /app/msw checkout ${BASE_COMMIT}
+
+# Copy the patch into the image build context (provided by host)
+# Copy modified files from the build context into the cloned repo
+# This avoids brittle patch-apply failures when the repo base differs.
+COPY patch_payload/ ./
+
+# Install dependencies using pnpm
+RUN pnpm install --frozen-lockfile
+
+# Make test script executable
+RUN chmod +x ./test.sh
+
+# Default command drops you into the repo
+CMD ["/bin/bash"]

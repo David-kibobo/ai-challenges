@@ -1,0 +1,6 @@
+dependency-injector
+sanic
+sanic-testing
+aiohttp
+pyyaml
+pytest-cov

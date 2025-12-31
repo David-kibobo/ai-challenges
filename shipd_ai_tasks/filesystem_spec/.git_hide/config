@@ -1,0 +1,21 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+[remote "origin"]
+	url = https://github.com/fsspec/filesystem_spec.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+	vscode-merge-base = origin/master
+[branch "patch-temp"]
+	vscode-merge-base = origin/master
+[branch "patch-submission"]
+	vscode-merge-base = origin/master
+[branch "patch-for-shipd"]
+	vscode-merge-base = origin/master
+[branch "test-upstream"]
+	remote = origin
+	merge = refs/heads/master

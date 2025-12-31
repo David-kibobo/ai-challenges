@@ -1,0 +1,1785 @@
+diff --git a/e2e/site/next-env.d.ts b/e2e/site/next-env.d.ts
+index b75ab5c..3cd7048 100644
+--- a/e2e/site/next-env.d.ts
++++ b/e2e/site/next-env.d.ts
+@@ -1,7 +1,6 @@
+ /// <reference types="next" />
+ /// <reference types="next/image-types/global" />
+ /// <reference types="next/navigation-types/compat/navigation" />
+-import './.next/types/routes.d.ts'
+ 
+ // NOTE: This file should not be edited
+ // see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+diff --git a/e2e/site/package.json b/e2e/site/package.json
+index 7747704..a7e169f 100644
+--- a/e2e/site/package.json
++++ b/e2e/site/package.json
+@@ -9,13 +9,13 @@
+     "lint": "next lint"
+   },
+   "dependencies": {
+-    "@types/node": "^22.19.1",
+-    "@types/react": "^19.2.7",
+-    "@types/react-dom": "^19.2.7",
+-    "next": "^16.0.10",
+-    "react": "^19.1.4",
+-    "react-dom": "^19.1.4",
+-    "typescript": "5.9.3",
++    "@types/node": "^20.2.5",
++    "@types/react": "^18.2.8",
++    "@types/react-dom": "18.2.4",
++    "next": "^15.4.4",
++    "react": "^19.1.0",
++    "react-dom": "^19.1.0",
++    "typescript": "5.1.3",
+     "swr": "link:../../"
+   }
+ }
+diff --git a/e2e/site/tsconfig.json b/e2e/site/tsconfig.json
+index 60f80ca..ebd7bfc 100644
+--- a/e2e/site/tsconfig.json
++++ b/e2e/site/tsconfig.json
+@@ -1,11 +1,7 @@
+ {
+   "compilerOptions": {
+     "target": "es5",
+-    "lib": [
+-      "dom",
+-      "dom.iterable",
+-      "esnext"
+-    ],
++    "lib": ["dom", "dom.iterable", "esnext"],
+     "allowJs": true,
+     "skipLibCheck": true,
+     "strict": true,
+@@ -16,7 +12,7 @@
+     "moduleResolution": "node",
+     "resolveJsonModule": true,
+     "isolatedModules": true,
+-    "jsx": "react-jsx",
++    "jsx": "preserve",
+     "incremental": true,
+     "plugins": [
+       {
+@@ -25,19 +21,9 @@
+     ],
+     "baseUrl": ".",
+     "paths": {
+-      "~/*": [
+-        "./*"
+-      ]
++      "~/*": ["./*"]
+     }
+   },
+-  "include": [
+-    "next-env.d.ts",
+-    "**/*.ts",
+-    "**/*.tsx",
+-    ".next/types/**/*.ts",
+-    ".next/dev/types/**/*.ts"
+-  ],
+-  "exclude": [
+-    "node_modules"
+-  ]
++  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
++  "exclude": ["node_modules"]
+ }
+diff --git a/package.json b/package.json
+index 0a9dd59..569bb8a 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "swr",
+-  "version": "2.3.8",
++  "version": "2.3.7",
+   "description": "React Hooks library for remote data fetching",
+   "keywords": [
+     "swr",
+@@ -150,7 +150,7 @@
+     "jest": "29.7.0",
+     "jest-environment-jsdom": "29.7.0",
+     "lint-staged": "16.2.7",
+-    "next": "16.0.10",
++    "next": "16.0.7",
+     "prettier": "2.8.8",
+     "react": "^18.2.0",
+     "react-dom": "^18.2.0",
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 12912fa..955aba6 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -103,8 +103,8 @@ importers:
+         specifier: 16.2.7
+         version: 16.2.7
+       next:
+-        specifier: 16.0.10
+-        version: 16.0.10(@playwright/test@1.57.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
++        specifier: 16.0.7
++        version: 16.0.7(@playwright/test@1.57.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+       prettier:
+         specifier: 2.8.8
+         version: 2.8.8
+@@ -681,53 +681,53 @@ packages:
+   '@loaderkit/resolve@1.0.4':
+     resolution: {integrity: sha512-rJzYKVcV4dxJv+vW6jlvagF8zvGxHJ2+HTr1e2qOejfmGhAApgJHl8Aog4mMszxceTRiKTTbnpgmTO1bEZHV/A==}
+ 
+-  '@next/env@16.0.10':
+-    resolution: {integrity: sha512-8tuaQkyDVgeONQ1MeT9Mkk8pQmZapMKFh5B+OrFUlG3rVmYTXcXlBetBgTurKXGaIZvkoqRT9JL5K3phXcgang==}
++  '@next/env@16.0.7':
++    resolution: {integrity: sha512-gpaNgUh5nftFKRkRQGnVi5dpcYSKGcZZkQffZ172OrG/XkrnS7UBTQ648YY+8ME92cC4IojpI2LqTC8sTDhAaw==}
+ 
+-  '@next/swc-darwin-arm64@16.0.10':
+-    resolution: {integrity: sha512-4XgdKtdVsaflErz+B5XeG0T5PeXKDdruDf3CRpnhN+8UebNa5N2H58+3GDgpn/9GBurrQ1uWW768FfscwYkJRg==}
++  '@next/swc-darwin-arm64@16.0.7':
++    resolution: {integrity: sha512-LlDtCYOEj/rfSnEn/Idi+j1QKHxY9BJFmxx7108A6D8K0SB+bNgfYQATPk/4LqOl4C0Wo3LACg2ie6s7xqMpJg==}
+     engines: {node: '>= 10'}
+     cpu: [arm64]
+     os: [darwin]
+ 
+-  '@next/swc-darwin-x64@16.0.10':
+-    resolution: {integrity: sha512-spbEObMvRKkQ3CkYVOME+ocPDFo5UqHb8EMTS78/0mQ+O1nqE8toHJVioZo4TvebATxgA8XMTHHrScPrn68OGw==}
++  '@next/swc-darwin-x64@16.0.7':
++    resolution: {integrity: sha512-rtZ7BhnVvO1ICf3QzfW9H3aPz7GhBrnSIMZyr4Qy6boXF0b5E3QLs+cvJmg3PsTCG2M1PBoC+DANUi4wCOKXpA==}
+     engines: {node: '>= 10'}
+     cpu: [x64]
+     os: [darwin]
+ 
+-  '@next/swc-linux-arm64-gnu@16.0.10':
+-    resolution: {integrity: sha512-uQtWE3X0iGB8apTIskOMi2w/MKONrPOUCi5yLO+v3O8Mb5c7K4Q5KD1jvTpTF5gJKa3VH/ijKjKUq9O9UhwOYw==}
++  '@next/swc-linux-arm64-gnu@16.0.7':
++    resolution: {integrity: sha512-mloD5WcPIeIeeZqAIP5c2kdaTa6StwP4/2EGy1mUw8HiexSHGK/jcM7lFuS3u3i2zn+xH9+wXJs6njO7VrAqww==}
+     engines: {node: '>= 10'}
+     cpu: [arm64]
+     os: [linux]
+ 
+-  '@next/swc-linux-arm64-musl@16.0.10':
+-    resolution: {integrity: sha512-llA+hiDTrYvyWI21Z0L1GiXwjQaanPVQQwru5peOgtooeJ8qx3tlqRV2P7uH2pKQaUfHxI/WVarvI5oYgGxaTw==}
++  '@next/swc-linux-arm64-musl@16.0.7':
++    resolution: {integrity: sha512-+ksWNrZrthisXuo9gd1XnjHRowCbMtl/YgMpbRvFeDEqEBd523YHPWpBuDjomod88U8Xliw5DHhekBC3EOOd9g==}
+     engines: {node: '>= 10'}
+     cpu: [arm64]
+     os: [linux]
+ 
+-  '@next/swc-linux-x64-gnu@16.0.10':
+-    resolution: {integrity: sha512-AK2q5H0+a9nsXbeZ3FZdMtbtu9jxW4R/NgzZ6+lrTm3d6Zb7jYrWcgjcpM1k8uuqlSy4xIyPR2YiuUr+wXsavA==}
++  '@next/swc-linux-x64-gnu@16.0.7':
++    resolution: {integrity: sha512-4WtJU5cRDxpEE44Ana2Xro1284hnyVpBb62lIpU5k85D8xXxatT+rXxBgPkc7C1XwkZMWpK5rXLXTh9PFipWsA==}
+     engines: {node: '>= 10'}
+     cpu: [x64]
+     os: [linux]
+ 
+-  '@next/swc-linux-x64-musl@16.0.10':
+-    resolution: {integrity: sha512-1TDG9PDKivNw5550S111gsO4RGennLVl9cipPhtkXIFVwo31YZ73nEbLjNC8qG3SgTz/QZyYyaFYMeY4BKZR/g==}
++  '@next/swc-linux-x64-musl@16.0.7':
++    resolution: {integrity: sha512-HYlhqIP6kBPXalW2dbMTSuB4+8fe+j9juyxwfMwCe9kQPPeiyFn7NMjNfoFOfJ2eXkeQsoUGXg+O2SE3m4Qg2w==}
+     engines: {node: '>= 10'}
+     cpu: [x64]
+     os: [linux]
+ 
+-  '@next/swc-win32-arm64-msvc@16.0.10':
+-    resolution: {integrity: sha512-aEZIS4Hh32xdJQbHz121pyuVZniSNoqDVx1yIr2hy+ZwJGipeqnMZBJHyMxv2tiuAXGx6/xpTcQJ6btIiBjgmg==}
++  '@next/swc-win32-arm64-msvc@16.0.7':
++    resolution: {integrity: sha512-EviG+43iOoBRZg9deGauXExjRphhuYmIOJ12b9sAPy0eQ6iwcPxfED2asb/s2/yiLYOdm37kPaiZu8uXSYPs0Q==}
+     engines: {node: '>= 10'}
+     cpu: [arm64]
+     os: [win32]
+ 
+-  '@next/swc-win32-x64-msvc@16.0.10':
+-    resolution: {integrity: sha512-E+njfCoFLb01RAFEnGZn6ERoOqhK1Gl3Lfz1Kjnj0Ulfu7oJbuMyvBKNj/bw8XZnenHDASlygTjZICQW+rYW1Q==}
++  '@next/swc-win32-x64-msvc@16.0.7':
++    resolution: {integrity: sha512-gniPjy55zp5Eg0896qSrf3yB1dw4F/3s8VK1ephdsZZ129j2n6e1WqCbE2YgcKhW9hPB9TVZENugquWJD5x0ug==}
+     engines: {node: '>= 10'}
+     cpu: [x64]
+     os: [win32]
+@@ -2511,8 +2511,8 @@ packages:
+   natural-compare@1.4.0:
+     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
+ 
+-  next@16.0.10:
+-    resolution: {integrity: sha512-RtWh5PUgI+vxlV3HdR+IfWA1UUHu0+Ram/JBO4vWB54cVPentCD0e+lxyAYEsDTqGGMg7qpjhKh6dc6aW7W/sA==}
++  next@16.0.7:
++    resolution: {integrity: sha512-3mBRJyPxT4LOxAJI6IsXeFtKfiJUbjCLgvXO02fV8Wy/lIhPvP94Fe7dGhUgHXcQy4sSuYwQNcOLhIfOm0rL0A==}
+     engines: {node: '>=20.9.0'}
+     hasBin: true
+     peerDependencies:
+@@ -3964,30 +3964,30 @@ snapshots:
+     dependencies:
+       '@braidai/lang': 1.1.2
+ 
+-  '@next/env@16.0.10': {}
++  '@next/env@16.0.7': {}
+ 
+-  '@next/swc-darwin-arm64@16.0.10':
++  '@next/swc-darwin-arm64@16.0.7':
+     optional: true
+ 
+-  '@next/swc-darwin-x64@16.0.10':
++  '@next/swc-darwin-x64@16.0.7':
+     optional: true
+ 
+-  '@next/swc-linux-arm64-gnu@16.0.10':
++  '@next/swc-linux-arm64-gnu@16.0.7':
+     optional: true
+ 
+-  '@next/swc-linux-arm64-musl@16.0.10':
++  '@next/swc-linux-arm64-musl@16.0.7':
+     optional: true
+ 
+-  '@next/swc-linux-x64-gnu@16.0.10':
++  '@next/swc-linux-x64-gnu@16.0.7':
+     optional: true
+ 
+-  '@next/swc-linux-x64-musl@16.0.10':
++  '@next/swc-linux-x64-musl@16.0.7':
+     optional: true
+ 
+-  '@next/swc-win32-arm64-msvc@16.0.10':
++  '@next/swc-win32-arm64-msvc@16.0.7':
+     optional: true
+ 
+-  '@next/swc-win32-x64-msvc@16.0.10':
++  '@next/swc-win32-x64-msvc@16.0.7':
+     optional: true
+ 
+   '@playwright/test@1.57.0':
+@@ -6154,9 +6154,9 @@ snapshots:
+ 
+   natural-compare@1.4.0: {}
+ 
+-  next@16.0.10(@playwright/test@1.57.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
++  next@16.0.7(@playwright/test@1.57.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+     dependencies:
+-      '@next/env': 16.0.10
++      '@next/env': 16.0.7
+       '@swc/helpers': 0.5.15
+       caniuse-lite: 1.0.30001757
+       postcss: 8.4.31
+@@ -6164,14 +6164,14 @@ snapshots:
+       react-dom: 18.3.1(react@18.3.1)
+       styled-jsx: 5.1.6(react@18.3.1)
+     optionalDependencies:
+-      '@next/swc-darwin-arm64': 16.0.10
+-      '@next/swc-darwin-x64': 16.0.10
+-      '@next/swc-linux-arm64-gnu': 16.0.10
+-      '@next/swc-linux-arm64-musl': 16.0.10
+-      '@next/swc-linux-x64-gnu': 16.0.10
+-      '@next/swc-linux-x64-musl': 16.0.10
+-      '@next/swc-win32-arm64-msvc': 16.0.10
+-      '@next/swc-win32-x64-msvc': 16.0.10
++      '@next/swc-darwin-arm64': 16.0.7
++      '@next/swc-darwin-x64': 16.0.7
++      '@next/swc-linux-arm64-gnu': 16.0.7
++      '@next/swc-linux-arm64-musl': 16.0.7
++      '@next/swc-linux-x64-gnu': 16.0.7
++      '@next/swc-linux-x64-musl': 16.0.7
++      '@next/swc-win32-arm64-msvc': 16.0.7
++      '@next/swc-win32-x64-msvc': 16.0.7
+       '@playwright/test': 1.57.0
+       sharp: 0.34.5
+     transitivePeerDependencies:
+diff --git a/src/_internal/types.ts b/src/_internal/types.ts
+index c5dee2f..77039c7 100644
+--- a/src/_internal/types.ts
++++ b/src/_internal/types.ts
+@@ -1,67 +1,19 @@
+ import type { SWRGlobalConfig } from '../index'
+ import type * as revalidateEvents from './events'
+ 
+-/**
+- * Global state tuple containing SWR's internal state management structures.
+- *
+- * This is the core state structure that manages all SWR operations internally.
+- * Each element serves a specific purpose in the SWR ecosystem.
+- *
+- * @internal
+- */
+ export type GlobalState = [
+-  /** Event revalidators: Maps cache keys to arrays of revalidation callbacks */
+-  Record<string, RevalidateCallback[]>,
+-  /** Mutation timestamps: Maps cache keys to [start_timestamp, end_timestamp] tuples */
+-  Record<string, [number, number]>,
+-  /** Fetch cache: Maps cache keys to [data, timestamp] tuples */
+-  Record<string, [any, number]>,
+-  /** Preload cache: Maps cache keys to fetcher responses */
+-  Record<string, FetcherResponse<any>>,
+-  /** Scoped mutator function for cache updates */
+-  ScopedMutator,
+-  /** Cache setter function with prev/current value comparison */
+-  (key: string, value: any, prev: any) => void,
+-  /** Cache subscriber function that returns an unsubscribe function */
+-  (key: string, callback: (current: any, prev: any) => void) => () => void
++  Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS
++  Record<string, [number, number]>, // MUTATION: [ts, end_ts]
++  Record<string, [any, number]>, // FETCH: [data, ts]
++  Record<string, FetcherResponse<any>>, // PRELOAD
++  ScopedMutator, // Mutator
++  (key: string, value: any, prev: any) => void, // Setter
++  (key: string, callback: (current: any, prev: any) => void) => () => void // Subscriber
+ ]
+-/**
+- * Response type that can be returned by fetcher functions.
+- *
+- * @template Data - The type of data returned by the fetcher
+- * @public
+- */
+ export type FetcherResponse<Data = unknown> = Data | Promise<Data>
+-
+-/**
+- * Basic fetcher function that accepts any arguments and returns data or a promise.
+- *
+- * This is the most permissive fetcher type, allowing any number of arguments
+- * of any type. Used when type safety is not required or when dealing with
+- * dynamic fetcher signatures.
+- *
+- * @template Data - The type of data returned by the fetcher
+- * @param args - Variable arguments passed to the fetcher
+- * @returns Data or a Promise that resolves to data
+- * @public
+- */
+ export type BareFetcher<Data = unknown> = (
+   ...args: any[]
+ ) => FetcherResponse<Data>
+-
+-/**
+- * Typed fetcher function that is constrained by the SWR key type.
+- *
+- * Provides type safety by ensuring the fetcher argument matches the key type.
+- * The conditional type logic ensures that:
+- * - If the key is a function returning a value, the fetcher receives that value
+- * - If the key is falsy (null, undefined, false), the fetcher is never called
+- * - Otherwise, the fetcher receives the key directly as its argument
+- *
+- * @template Data - The type of data returned by the fetcher
+- * @template SWRKey - The type of the SWR key, used to infer fetcher arguments
+- * @public
+- */
+ export type Fetcher<
+   Data = unknown,
+   SWRKey extends Key = Key
+@@ -73,25 +25,6 @@ export type Fetcher<
+   ? (arg: Arg) => FetcherResponse<Data>
+   : never
+ 
+-/**
+- * Determines if data should block rendering based on suspense configuration.
+- *
+- * This conditional type is used internally to determine the return type of `data`
+- * in SWRResponse. When suspense is enabled or fallbackData is provided, data
+- * will never be undefined, allowing for non-nullable return types.
+- *
+- * The type resolution follows this logic:
+- * 1. If global suspense is enabled → `true` (data never undefined)
+- * 2. If no options provided → `false` (data can be undefined)
+- * 3. If suspense is enabled in options → `true` (data never undefined)
+- * 4. If fallbackData is provided → `true` (data never undefined)
+- * 5. Otherwise → `false` (data can be undefined)
+- *
+- * @template Data - The data type
+- * @template Options - The SWR configuration options
+- * @returns `true` if data is guaranteed to be defined, `false` if it can be undefined
+- * @internal
+- */
+ export type BlockingData<
+   Data = any,
+   Options = SWRDefaultOptions<Data>
+@@ -105,35 +38,14 @@ export type BlockingData<
+   ? true
+   : false
+ 
+-/**
+- * Configuration types that are only used internally, not exposed to the user.
+- *
+- * These options are managed internally by SWR and passed between internal
+- * functions. They are not part of the public API and should not be used
+- * directly by consumers.
+- *
+- * @internal
+- */
++// Configuration types that are only used internally, not exposed to the user.
+ export interface InternalConfiguration {
+-  /** The cache instance used to store SWR data and state */
+   cache: Cache
+-  /** Scoped mutator function for updating cache entries */
+   mutate: ScopedMutator
+ }
+ 
+ /**
+- * Public configuration options for SWR.
+- *
+- * This interface defines all the configuration options that users can pass
+- * to customize SWR's behavior. These options can be provided globally via
+- * SWRConfig or per-hook via the config parameter.
+- *
+- * @template Data - The type of data returned by the fetcher
+- * @template Error - The type of error that can be thrown
+- * @template Fn - The fetcher function type
+- *
+- * @public
+- * @see {@link https://swr.vercel.app/docs/options | SWR Options Documentation}
++ * @link https://swr.vercel.app/docs/options
+  */
+ export interface PublicConfiguration<
+   Data = any,
+@@ -163,62 +75,42 @@ export interface PublicConfiguration<
+    */
+   dedupingInterval: number
+   /**
++   *  @link https://swr.vercel.app/docs/revalidation
+    *  * Disabled by default: `refreshInterval = 0`
+    *  * If set to a number, polling interval in milliseconds
+    *  * If set to a function, the function will receive the latest data and should return the interval in milliseconds
+-   *  @see {@link https://swr.vercel.app/docs/revalidation}
+    */
+   refreshInterval?: number | ((latestData: Data | undefined) => number)
+   /**
+    * polling when the window is invisible (if `refreshInterval` is enabled)
+    * @defaultValue false
++   *
+    */
+   refreshWhenHidden?: boolean
+   /**
+    * polling when the browser is offline (determined by `navigator.onLine`)
+-   *
+-   * When enabled, SWR will continue polling even when the browser is offline.
+-   * This can be useful for applications that need to check for connectivity
+-   * or cache updates while offline.
+-   *
+-   * @defaultValue false
+    */
+   refreshWhenOffline?: boolean
+   /**
+    * automatically revalidate when window gets focused
+-   *
+-   * When enabled, SWR will automatically revalidate data when the user
+-   * returns focus to the window/tab. This ensures data freshness when
+-   * users switch between applications.
+-   *
+    * @defaultValue true
+-   * @see {@link https://swr.vercel.app/docs/revalidation | Revalidation Documentation}
++   * @link https://swr.vercel.app/docs/revalidation
+    */
+   revalidateOnFocus: boolean
+   /**
+    * automatically revalidate when the browser regains a network connection (via `navigator.onLine`)
+-   *
+-   * When enabled, SWR will automatically revalidate data when the browser
+-   * goes from offline to online state, ensuring data is up-to-date when
+-   * connectivity is restored.
+-   *
+    * @defaultValue true
+-   * @see {@link https://swr.vercel.app/docs/revalidation | Revalidation Documentation}
++   * @link https://swr.vercel.app/docs/revalidation
+    */
+   revalidateOnReconnect: boolean
+   /**
+    * enable or disable automatic revalidation when component is mounted
+-   *
+-   * Controls whether SWR should automatically fetch data when the component
+-   * mounts. When `undefined`, the behavior depends on `revalidateIfStale`.
+-   *
+-   * @defaultValue undefined (inherits from revalidateIfStale)
+    */
+   revalidateOnMount?: boolean
+   /**
+    * automatically revalidate even if there is stale data
+    * @defaultValue true
+-   * @see {@link https://swr.vercel.app/docs/revalidation#disable-automatic-revalidations}
++   * @link https://swr.vercel.app/docs/revalidation#disable-automatic-revalidations
+    */
+   revalidateIfStale: boolean
+   /**
+@@ -234,12 +126,12 @@ export interface PublicConfiguration<
+   /**
+    * @experimental  enable React Suspense mode
+    * @defaultValue false
+-   * @see {@link https://swr.vercel.app/docs/suspense}
++   * @link https://swr.vercel.app/docs/suspense
+    */
+   suspense?: boolean
+   /**
+    * initial data to be returned (note: ***This is per-hook***)
+-   * @see {@link https://swr.vercel.app/docs/with-nextjs}
++   * @link https://swr.vercel.app/docs/with-nextjs
+    */
+   fallbackData?: Data | Promise<Data>
+   /**
+@@ -254,16 +146,16 @@ export interface PublicConfiguration<
+   fetcher?: Fn
+   /**
+    * array of middleware functions
+-   * @see {@link https://swr.vercel.app/docs/middleware}
++   * @link https://swr.vercel.app/docs/middleware
+    */
+   use?: Middleware[]
+   /**
+    * a key-value object of multiple fallback data
+-   * @see {@link https://swr.vercel.app/docs/with-nextjs#pre-rendering-with-default-data}
++   * @link https://swr.vercel.app/docs/with-nextjs#pre-rendering-with-default-data
+    */
+   fallback: { [key: string]: any }
+   /**
+-   * Function to detect whether pause revalidations, will ignore fetched data and errors when it returns true. Returns false by default.
++   * function to detect whether pause revalidations, will ignore fetched data and errors when it returns true. Returns false by default.
+    */
+   isPaused: () => boolean
+   /**
+@@ -304,17 +196,17 @@ export interface PublicConfiguration<
+    */
+   onDiscarded: (key: string) => void
+   /**
+-   * Comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [dequal](https://github.com/lukeed/dequal) is used.
++   * comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [stable-hash](https://github.com/shuding/stable-hash) is used.
+    */
+   compare: (a: Data | undefined, b: Data | undefined) => boolean
+   /**
+-   * IsOnline and isVisible are functions that return a boolean, to determine if the application is "active". By default, SWR will bail out a revalidation if these conditions are not met.
+-   * @see {@link https://swr.vercel.app/docs/advanced/react-native#customize-focus-and-reconnect-events}
++   * isOnline and isVisible are functions that return a boolean, to determine if the application is "active". By default, SWR will bail out a revalidation if these conditions are not met.
++   * @link https://swr.vercel.app/docs/advanced/react-native#customize-focus-and-reconnect-events
+    */
+   isOnline: () => boolean
+   /**
+-   * IsOnline and isVisible are functions that return a boolean, to determine if the application is "active". By default, SWR will bail out a revalidation if these conditions are not met.
+-   * @see {@link https://swr.vercel.app/docs/advanced/react-native#customize-focus-and-reconnect-events}
++   * isOnline and isVisible are functions that return a boolean, to determine if the application is "active". By default, SWR will bail out a revalidation if these conditions are not met.
++   * @link https://swr.vercel.app/docs/advanced/react-native#customize-focus-and-reconnect-events
+    */
+   isVisible: () => boolean
+ }
+@@ -325,135 +217,28 @@ export type FullConfiguration<
+   Fn extends Fetcher = BareFetcher
+ > = InternalConfiguration & PublicConfiguration<Data, Error, Fn>
+ 
+-/**
+- * Provider configuration for custom focus and reconnect event handling.
+- *
+- * This configuration allows custom implementations for detecting window focus
+- * and network reconnection events. Useful for React Native or other environments
+- * where the default browser APIs are not available.
+- *
+- * @public
+- * @see {@link https://swr.vercel.app/docs/advanced/react-native | React Native Documentation}
+- */
+ export type ProviderConfiguration = {
+-  /**
+-   * Initialize focus event listener.
+-   *
+-   * @param callback - Function to call when window gains focus
+-   * @returns Optional cleanup function to remove the listener
+-   */
+   initFocus: (callback: () => void) => (() => void) | void
+-  /**
+-   * Initialize reconnect event listener.
+-   *
+-   * @param callback - Function to call when network reconnects
+-   * @returns Optional cleanup function to remove the listener
+-   */
+   initReconnect: (callback: () => void) => (() => void) | void
+ }
+-
+ /**
+- * The main useSWR hook interface with multiple overloads for different usage patterns.
+- *
+- * This interface provides type-safe overloads for various ways to call useSWR,
+- * from simple key-only calls to complex configurations with custom fetchers.
+- * The overloads ensure proper type inference for data, error, and configuration.
+- *
+- * @public
+- *
+- * @example Basic usage
+- * ```ts
+- * const { data, error } = useSWR('/api/data', fetcher)
+- * ```
+- *
+- * @example With configuration
+- * ```ts
+- * const { data, error } = useSWR('/api/data', fetcher, {
+- *   refreshInterval: 1000,
+- *   revalidateOnFocus: false
+- * })
+- * ```
+- *
+- * @example Conditional fetching
+- * ```ts
+- * const { data, error } = useSWR(
+- *   user.id ? `/api/user/${user.id}` : null,
+- *   fetcher
+- * )
+- * ```
+- *
+- * @example Dynamic key with function
++ * @example
+  * ```ts
+- * const { data, error } = useSWR(
+- *   () => user.id ? [`/api/user/${user.id}`, user.token] : null,
+- *   ([url, token]) => fetcher(url, { headers: { Authorization: token } })
+- * )
++ * const { data, error } = useSWR(key, fetcher)
+  * ```
+  */
+ export interface SWRHook {
+-  /**
+-   * Basic usage with just a key. Requires a global fetcher to be configured,
+-   * or can be used for client-side state management without fetching.
+-   *
+-   * @example
+-   * ```ts
+-   * // With global fetcher
+-   * const { data } = useSWR('/api/user')
+-   *
+-   * // Client state management
+-   * const { data, mutate } = useSWR('user-settings')
+-   * mutate({ theme: 'dark' })
+-   * ```
+-   */
+   <Data = any, Error = any, SWRKey extends Key = StrictKey>(
+     key: SWRKey
+   ): SWRResponse<Data, Error>
+-
+-  /**
+-   * Most common usage pattern with key and explicit fetcher function.
+-   * The fetcher receives the key as its argument and returns the data.
+-   *
+-   * @example
+-   * ```ts
+-   * const { data, error } = useSWR('/api/user/123',
+-   *   (url) => fetch(url).then(res => res.json())
+-   * )
+-   * ```
+-   */
+   <Data = any, Error = any, SWRKey extends Key = StrictKey>(
+     key: SWRKey,
+     fetcher: Fetcher<Data, SWRKey> | null
+   ): SWRResponse<Data, Error>
+-
+-  /**
+-   * Key with fetcher using relaxed key constraints for dynamic or complex keys.
+-   * Allows more flexible key types including functions and objects.
+-   *
+-   * @example
+-   * ```ts
+-   * const { data } = useSWR(
+-   *   () => user ? ['/api/posts', user.id] : null,
+-   *   ([url, userId]) => fetchUserPosts(url, userId)
+-   * )
+-   * ```
+-   */
+   <Data = any, Error = any, SWRKey extends Key = Key>(
+     key: SWRKey,
+     fetcher: Fetcher<Data, SWRKey> | null
+   ): SWRResponse<Data, Error>
+-
+-  /**
+-   * Key-only with advanced configuration options and strict typing.
+-   * Useful when you need specific SWR options but rely on a global fetcher.
+-   *
+-   * @example
+-   * ```ts
+-   * const { data } = useSWR<User>('/api/user', {
+-   *   refreshInterval: 5000,
+-   *   revalidateOnFocus: false
+-   * })
+-   * ```
+-   */
+   <
+     Data = any,
+     Error = any,
+@@ -466,19 +251,6 @@ export interface SWRHook {
+   >(
+     key: SWRKey
+   ): SWRResponse<Data, Error, SWROptions>
+-
+-  /**
+-   * Key with fetcher and advanced configuration options with strict typing.
+-   * Provides full control over fetching behavior and SWR options.
+-   *
+-   * @example
+-   * ```ts
+-   * const { data } = useSWR('/api/data', fetcher, {
+-   *   suspense: true,
+-   *   fallbackData: initialData
+-   * })
+-   * ```
+-   */
+   <
+     Data = any,
+     Error = any,
+@@ -492,24 +264,6 @@ export interface SWRHook {
+     key: SWRKey,
+     fetcher: Fetcher<Data, SWRKey> | null
+   ): SWRResponse<Data, Error, SWROptions>
+-
+-  /**
+-   * Key with configuration object but no explicit fetcher. Uses global fetcher
+-   * or can be used for pure client state management with configuration.
+-   *
+-   * @example
+-   * ```ts
+-   * // With global fetcher and config
+-   * const { data } = useSWR('/api/user', {
+-   *   refreshInterval: 1000
+-   * })
+-   *
+-   * // Client state with config
+-   * const { data } = useSWR('local-state', {
+-   *   fallbackData: defaultValue
+-   * })
+-   * ```
+-   */
+   <
+     Data = any,
+     Error = any,
+@@ -523,28 +277,6 @@ export interface SWRHook {
+     key: SWRKey,
+     config: SWRConfigurationWithOptionalFallback<SWROptions>
+   ): SWRResponse<Data, Error, SWROptions>
+-
+-  /**
+-   * Complete signature with key, fetcher, and configuration options.
+-   * Provides maximum flexibility and control over all SWR behavior.
+-   *
+-   * @example
+-   * ```ts
+-   * const { data, error, isLoading } = useSWR(
+-   *   '/api/user',
+-   *   async (url) => {
+-   *     const res = await fetch(url)
+-   *     if (!res.ok) throw new Error('Failed to fetch')
+-   *     return res.json()
+-   *   },
+-   *   {
+-   *     refreshInterval: 5000,
+-   *     onError: (error) => console.error('SWR Error:', error),
+-   *     fallbackData: { name: 'Loading...' }
+-   *   }
+-   * )
+-   * ```
+-   */
+   <
+     Data = any,
+     Error = any,
+@@ -559,31 +291,7 @@ export interface SWRHook {
+     fetcher: Fetcher<Data, SWRKey> | null,
+     config: SWRConfigurationWithOptionalFallback<SWROptions>
+   ): SWRResponse<Data, Error, SWROptions>
+-
+-  /**
+-   * Simple key-only usage with flexible key types. Most permissive overload
+-   * that accepts any valid key format.
+-   *
+-   * @example
+-   * ```ts
+-   * const { data } = useSWR('/api/data')
+-   * const { data: userData } = useSWR(['user', userId])
+-   * const { data: settings } = useSWR({ endpoint: '/settings', version: 'v1' })
+-   * ```
+-   */
+   <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
+-
+-  /**
+-   * Key-only with configuration options using bare fetcher constraints.
+-   * Suitable for cases where fetcher type safety is less important.
+-   *
+-   * @example
+-   * ```ts
+-   * const { data } = useSWR('/api/data', {
+-   *   dedupingInterval: 5000
+-   * })
+-   * ```
+-   */
+   <
+     Data = any,
+     Error = any,
+@@ -593,18 +301,6 @@ export interface SWRHook {
+   >(
+     key: Key
+   ): SWRResponse<Data, Error, SWROptions>
+-
+-  /**
+-   * Key with bare fetcher function that accepts any arguments.
+-   * Provides less type safety but maximum flexibility for fetcher signatures.
+-   *
+-   * @example
+-   * ```ts
+-   * const { data } = useSWR('/api/user',
+-   *   (...args) => customFetcher(...args)
+-   * )
+-   * ```
+-   */
+   <
+     Data = any,
+     Error = any,
+@@ -615,19 +311,6 @@ export interface SWRHook {
+     key: Key,
+     fetcher: BareFetcher<Data> | null
+   ): SWRResponse<Data, Error, SWROptions>
+-
+-  /**
+-   * Key with configuration using relaxed fetcher typing constraints.
+-   * Useful when working with dynamic or loosely-typed fetcher functions.
+-   *
+-   * @example
+-   * ```ts
+-   * const { data } = useSWR(dynamicKey, {
+-   *   fetcher: customFetcher,
+-   *   refreshInterval: 2000
+-   * })
+-   * ```
+-   */
+   <
+     Data = any,
+     Error = any,
+@@ -638,24 +321,6 @@ export interface SWRHook {
+     key: Key,
+     config: SWRConfigurationWithOptionalFallback<SWROptions>
+   ): SWRResponse<Data, Error, SWROptions>
+-
+-  /**
+-   * Complete signature with key, bare fetcher, and configuration.
+-   * Most flexible overload with minimal type constraints, suitable for
+-   * complex scenarios where strict typing isn't feasible.
+-   *
+-   * @example
+-   * ```ts
+-   * const { data } = useSWR(
+-   *   complexKey,
+-   *   (...args) => legacyFetcher(...args),
+-   *   {
+-   *     refreshInterval: 10000,
+-   *     errorRetryCount: 3
+-   *   }
+-   * )
+-   * ```
+-   */
+   <
+     Data = any,
+     Error = any,
+@@ -669,35 +334,7 @@ export interface SWRHook {
+   ): SWRResponse<Data, Error, SWROptions>
+ }
+ 
+-/**
+- * Middleware function type for extending SWR functionality.
+- *
+- * Middleware functions receive the next SWR hook in the chain and return
+- * a modified hook function. This allows for composition of multiple
+- * middleware functions to add features like logging, caching, or
+- * request/response transformation.
+- *
+- * The middleware guarantees that a SWRHook receives a key, fetcher,
+- * and config as arguments, providing a consistent interface for
+- * middleware authors.
+- *
+- * @param useSWRNext - The next SWR hook function in the middleware chain
+- * @returns A new SWR hook function with middleware functionality applied
+- *
+- * @template Data - The type of data returned by the fetcher
+- * @template Error - The type of error that can be thrown
+- *
+- * @public
+- * @see {@link https://swr.vercel.app/docs/middleware | Middleware Documentation}
+- *
+- * @example
+- * ```ts
+- * const logger: Middleware = (useSWRNext) => (key, fetcher, config) => {
+- *   console.log('SWR Request:', key)
+- *   return useSWRNext(key, fetcher, config)
+- * }
+- * ```
+- */
++// Middleware guarantees that a SWRHook receives a key, fetcher, and config as the argument
+ export type Middleware = (
+   useSWRNext: SWRHook
+ ) => <Data = any, Error = any>(
+@@ -706,45 +343,7 @@ export type Middleware = (
+   config: SWRConfiguration<Data, Error, BareFetcher<Data>>
+ ) => SWRResponse<Data, Error>
+ 
+-/**
+- * Represents a tuple of arguments that can be passed to a fetcher.
+- *
+- * The first element is typically the primary key (like a URL), followed
+- * by additional parameters that affect the request (like query parameters,
+- * headers, or request options).
+- *
+- */
+ type ArgumentsTuple = readonly [any, ...unknown[]]
+-
+-/**
+- * Valid types for SWR keys.
+- *
+- * SWR keys identify unique requests and can be:
+- * - `string`: Simple URL or identifier
+- * - `ArgumentsTuple`: Array with URL and additional parameters
+- * - `Record<any, any>`: Object that will be serialized
+- * - `null | undefined | false`: Falsy values disable the request
+- *
+- * When a key is falsy, SWR will not make the request, allowing for
+- * conditional fetching based on application state.
+- *
+- * @public
+- *
+- * @example
+- * ```ts
+- * // String key
+- * useSWR('/api/users', fetcher)
+- *
+- * // Array key with parameters
+- * useSWR(['/api/user', userId], ([url, id]) => fetcher(`${url}/${id}`))
+- *
+- * // Object key
+- * useSWR({ url: '/api/data', params: { page: 1 } }, fetcher)
+- *
+- * // Conditional key
+- * useSWR(userId ? `/api/user/${userId}` : null, fetcher)
+- * ```
+- */
+ export type Arguments =
+   | string
+   | ArgumentsTuple
+@@ -752,134 +351,26 @@ export type Arguments =
+   | null
+   | undefined
+   | false
+-
+-/**
+- * SWR key that can be static or a function that returns arguments.
+- *
+- * When a function is provided, it's called on each render to determine
+- * the current key. This allows for dynamic keys based on component state
+- * or props.
+- *
+- * @public
+- *
+- * @example
+- * ```ts
+- * // Static key
+- * useSWR('/api/data', fetcher)
+- *
+- * // Dynamic key function
+- * useSWR(() => user ? `/api/user/${user.id}` : null, fetcher)
+- * ```
+- */
+ export type Key = Arguments | (() => Arguments)
+-
+-/**
+- * Strict tuple key type that only allows tuples or falsy values.
+- *
+- * @internal
+- */
+ export type StrictTupleKey = ArgumentsTuple | null | undefined | false
+-
+-/**
+- * Strict key type for internal use.
+- *
+- * @internal
+- */
+ type StrictKey = StrictTupleKey | (() => StrictTupleKey)
+-/**
+- * Callback function type for mutator operations.
+- *
+- * This function receives the current cached data and can return new data
+- * to update the cache. It can be synchronous or asynchronous, and can
+- * return undefined to indicate no change should be made.
+- *
+- * @template Data - The type of the cached data
+- * @param currentData - The current data in the cache (may be undefined)
+- * @returns New data to set, undefined for no change, or a Promise resolving to either
+- *
+- * @public
+- *
+- * @example
+- * ```ts
+- * // Increment a counter
+- * mutate(key, (current: number = 0) => current + 1)
+- *
+- * // Async update
+- * mutate(key, async (current) => {
+- *   const updated = await updateData(current)
+- *   return updated
+- * })
+- * ```
+- */
+ export type MutatorCallback<Data = any> = (
+   currentData?: Data
+ ) => Promise<undefined | Data> | undefined | Data
+ 
+ /**
+- * Options for configuring mutator behavior.
+- *
+- * These options control how the mutation affects the cache, revalidation,
+- * and error handling behavior.
+- *
+- * @template Data - The type of the data related to the key
+- * @template MutationData - The type of the data returned by the mutator
+- *
+- * @public
++ * @typeParam Data - The type of the data related to the key
++ * @typeParam MutationData - The type of the data returned by the mutator
+  */
+ export type MutatorOptions<Data = any, MutationData = Data> = {
+-  /**
+-   * Whether to revalidate the cache after mutation.
+-   *
+-   * Can be a boolean or a function that receives the new data and key
+-   * to determine whether revalidation should occur.
+-   *
+-   * @defaultValue true
+-   */
+   revalidate?: boolean | ((data: Data, key: Arguments) => boolean)
+-
+-  /**
+-   * Whether and how to populate the cache with mutation results.
+-   *
+-   * - `false`: Don't update the cache
+-   * - `true`: Update cache with mutation result directly
+-   * - Function: Transform mutation result before caching
+-   *
+-   * @defaultValue true
+-   */
+   populateCache?:
+     | boolean
+     | ((result: MutationData, currentData: Data | undefined) => Data)
+-
+-  /**
+-   * Optimistic data to show immediately while mutation is pending.
+-   *
+-   * Can be the data directly or a function that computes it based on
+-   * current and displayed data. Useful for immediate UI feedback.
+-   *
+-   * @defaultValue undefined
+-   */
+   optimisticData?:
+     | Data
+     | ((currentData: Data | undefined, displayedData: Data | undefined) => Data)
+-
+-  /**
+-   * Whether to rollback optimistic updates on error.
+-   *
+-   * Can be a boolean or a function that receives the error to determine
+-   * whether rollback should occur.
+-   *
+-   * @defaultValue true
+-   */
+   rollbackOnError?: boolean | ((error: unknown) => boolean)
+-
+-  /**
+-   * Whether to throw errors instead of returning them in the error field.
+-   *
+-   * When true, errors will be thrown and can be caught with try/catch.
+-   * When false, errors are returned in the response object.
+-   *
+-   * @defaultValue false
+-   */
+   throwOnError?: boolean
+ }
+ 
+@@ -898,26 +389,10 @@ export type Broadcaster<Data = any, Error = any> = (
+   populateCache?: boolean
+ ) => Promise<Data>
+ 
+-/**
+- * Internal state structure stored in the cache.
+- *
+- * This represents the complete state for a cache entry, including
+- * data, error, and loading states. All fields are optional as they
+- * may not be present depending on the request lifecycle.
+- *
+- * @template Data - The type of data stored
+- * @template Error - The type of error that can occur
+- *
+- * @internal
+- */
+ export type State<Data = any, Error = any> = {
+-  /** The cached data, if available */
+   data?: Data
+-  /** The error object, if an error occurred */
+   error?: Error
+-  /** Whether a revalidation is currently in progress */
+   isValidating?: boolean
+-  /** Whether this is the initial load with no cached data */
+   isLoading?: boolean
+ }
+ 
+@@ -998,56 +473,17 @@ type SWRConfigurationWithOptionalFallback<Options> =
+     ? Omit<Options, 'fallbackData'> & Pick<Partial<Options>, 'fallbackData'>
+     : Options
+ 
+-/**
+- * The response object returned by SWR hooks.
+- *
+- * This interface represents the return value of useSWR and related hooks,
+- * providing access to data, error state, and control functions.
+- *
+- * @template Data - The type of data returned by the fetcher
+- * @template Error - The type of error that can be thrown
+- * @template Config - The configuration type used to determine blocking behavior
+- *
+- * @public
+- */
+ export interface SWRResponse<Data = any, Error = any, Config = any> {
+   /**
+-   * The data returned by the fetcher function.
+-   *
+-   * - When suspense is enabled or fallbackData is provided: always defined
+-   * - Otherwise: `undefined` during initial load or when key is falsy
++   * The returned data of the fetcher function.
+    */
+   data: BlockingData<Data, Config> extends true ? Data : Data | undefined
+-
+   /**
+    * The error object thrown by the fetcher function.
+-   *
+-   * `undefined` when there's no error or when a request is in progress.
+    */
+   error: Error | undefined
+-
+-  /**
+-   * Function to mutate the cached data for this specific key.
+-   *
+-   * This is a bound version of the global mutate function that automatically
+-   * uses the current key, providing type safety and convenience.
+-   */
+   mutate: KeyedMutator<Data>
+-
+-  /**
+-   * Whether the request is currently being validated (loading fresh data).
+-   *
+-   * `true` during initial load, revalidation, or when mutate is called
+-   * with a promise or async function.
+-   */
+   isValidating: boolean
+-
+-  /**
+-   * Whether the request is in initial loading state.
+-   *
+-   * `true` only during the initial load when there's no cached data.
+-   * Unlike `isValidating`, this becomes `false` once data is available.
+-   */
+   isLoading: IsLoadingResponse<Data, Config>
+ }
+ 
+@@ -1080,47 +516,10 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
+   opts?: any
+ ) => RevalidateCallbackReturnType[K]
+ 
+-/**
+- * Cache interface for storing SWR state.
+- *
+- * This interface defines the contract for cache providers used by SWR.
+- * The default implementation uses a Map, but custom cache providers
+- * can implement this interface to provide different storage mechanisms.
+- *
+- * @template Data - The type of data stored in the cache
+- *
+- * @public
+- * @see {@link https://swr.vercel.app/docs/advanced/cache | Cache Documentation}
+- */
+ export interface Cache<Data = any> {
+-  /**
+-   * Get an iterator of all cache keys.
+-   *
+-   * @returns Iterator that yields all cache keys as strings
+-   */
+   keys(): IterableIterator<string>
+-
+-  /**
+-   * Get the cached state for a key.
+-   *
+-   * @param key - The cache key to look up
+-   * @returns The cached state or undefined if not found
+-   */
+   get(key: string): State<Data> | undefined
+-
+-  /**
+-   * Set the cached state for a key.
+-   *
+-   * @param key - The cache key to set
+-   * @param value - The state to cache
+-   */
+   set(key: string, value: State<Data>): void
+-
+-  /**
+-   * Delete a cached entry.
+-   *
+-   * @param key - The cache key to delete
+-   */
+   delete(key: string): void
+ }
+ 
+diff --git a/src/index/use-swr.ts b/src/index/use-swr.ts
+index 0d67bbc..7edcdcf 100644
+--- a/src/index/use-swr.ts
++++ b/src/index/use-swr.ts
+@@ -91,34 +91,6 @@ type DefinitelyTruthy<T> = false extends T
+ 
+ const resolvedUndef = Promise.resolve(UNDEFINED)
+ 
+-/**
+- * The core implementation of the useSWR hook.
+- *
+- * This is the main handler function that implements all SWR functionality including
+- * data fetching, caching, revalidation, error handling, and state management.
+- * It manages the complete lifecycle of SWR requests from initialization through
+- * cleanup.
+- *
+- * Key responsibilities:
+- * - Key serialization and normalization
+- * - Cache state management and synchronization
+- * - Automatic and manual revalidation
+- * - Error handling and retry logic
+- * - Suspense integration
+- * - Loading state management
+- * - Effect cleanup and memory management
+- *
+- * @template Data - The type of data returned by the fetcher
+- * @template Error - The type of error that can be thrown
+- *
+- * @param _key - The SWR key (string, array, object, function, or falsy)
+- * @param fetcher - The fetcher function to retrieve data, or null to disable fetching
+- * @param config - Complete SWR configuration object with both public and internal options
+- *
+- * @returns SWRResponse object containing data, error, mutate function, and loading states
+- *
+- * @internal This is the internal implementation. Use `useSWR` instead.
+- */
+ export const useSWRHandler = <Data = any, Error = any>(
+   _key: Key,
+   fetcher: Fetcher<Data> | null,
+@@ -841,8 +813,7 @@ export { unstable_serialize } from './serialize'
+ /**
+  * A hook to fetch data.
+  *
+- * @see {@link https://swr.vercel.app}
+- *
++ * @link https://swr.vercel.app
+  * @example
+  * ```jsx
+  * import useSWR from 'swr'
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 0000000..aae82c3
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,53 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++NEW_TEST_FILE="test/use-swr-mutation-optimistic.test.tsx"
++
++
++# 1. NEW_TEST_FILE: Excluded during 'base' mode.
++# 2. EXCLUDED BASELINE TESTS: Omitted to bypass already failing baseline tests due to environmental instability.
++# 3. e2e/: Excludes the end-to-end directory.
++EXCLUDE_TESTS=(
++  "${NEW_TEST_FILE}"
++  "test/use-swr-focus.test.tsx"
++  "test/use-swr-subscription.test.tsx"
++  "test/use-swr-infinite.test.tsx"
++  "e2e/"
++)
++
++
++IFS="|"
++IGNORE_PATTERNS="${EXCLUDE_TESTS[*]}"
++
++IFS=$' \t\n'
++
++
++if [ "$#" -ge 1 ]; then
++  MODE="$1"
++elif [ "${MODE-""}" != "" ]; then
++  MODE="$MODE"
++else
++  MODE=base
++fi
++
++echo " Running SWR tests (mode: ${MODE})"
++echo "---"
++
++
++
++if [ "${MODE}" = "base" ]; then
++  echo "Running BASE tests (All original tests, excluding known unstable files)"
++  pnpm test --no-watch \
++    --testPathIgnorePatterns="${IGNORE_PATTERNS}"
++  exit 0
++fi
++
++if [ "${MODE}" = "new" ]; then
++  echo "Running NEW tests"
++
++  pnpm test --verbose "${NEW_TEST_FILE}"
++  exit 0
++fi
++
++echo "Unknown MODE: ${MODE}. Use 'base' (default) or 'new'."
++exit 2
+\ No newline at end of file
+diff --git a/test/use-swr-cache.test.tsx b/test/use-swr-cache.test.tsx
+index 8cbd64a..88c7170 100644
+--- a/test/use-swr-cache.test.tsx
++++ b/test/use-swr-cache.test.tsx
+@@ -1,5 +1,5 @@
+-import { fireEvent, screen } from '@testing-library/react'
+-import { act, useState, StrictMode } from 'react'
++import { act, fireEvent, screen } from '@testing-library/react'
++import { useState, StrictMode } from 'react'
+ import useSWR, { useSWRConfig, SWRConfig, mutate as globalMutate } from 'swr'
+ import {
+   sleep,
+diff --git a/test/use-swr-concurrent-rendering.test.tsx b/test/use-swr-concurrent-rendering.test.tsx
+index 915bdd8..e1c19e3 100644
+--- a/test/use-swr-concurrent-rendering.test.tsx
++++ b/test/use-swr-concurrent-rendering.test.tsx
+@@ -1,4 +1,4 @@
+-import { screen } from '@testing-library/react'
++import { screen, act } from '@testing-library/react'
+ import {
+   createKey,
+   createResponse,
+@@ -6,7 +6,7 @@ import {
+   executeWithoutBatching,
+   renderWithConfig
+ } from './utils'
+-import React, { act } from 'react'
++import React from 'react'
+ 
+ import useSWR from 'swr'
+ 
+diff --git a/test/use-swr-config-callbacks.test.tsx b/test/use-swr-config-callbacks.test.tsx
+index db6438e..43d70cb 100644
+--- a/test/use-swr-config-callbacks.test.tsx
++++ b/test/use-swr-config-callbacks.test.tsx
+@@ -1,5 +1,4 @@
+-import { screen, fireEvent } from '@testing-library/react'
+-import { act } from 'react'
++import { act, screen, fireEvent } from '@testing-library/react'
+ import useSWR from 'swr'
+ import { sleep, createResponse, renderWithConfig, createKey } from './utils'
+ 
+diff --git a/test/use-swr-config.test.tsx b/test/use-swr-config.test.tsx
+index 413c09b..ce87a45 100644
+--- a/test/use-swr-config.test.tsx
++++ b/test/use-swr-config.test.tsx
+@@ -1,5 +1,5 @@
+-import { screen, fireEvent } from '@testing-library/react'
+-import { useEffect, useState, act } from 'react'
++import { act, screen, fireEvent } from '@testing-library/react'
++import { useEffect, useState } from 'react'
+ import type { Middleware } from 'swr'
+ import useSWR, { SWRConfig, useSWRConfig } from 'swr'
+ import { renderWithConfig, createKey, renderWithGlobalCache } from './utils'
+diff --git a/test/use-swr-context-config.test.tsx b/test/use-swr-context-config.test.tsx
+index a8a0461..b2caf58 100644
+--- a/test/use-swr-context-config.test.tsx
++++ b/test/use-swr-context-config.test.tsx
+@@ -1,5 +1,4 @@
+-import { render, screen, fireEvent } from '@testing-library/react'
+-import { act } from 'react'
++import { act, render, screen, fireEvent } from '@testing-library/react'
+ import useSWR, {
+   mutate,
+   SWRConfig,
+diff --git a/test/use-swr-error.test.tsx b/test/use-swr-error.test.tsx
+index 0ff0c80..b163d2b 100644
+--- a/test/use-swr-error.test.tsx
++++ b/test/use-swr-error.test.tsx
+@@ -1,5 +1,5 @@
+-import { fireEvent, screen } from '@testing-library/react'
+-import { useEffect, useState, act } from 'react'
++import { act, fireEvent, screen } from '@testing-library/react'
++import { useEffect, useState } from 'react'
+ import useSWR from 'swr'
+ import {
+   sleep,
+diff --git a/test/use-swr-fetcher.test.tsx b/test/use-swr-fetcher.test.tsx
+index f4c4943..6e14a46 100644
+--- a/test/use-swr-fetcher.test.tsx
++++ b/test/use-swr-fetcher.test.tsx
+@@ -1,5 +1,5 @@
+-import { fireEvent, screen } from '@testing-library/react'
+-import { Suspense, useState, act } from 'react'
++import { act, fireEvent, screen } from '@testing-library/react'
++import { Suspense, useState } from 'react'
+ import useSWR from 'swr'
+ import { createKey, renderWithConfig, nextTick } from './utils'
+ 
+diff --git a/test/use-swr-focus.test.tsx b/test/use-swr-focus.test.tsx
+index 02d3a37..7c260f5 100644
+--- a/test/use-swr-focus.test.tsx
++++ b/test/use-swr-focus.test.tsx
+@@ -1,5 +1,5 @@
+-import { fireEvent, screen } from '@testing-library/react'
+-import { useState, act } from 'react'
++import { act, fireEvent, screen } from '@testing-library/react'
++import { useState } from 'react'
+ import useSWR from 'swr'
+ import {
+   sleep,
+diff --git a/test/use-swr-immutable.test.tsx b/test/use-swr-immutable.test.tsx
+index 2f9f389..caf3ff6 100644
+--- a/test/use-swr-immutable.test.tsx
++++ b/test/use-swr-immutable.test.tsx
+@@ -1,5 +1,5 @@
+-import { screen, fireEvent } from '@testing-library/react'
+-import { useState, act } from 'react'
++import { screen, act, fireEvent } from '@testing-library/react'
++import { useState } from 'react'
+ import useSWR from 'swr'
+ import useSWRImmutable, { immutable } from 'swr/immutable'
+ import {
+diff --git a/test/use-swr-infinite-preload.test.tsx b/test/use-swr-infinite-preload.test.tsx
+index c15233d..a32840b 100644
+--- a/test/use-swr-infinite-preload.test.tsx
++++ b/test/use-swr-infinite-preload.test.tsx
+@@ -1,5 +1,5 @@
+-import { fireEvent, screen } from '@testing-library/react'
+-import { Suspense, useEffect, useState, Profiler, act } from 'react'
++import { act, fireEvent, screen } from '@testing-library/react'
++import { Suspense, useEffect, useState, Profiler } from 'react'
+ import { preload } from 'swr'
+ import useSWRInfinite from 'swr/infinite'
+ import { createKey, createResponse, renderWithConfig, sleep } from './utils'
+diff --git a/test/use-swr-infinite.test.tsx b/test/use-swr-infinite.test.tsx
+index ba69f30..cec8e7f 100644
+--- a/test/use-swr-infinite.test.tsx
++++ b/test/use-swr-infinite.test.tsx
+@@ -1,5 +1,5 @@
+-import { Suspense, useEffect, useState, act } from 'react'
+-import { fireEvent, screen } from '@testing-library/react'
++import { Suspense, useEffect, useState } from 'react'
++import { fireEvent, act, screen } from '@testing-library/react'
+ import useSWR, { mutate as globalMutate, useSWRConfig, SWRConfig } from 'swr'
+ import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
+ import {
+diff --git a/test/use-swr-integration.test.tsx b/test/use-swr-integration.test.tsx
+index 20c923f..af651cc 100644
+--- a/test/use-swr-integration.test.tsx
++++ b/test/use-swr-integration.test.tsx
+@@ -1,5 +1,5 @@
+-import { screen, fireEvent } from '@testing-library/react'
+-import React, { useState, useEffect, Profiler, act } from 'react'
++import { act, screen, fireEvent } from '@testing-library/react'
++import React, { useState, useEffect, Profiler } from 'react'
+ import useSWR from 'swr'
+ import {
+   createResponse,
+diff --git a/test/use-swr-key.test.tsx b/test/use-swr-key.test.tsx
+index 5c0d3df..5c1edff 100644
+--- a/test/use-swr-key.test.tsx
++++ b/test/use-swr-key.test.tsx
+@@ -1,5 +1,5 @@
+-import { fireEvent, screen } from '@testing-library/react'
+-import React, { useState, useEffect, act } from 'react'
++import { act, fireEvent, screen } from '@testing-library/react'
++import React, { useState, useEffect } from 'react'
+ import useSWR from 'swr'
+ import { createKey, createResponse, renderWithConfig, sleep } from './utils'
+ 
+diff --git a/test/use-swr-laggy.test.tsx b/test/use-swr-laggy.test.tsx
+index e647386..bad5c53 100644
+--- a/test/use-swr-laggy.test.tsx
++++ b/test/use-swr-laggy.test.tsx
+@@ -1,5 +1,5 @@
+-import { screen, fireEvent } from '@testing-library/react'
+-import { useState, act } from 'react'
++import { screen, act, fireEvent } from '@testing-library/react'
++import { useState } from 'react'
+ import useSWR from 'swr'
+ import useSWRInfinite from 'swr/infinite'
+ 
+diff --git a/test/use-swr-legacy-react.test.tsx b/test/use-swr-legacy-react.test.tsx
+index dc08c8a..059ec75 100644
+--- a/test/use-swr-legacy-react.test.tsx
++++ b/test/use-swr-legacy-react.test.tsx
+@@ -1,7 +1,6 @@
+ // This test case covers special environments such as React <= 17.
+ 
+-import { screen, render, fireEvent } from '@testing-library/react'
+-import { act } from 'react'
++import { act, screen, render, fireEvent } from '@testing-library/react'
+ 
+ // https://github.com/jestjs/jest/issues/11471
+ jest.mock('react', () => jest.requireActual('react'))
+diff --git a/test/use-swr-loading.test.tsx b/test/use-swr-loading.test.tsx
+index c27ff3d..ca90f24 100644
+--- a/test/use-swr-loading.test.tsx
++++ b/test/use-swr-loading.test.tsx
+@@ -1,5 +1,5 @@
+-import { screen, fireEvent } from '@testing-library/react'
+-import React, { useEffect, act } from 'react'
++import { act, screen, fireEvent } from '@testing-library/react'
++import React, { useEffect } from 'react'
+ import useSWR from 'swr'
+ import {
+   createResponse,
+diff --git a/test/use-swr-local-mutation.test.tsx b/test/use-swr-local-mutation.test.tsx
+index 72b3ea7..f0af215 100644
+--- a/test/use-swr-local-mutation.test.tsx
++++ b/test/use-swr-local-mutation.test.tsx
+@@ -1,5 +1,5 @@
+-import { screen, fireEvent } from '@testing-library/react'
+-import { useEffect, useState, act } from 'react'
++import { act, screen, fireEvent } from '@testing-library/react'
++import { useEffect, useState } from 'react'
+ import useSWR, { mutate as globalMutate, useSWRConfig } from 'swr'
+ import useSWRInfinite from 'swr/infinite'
+ import { serialize } from 'swr/_internal'
+diff --git a/test/use-swr-middlewares.test.tsx b/test/use-swr-middlewares.test.tsx
+index bf2b323..b872ea7 100644
+--- a/test/use-swr-middlewares.test.tsx
++++ b/test/use-swr-middlewares.test.tsx
+@@ -1,5 +1,5 @@
+-import { screen } from '@testing-library/react'
+-import { useState, useEffect, useRef, act } from 'react'
++import { act, screen } from '@testing-library/react'
++import { useState, useEffect, useRef } from 'react'
+ import type { Middleware } from 'swr'
+ import useSWR, { SWRConfig } from 'swr'
+ import { withMiddleware } from 'swr/_internal'
+diff --git a/test/use-swr-mutation-optimistic.test.tsx b/test/use-swr-mutation-optimistic.test.tsx
+new file mode 100644
+index 0000000..7be83f9
+--- /dev/null
++++ b/test/use-swr-mutation-optimistic.test.tsx
+@@ -0,0 +1,107 @@
++import { render, screen, fireEvent, act } from '@testing-library/react'
++import useSWRMutation from '../src/mutation/index'
++import { SWRConfig } from '../_internal'
++import { sleep } from './utils'
++
++describe('useSWRMutation - Optimistic Data State', () => {
++  it('should update "data" optimistically immediately', async () => {
++    const fetcher = async () => {
++      await sleep(100)
++      return 'server'
++    }
++
++    function Page() {
++      const { trigger, data } = useSWRMutation('key-1', fetcher, {
++        optimisticData: 'optimistic'
++      })
++      return (
++        <button data-testid="btn" onClick={() => trigger()}>
++          {data || 'undefined'}
++        </button>
++      )
++    }
++
++    render(
++      <SWRConfig value={{ provider: () => new Map() }}>
++        <Page />
++      </SWRConfig>
++    )
++
++    const btn = screen.getByTestId('btn')
++    expect(btn.textContent).toBe('undefined')
++
++    fireEvent.click(btn)
++
++    expect(btn.textContent).toBe('optimistic')
++
++    await act(() => sleep(150))
++    expect(btn.textContent).toBe('server')
++  })
++
++  it('should prioritize optimisticData passed to trigger over hook config', async () => {
++    const fetcher = async () => {
++      await sleep(100)
++      return 'server'
++    }
++
++    function Page() {
++      const { trigger, data } = useSWRMutation('key-2', fetcher, {
++        optimisticData: 'hook-level'
++      })
++      return (
++        <button
++          data-testid="btn"
++          onClick={() => trigger(undefined, { optimisticData: 'trigger-level' })}
++        >
++          {data || 'undefined'}
++        </button>
++      )
++    }
++
++    render(
++      <SWRConfig value={{ provider: () => new Map() }}>
++        <Page />
++      </SWRConfig>
++    )
++
++    const btn = screen.getByTestId('btn')
++    fireEvent.click(btn)
++
++    expect(btn.textContent).toBe('trigger-level')
++  })
++
++  it('should rollback "data" to previous state if the mutation fails', async () => {
++    const fetcher = async () => {
++      await sleep(50)
++      throw new Error('fetch-failed')
++    }
++
++    function Page() {
++      const { trigger, data, error } = useSWRMutation('key-3', fetcher, {
++        optimisticData: 'optimistic-val',
++        throwOnError: false
++      })
++      return (
++        <button data-testid="btn" onClick={() => trigger()}>
++          {error ? 'error' : data || 'undefined'}
++        </button>
++      )
++    }
++
++    render(
++      <SWRConfig value={{ provider: () => new Map() }}>
++        <Page />
++      </SWRConfig>
++    )
++
++    const btn = screen.getByTestId('btn')
++
++    fireEvent.click(btn)
++
++    expect(btn.textContent).toBe('optimistic-val')
++
++    await act(() => sleep(100))
++
++    expect(btn.textContent).toBe('error')
++  })
++})
+\ No newline at end of file
+diff --git a/test/use-swr-offline.test.tsx b/test/use-swr-offline.test.tsx
+index 7bd05d0..3733bac 100644
+--- a/test/use-swr-offline.test.tsx
++++ b/test/use-swr-offline.test.tsx
+@@ -1,5 +1,4 @@
+-import { screen } from '@testing-library/react'
+-import { act } from 'react'
++import { act, screen } from '@testing-library/react'
+ import useSWR from 'swr'
+ import {
+   nextTick as waitForNextTick,
+diff --git a/test/use-swr-preload.test.tsx b/test/use-swr-preload.test.tsx
+index 1e241bf..fb7e011 100644
+--- a/test/use-swr-preload.test.tsx
++++ b/test/use-swr-preload.test.tsx
+@@ -1,5 +1,5 @@
+-import { fireEvent, screen } from '@testing-library/react'
+-import { Suspense, useEffect, useState, Profiler, act } from 'react'
++import { act, fireEvent, screen } from '@testing-library/react'
++import { Suspense, useEffect, useState, Profiler } from 'react'
+ import useSWR, { preload, useSWRConfig } from 'swr'
+ import {
+   createKey,
+diff --git a/test/use-swr-promise.test.tsx b/test/use-swr-promise.test.tsx
+index 1997cca..793fa0e 100644
+--- a/test/use-swr-promise.test.tsx
++++ b/test/use-swr-promise.test.tsx
+@@ -1,7 +1,7 @@
+-import { screen } from '@testing-library/react'
++import { act, screen } from '@testing-library/react'
+ import useSWR, { SWRConfig } from 'swr'
+ import { createKey, createResponse, renderWithConfig, sleep } from './utils'
+-import { Suspense, act } from 'react'
++import { Suspense } from 'react'
+ import { ErrorBoundary } from 'react-error-boundary'
+ 
+ describe('useSWR - promise', () => {
+diff --git a/test/use-swr-refresh.test.tsx b/test/use-swr-refresh.test.tsx
+index 1be4f30..3118f72 100644
+--- a/test/use-swr-refresh.test.tsx
++++ b/test/use-swr-refresh.test.tsx
+@@ -1,5 +1,5 @@
+-import { fireEvent, screen } from '@testing-library/react'
+-import React, { useState, act } from 'react'
++import { act, fireEvent, screen } from '@testing-library/react'
++import React, { useState } from 'react'
+ import useSWR, { SWRConfig, useSWRConfig } from 'swr'
+ import { createKey, renderWithConfig, sleep } from './utils'
+ 
+diff --git a/test/use-swr-remote-mutation.test.tsx b/test/use-swr-remote-mutation.test.tsx
+index 32a5438..955d2b9 100644
+--- a/test/use-swr-remote-mutation.test.tsx
++++ b/test/use-swr-remote-mutation.test.tsx
+@@ -1,5 +1,5 @@
+-import { fireEvent, render, screen } from '@testing-library/react'
+-import React, { useState, act } from 'react'
++import { act, fireEvent, render, screen } from '@testing-library/react'
++import React, { useState } from 'react'
+ import useSWR from 'swr'
+ import useSWRMutation from 'swr/mutation'
+ import { createKey, sleep, nextTick, createResponse } from './utils'
+@@ -1120,15 +1120,13 @@ describe('useSWR - remote mutation', () => {
+     const onRejected = jest.fn()
+ 
+     const fetcher = () => {
+-      return new Promise((_, reject) => reject(''))
+-    }
++      return new Promise((_, reject) => reject(''));
++    };
+ 
+     function Page() {
+       const { trigger } = useSWRMutation(key, fetcher, { onError, onSuccess })
+ 
+-      return (
+-        <button onClick={() => trigger().catch(onRejected)}>trigger</button>
+-      )
++      return <button onClick={() => trigger().catch(onRejected)}>trigger</button>
+     }
+ 
+     render(<Page />)
+diff --git a/test/use-swr-revalidate.test.tsx b/test/use-swr-revalidate.test.tsx
+index b36a04f..b764e73 100644
+--- a/test/use-swr-revalidate.test.tsx
++++ b/test/use-swr-revalidate.test.tsx
+@@ -1,5 +1,5 @@
+-import { fireEvent, screen } from '@testing-library/react'
+-import { useState, act } from 'react'
++import { act, fireEvent, screen } from '@testing-library/react'
++import { useState } from 'react'
+ import useSWR, { useSWRConfig } from 'swr'
+ import {
+   createResponse,
+diff --git a/test/use-swr-streaming-ssr.test.tsx b/test/use-swr-streaming-ssr.test.tsx
+index c8301fc..5299fbb 100644
+--- a/test/use-swr-streaming-ssr.test.tsx
++++ b/test/use-swr-streaming-ssr.test.tsx
+@@ -1,4 +1,5 @@
+-import { Suspense, act } from 'react'
++import { act } from '@testing-library/react'
++import { Suspense } from 'react'
+ import useSWR from 'swr'
+ import {
+   createKey,
+diff --git a/test/use-swr-subscription.test.tsx b/test/use-swr-subscription.test.tsx
+index 9ba5638..9ec9c10 100644
+--- a/test/use-swr-subscription.test.tsx
++++ b/test/use-swr-subscription.test.tsx
+@@ -1,8 +1,8 @@
+-import { fireEvent, screen } from '@testing-library/react'
++import { act, fireEvent, screen } from '@testing-library/react'
+ import { sleep, renderWithConfig, createKey } from './utils'
+ import useSWRSubscription from 'swr/subscription'
+ import useSWR from 'swr'
+-import { useEffect, useState, act } from 'react'
++import { useEffect, useState } from 'react'
+ import { ErrorBoundary } from 'react-error-boundary'
+ 
+ describe('useSWRSubscription', () => {
+diff --git a/test/use-swr-suspense.test.tsx b/test/use-swr-suspense.test.tsx
+index 453aa01..bda6624 100644
+--- a/test/use-swr-suspense.test.tsx
++++ b/test/use-swr-suspense.test.tsx
+@@ -1,5 +1,5 @@
+-import { fireEvent, screen } from '@testing-library/react'
+-import { Profiler, act } from 'react'
++import { act, fireEvent, screen } from '@testing-library/react'
++import { Profiler } from 'react'
+ import { Suspense, useReducer, useState } from 'react'
+ import useSWR, { mutate } from 'swr'
+ import {

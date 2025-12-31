@@ -1,0 +1,58 @@
+diff --git a/src/interceptors/ClientRequest/MockHttpSocket.ts b/src/interceptors/ClientRequest/MockHttpSocket.ts
+index 371ee98..009d3f0 100644
+--- a/src/interceptors/ClientRequest/MockHttpSocket.ts
++++ b/src/interceptors/ClientRequest/MockHttpSocket.ts
+@@ -66,7 +66,7 @@ export class MockHttpSocket extends MockSocket {
+   private responseParser: HTTPParser<1>
+   private responseStream?: Readable
+   private originalSocket?: net.Socket
+-
++
+   constructor(options: MockHttpSocketOptions) {
+     super({
+       write: (chunk, encoding, callback) => {
+@@ -208,6 +208,22 @@ export class MockHttpSocket extends MockSocket {
+     })
+
+     this.address = socket.address.bind(socket)
++    // Ensure passthrough copies essential address properties
++    // from the REAL socket to the mock socket.
++    Object.defineProperty(this, 'localAddress', {
++        value: socket.localAddress,
++        configurable: true,
++        enumerable: true,
++        writable: true, // Allow setting during passthrough
++    })
++    Object.defineProperty(this, 'remoteAddress', {
++        value: socket.remoteAddress,
++        configurable: true,
++        enumerable: true,
++        writable: true, // Allow setting during passthrough
++    })
++
++
+
+     // Flush the buffered "socket.write()" calls onto
+     // the original socket instance (i.e. write request body).
+@@ -458,6 +474,21 @@ export class MockHttpSocket extends MockSocket {
+       family: isIPv6 ? 'IPv6' : 'IPv4',
+       port: this.connectionOptions.port,
+     }
++
++  // Use Object.defineProperty to bypass read-only restrictions
++  Object.defineProperty(this, 'localAddress', {
++    value: addressInfo.address,
++    configurable: true,
++    enumerable: true,
++    writable: false, // Ensure it maintains standard socket behavior
++  })
++  Object.defineProperty(this, 'remoteAddress', {
++    value: addressInfo.address,
++    configurable: true,
++    enumerable: true,
++    writable: false,
++  })
++
+     // Return fake address information for the socket.
+     this.address = () => addressInfo
+     this.emit(

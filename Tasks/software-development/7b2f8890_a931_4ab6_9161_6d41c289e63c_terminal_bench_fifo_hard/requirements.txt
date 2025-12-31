@@ -1,0 +1,2 @@
+# requirements.txt generated from your .venv
+# Add any additional packages below if needed

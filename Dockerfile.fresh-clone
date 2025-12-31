@@ -1,0 +1,19 @@
+FROM public.ecr.aws/x8v8d7g8/mars-base:latest
+
+WORKDIR /app
+
+ENV NODE_ENV=development
+
+# Install git and curl (needed for cloning) and enable corepack for pnpm
+RUN apt-get update && apt-get install -y git curl ca-certificates unzip && rm -rf /var/lib/apt/lists/*
+RUN corepack enable && corepack prepare pnpm@latest --activate || true
+
+# Default base commit (can be overridden with --build-arg BASE_COMMIT)
+ARG BASE_COMMIT="063564ee43f068372fa7c2c9152ceb82ade7cc8f"
+
+# Copy test.patch into the build context
+COPY test.patch ./test.patch
+
+# Clone repository at runtime in container; keep image build simple
+# We won't apply the patch during build to avoid brittle failures.
+CMD ["/bin/bash","-lc","git clone https://github.com/mswjs/msw.git /app/msw && cd /app/msw && git fetch --all && git checkout ${BASE_COMMIT} && git apply --check /app/test.patch && git apply /app/test.patch && pnpm install --frozen-lockfile && chmod +x ./test.sh && ./test.sh base"]

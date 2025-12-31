@@ -1,0 +1,254 @@
+diff --git a/src/core/utils/msw-sse-tools.ts b/src/core/utils/msw-sse-tools.ts
+new file mode 100644
+index 00000000..7455dc9c
+--- /dev/null
++++ b/src/core/utils/msw-sse-tools.ts
+@@ -0,0 +1,247 @@
++// src/core/utils/msw-sse-tools.ts
++
++import { invariant } from 'outvariant';
++
++export interface TrackedMswSseClient {
++    id: string; 
++    send: (message: { event?: string; data: string | null; id?: string; retry?: number }) => void;
++}
++
++
++interface InternalClientState {
++    connectionId: number;
++    isClosed: boolean;
++    onCloseCallbacks: Set<(reason: string) => void>;
++    resolveKeepAlive?: () => void;
++    pingIntervalId: NodeJS.Timeout | null;
++    lastSuccessfulSend: number;
++    keepAlivePromise: Promise<void>;
++}
++
++const clientStates = new WeakMap<TrackedMswSseClient, InternalClientState>();
++let nextConnectionId = 1;
++
++const allActiveSseClients = new Set<TrackedMswSseClient>();
++
++const DEFAULT_LEASE_TIMEOUT_MS = 5000;
++
++const clientToSyntheticIdMap = new WeakMap<TrackedMswSseClient, string>();
++let nextSyntheticId = 1;
++
++
++/**
++ * Internal function to trigger all closure mechanisms for a specific client.
++ */
++function _internal_emitClientClose(client: TrackedMswSseClient, reason: string): void {
++    const state = clientStates.get(client);
++
++    if (!state || state.isClosed) {
++        return;
++    }
++
++    console.log(`[SSE-TRACKER-INTERNAL] Client ${state.connectionId} closure triggered. Reason: "${reason}".`);
++    state.isClosed = true;
++    allActiveSseClients.delete(client);
++
++    // Clear internal ping interval
++    if (state.pingIntervalId) {
++        clearInterval(state.pingIntervalId);
++        state.pingIntervalId = null;
++    }
++
++    // Execute all registered cleanup callbacks
++    state.onCloseCallbacks.forEach(cb => {
++        try {
++            cb(reason);
++        } catch (error) {
++            console.error(`[SSE-TRACKER-INTERNAL] Error executing onCloseCallback for client ${state.connectionId}:`, error);
++        }
++    });
++    state.onCloseCallbacks.clear();
++
++    // Resolve the keepAlivePromise, allowing the handler to complete gracefully
++    if (state.resolveKeepAlive) {
++        state.resolveKeepAlive();
++        state.resolveKeepAlive = undefined;
++    }
++}
++
++/**
++ * Provides an interface for managing an SSE client's lifecycle
++ * within an MSW handler.
++ */
++export interface SseClientTracker {
++    connectionId: number;
++    onClose(callback: (reason: string) => void): void;
++    keepAlivePromise: Promise<void>;
++    emitClose(reason: string): void;
++}
++
++/**
++ * Initializes tracking for an SSE client within an MSW `sse` handler.
++ */
++export function createSseClientTracker(
++    mswClient: TrackedMswSseClient,
++    mswRequest: Request,
++    leaseTimeoutMs: number = DEFAULT_LEASE_TIMEOUT_MS
++): SseClientTracker {
++    invariant(!clientStates.has(mswClient), `createSseClientTracker: Client already tracked. Connection ID: ${clientStates.get(mswClient)?.connectionId}`);
++    
++    let clientId = mswClient.id;
++
++    if (typeof clientId !== 'string' || clientId === '') {
++        if (clientToSyntheticIdMap.has(mswClient)) {
++            clientId = clientToSyntheticIdMap.get(mswClient)!;
++        } else {
++            clientId = `synthetic-${nextSyntheticId++}`;
++            clientToSyntheticIdMap.set(mswClient, clientId);
++        }
++        
++        // Temporarily redefine the 'id' property on the client object for consistent use
++        Object.defineProperty(mswClient, 'id', {
++            value: clientId,
++            configurable: true,
++        });
++    }
++
++    const connectionId = nextConnectionId++;
++
++    let resolveKeepAlive: (() => void) | undefined;
++    const keepAlivePromise = new Promise<void>((resolve) => {
++        resolveKeepAlive = resolve;
++    });
++
++    // Initialize the internal state for this client
++    const state: InternalClientState = {
++        connectionId,
++        isClosed: false,
++        onCloseCallbacks: new Set(),
++        resolveKeepAlive: resolveKeepAlive,
++        pingIntervalId: null,
++        lastSuccessfulSend: Date.now(),
++        keepAlivePromise,
++    };
++    clientStates.set(mswClient, state);
++    allActiveSseClients.add(mswClient);
++
++    console.log(`[SSE-TRACKER] New client ${connectionId} initialized with ID ${clientId}. Total active clients: ${allActiveSseClients.size}`);
++
++    // Automatic Client Disconnection Detection (via request.signal)
++    mswRequest.signal.addEventListener('abort', () => {
++        console.log(`[SSE-TRACKER] Client ${connectionId}: Detected 'request.signal' abort event.`);
++        _internal_emitClientClose(mswClient, 'request-aborted');
++    });
++
++    // Pinging Mechanism for Lease Timeout and Send Failure Detection
++    const effectivePingInterval = Math.min(1000, leaseTimeoutMs / 2);
++
++    const pingInterval = setInterval(() => {
++        if (state.isClosed) {
++            clearInterval(pingInterval);
++            state.pingIntervalId = null;
++            return;
++        }
++
++        try {
++            mswClient.send({ event: 'ping', data: `ping-${connectionId}-${Date.now()}` });
++            state.lastSuccessfulSend = Date.now();
++        } catch (error) {
++            console.warn(`[SSE-TRACKER] Client ${connectionId} ping send failed: ${error}. Triggering cleanup.`);
++            _internal_emitClientClose(mswClient, 'ping-send-failed');
++            return;
++        }
++
++        if (Date.now() - state.lastSuccessfulSend > leaseTimeoutMs) {
++            console.warn(`[SSE-TRACKER] Client ${connectionId} lease timeout. No activity for ${leaseTimeoutMs}ms. Triggering cleanup.`);
++            _internal_emitClientClose(mswClient, 'lease-timeout');
++        }
++    }, effectivePingInterval);
++
++    state.pingIntervalId = pingInterval;
++
++    // `mswClient.send()` Method Wrapping
++    const originalSend = mswClient.send;
++    Object.defineProperty(mswClient, 'send', {
++        value: (payload: any) => {
++            if (state.isClosed) {
++                console.warn(`[SSE-TRACKER] Client ${connectionId}: Attempted to send on a closed connection.`);
++                throw new Error(`[SSE-TRACKER] Cannot send message: client ${connectionId} connection is already closed.`);
++            }
++            originalSend.call(mswClient, payload);
++        },
++        configurable: true
++    });
++
++    // Return the public API object
++    return {
++        connectionId: state.connectionId,
++        onClose(callback: (reason: string) => void) {
++            if (state.isClosed) {
++                console.debug(`[SSE-TRACKER] Client ${state.connectionId}: Callback registered after closure, executing immediately.`);
++                callback('client-already-closed-on-registration');
++                return;
++            }
++            state.onCloseCallbacks.add(callback);
++        },
++        keepAlivePromise,
++        emitClose(reason: string) {
++            _internal_emitClientClose(mswClient, reason);
++        },
++    };
++}
++
++
++// --- Test/Utility Exports ---
++
++export function _internal_getAllActiveSseClientsForTests(): Set<TrackedMswSseClient> {
++    return new Set(allActiveSseClients);
++}
++
++/**
++ * Clears all internal state related to SSE client tracking.
++ * This is crucial for ensuring a clean slate between test runs.
++ * It actively closes all tracked clients to ensure all associated promises are resolved
++ * and callbacks are run.
++ */
++export function _internal_clearAllActiveSseClientsForTests(): Promise<void> {
++    console.log(`[SSE-TRACKER] _internal_clearAllActiveSseClientsForTests: Clearing all internal state.`);
++
++    // 1. Capture promises *before* calling emitClose, as emitClose resolves them.
++    const closurePromises: Promise<void>[] = [];
++
++    for (const client of Array.from(allActiveSseClients)) {
++        const state = clientStates.get(client);
++        if (state && !state.isClosed) {
++            // Accessing the keepAlivePromise on the state object.
++            closurePromises.push(state.keepAlivePromise);
++            _internal_emitClientClose(client, 'test-cleanup-force-clear');
++        }
++    }
++
++    // 2. Await all cleanup processes to complete (all keepAlivePromises resolve).
++    return Promise.all(closurePromises)
++        .then(() => {
++            allActiveSseClients.clear();
++            nextConnectionId = 1;
++            nextSyntheticId = 1; // Reset synthetic ID counter for full cleanup
++            console.log(`[SSE-TRACKER] _internal_clearAllActiveSseClientsForTests: All internal state cleared. Remaining active clients: ${allActiveSseClients.size}.`);
++        })
++        .catch((error) => {
++            console.error('[SSE-TRACKER] Error during _internal_clearAllActiveSseClientsForTests cleanup:', error);
++            allActiveSseClients.clear();
++            nextConnectionId = 1;
++            nextSyntheticId = 1; // Reset synthetic ID counter for full cleanup
++            throw error;
++        });
++}
++
++/**
++ * Forces the closure of all currently tracked SSE clients.
++ */
++export function _internal_closeAllTrackedSseClients(reason: string = 'test-forced-cleanup-global'): void {
++    console.log(`[SSE-TRACKER] _internal_closeAllTrackedSseClients: Attempting to close ${allActiveSseClients.size} active clients (reason: ${reason}).`);
++    for (const client of Array.from(allActiveSseClients)) {
++        _internal_emitClientClose(client, reason);
++    }
++    console.log(`[SSE-TRACKER] _internal_closeAllTrackedSseClients: All clients processed. Remaining active clients: ${allActiveSseClients.size}.`);
++}
+\ No newline at end of file

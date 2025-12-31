@@ -1,0 +1,36 @@
+# Ignore common VCS and envs
+.git
+node_modules
+venv
+.venv
+__pycache__
+*.pyc
+
+# Ignore large unrelated project folders in this workspace
+tanstack_router_issues/
+fsspec_issues/
+python_injector_prob/
+terminal-bench/
+shipd_ai_tasks/
+Tasks-20250913T160156Z-1-001/
+Tasks/
+tenacity_issues/
+
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/
+
+# Docker build artifacts
+docker-compose.override.yml
+
+# Logs and caches
+*.log
+.cache/
+.pytest_cache/
+
+# Keep these workspace files available to the build: msw, patch_payload, Dockerfile.apply-and-test, test.patch
+!msw/
+!patch_payload/
+!Dockerfile.apply-and-test
+!test.patch

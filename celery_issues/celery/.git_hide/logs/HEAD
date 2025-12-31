@@ -1,0 +1,6 @@
+0000000000000000000000000000000000000000 5fd0b3e004ecae004848e0cbe236344e2b2892cc David Kibobo <dkibobo@aims.edu.gh> 1762609259 +0300	clone: from https://github.com/celery/celery.git
+5fd0b3e004ecae004848e0cbe236344e2b2892cc 2f606424c98e8eadc5bce58a90d99a1b25b7168a David Kibobo <dkibobo@aims.edu.gh> 1762609718 +0300	checkout: moving from main to 2f60642
+2f606424c98e8eadc5bce58a90d99a1b25b7168a 2f606424c98e8eadc5bce58a90d99a1b25b7168a David Kibobo <dkibobo@aims.edu.gh> 1762609746 +0300	checkout: moving from 2f606424c98e8eadc5bce58a90d99a1b25b7168a to test/chain_break_bug
+2f606424c98e8eadc5bce58a90d99a1b25b7168a 2f606424c98e8eadc5bce58a90d99a1b25b7168a David Kibobo <dkibobo@aims.edu.gh> 1767057496 +0300	reset: moving to HEAD
+2f606424c98e8eadc5bce58a90d99a1b25b7168a ba20bed7723c684d12ddd62d6a7c0c0d901b3351 David Kibobo <dkibobo@aims.edu.gh> 1767057707 +0300	rebase (start): checkout ba20bed7723c684d12ddd62d6a7c0c0d901b3351
+ba20bed7723c684d12ddd62d6a7c0c0d901b3351 ba20bed7723c684d12ddd62d6a7c0c0d901b3351 David Kibobo <dkibobo@aims.edu.gh> 1767057707 +0300	rebase (finish): returning to refs/heads/test/chain_break_bug

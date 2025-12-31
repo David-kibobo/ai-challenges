@@ -1,0 +1,42 @@
+name: publish
+
+on:
+  push
+
+jobs:
+  publish-tag:
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      matrix:
+        python-version: ['3.10']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # Avoid caching to be 100% confident things are working properly
+      - name: Init python poetry action
+        uses: abatilo/actions-poetry@v3.0.0
+        with:
+          poetry-version: 1.5.1
+
+      - name: Install dependencies
+        run: poetry install -E session
+
+      - name: Check that formatting, linting, and tests pass for pydantic v1
+        run: poetry run make ci-v1
+      - name: Check that formatting, linting, and tests pass for pydantic v2
+        run: poetry run make ci-v2
+
+      - name: Build distribution
+        run: poetry build
+
+      - name: Publish distribution to PyPI
+        run: poetry publish
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+

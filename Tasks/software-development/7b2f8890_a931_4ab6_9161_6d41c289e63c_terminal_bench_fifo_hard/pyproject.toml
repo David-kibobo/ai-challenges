@@ -1,0 +1,9 @@
+[project]
+name = "7b2f8890-a931-4ab6-9161-6d41c289e63c-terminal-bench-fifo-hard"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pytest==8.4.1",
+]

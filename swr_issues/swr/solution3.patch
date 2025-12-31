@@ -1,0 +1,187 @@
+diff --git a/src/infinite/index.ts b/src/infinite/index.ts
+index 99ae46d..da4d973 100644
+--- a/src/infinite/index.ts
++++ b/src/infinite/index.ts
+@@ -1,7 +1,7 @@
+ // We have to several type castings here because `useSWRInfinite` is a special
+ // hook where `key` and return type are not like the normal `useSWR` types.
+
+-import { useRef, useCallback } from 'react'
++import { useRef, useCallback, useState } from 'react'
+ import type { SWRConfig } from '../index'
+ import useSWR from '../index'
+ import {
+@@ -75,11 +75,30 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
+       SWRInfiniteCacheValue<Data, any>
+     >(cache, infiniteKey)
+
++    const getRef = useRef(get)
++    const setRef = useRef(set)
++    useIsomorphicLayoutEffect(() => {
++      getRef.current = get
++      setRef.current = set
++    })
++
++    const isExplicitSize = !isUndefined(config.initialSize)
++    const [instanceId] = useState(() =>
++      isExplicitSize ? '$_' + Math.random().toString(36).slice(2) : '_l'
++    )
++
++    const resolvePageSize = useCallback((): number => {
++      const cachedPageSize = (getRef.current() as any)[instanceId]
++      return isUndefined(cachedPageSize) ? initialSize : cachedPageSize
++      // `cache` isn't allowed to change during the lifecycle
++      // eslint-disable-next-line react-hooks/exhaustive-deps
++    }, [infiniteKey, initialSize, instanceId])
++
+     const getSnapshot = useCallback(() => {
+-      const size = isUndefined(get()._l) ? initialSize : get()._l
+-      return size
++      return resolvePageSize()
+       // eslint-disable-next-line react-hooks/exhaustive-deps
+-    }, [cache, infiniteKey, initialSize])
++    }, [resolvePageSize])
++
+     useSyncExternalStore(
+       useCallback(
+         (callback: () => void) => {
+@@ -90,19 +109,12 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
+           return () => {}
+         },
+         // eslint-disable-next-line react-hooks/exhaustive-deps
+-        [cache, infiniteKey]
++        [infiniteKey]
+       ),
+       getSnapshot,
+       getSnapshot
+     )
+
+-    const resolvePageSize = useCallback((): number => {
+-      const cachedPageSize = get()._l
+-      return isUndefined(cachedPageSize) ? initialSize : cachedPageSize
+-
+-      // `cache` isn't allowed to change during the lifecycle
+-      // eslint-disable-next-line react-hooks/exhaustive-deps
+-    }, [infiniteKey, initialSize])
+     // keep the last page size to restore it with the persistSize option
+     const lastPageSizeRef = useRef<number>(resolvePageSize())
+
+@@ -116,11 +128,14 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
+       if (infiniteKey) {
+         // If the key has been changed, we keep the current page size if persistSize is enabled
+         // Otherwise, we reset the page size to cached pageSize
+-        set({ _l: persistSize ? lastPageSizeRef.current : resolvePageSize() })
++        const nextSize = persistSize
++          ? lastPageSizeRef.current
++          : resolvePageSize()
++        setRef.current({ [instanceId]: nextSize } as any)
+       }
+
+       // `initialSize` isn't allowed to change during the lifecycle
+-    }, [infiniteKey, cache])
++    }, [infiniteKey, persistSize, instanceId, resolvePageSize])
+
+     // Needs to check didMountRef during mounting, not in the fetcher
+     const shouldRevalidateOnMount = revalidateOnMount && !didMountRef.current
+@@ -130,9 +145,11 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
+       infiniteKey,
+       async key => {
+         // get the revalidate context
+-        const forceRevalidateAll = get()._i
+-        const shouldRevalidatePage = get()._r
+-        set({ _r: UNDEFINED })
++        const forceRevalidateAll = getRef.current()._i
++        const shouldRevalidatePage = getRef.current()._r
++
++        // Reset flags immediately after reading
++        setRef.current({ _r: UNDEFINED, _i: UNDEFINED })
+
+         // return an array of page data
+         const data: Data[] = []
+@@ -219,9 +236,6 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
+           await Promise.all(revalidators.map(r => r()))
+         }
+
+-        // once we executed the data fetching based on the context, clear the context
+-        set({ _i: UNDEFINED })
+-
+         // return the data
+         return data
+       },
+@@ -248,14 +262,16 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
+
+         // It is possible that the key is still falsy.
+         if (!infiniteKey) return EMPTY_PROMISE
++
+         if (shouldRevalidate) {
+-          if (!isUndefined(data)) {
+-            // We only revalidate the pages that are changed
+-            set({ _i: false, _r: options.revalidate })
+-          } else {
+-            // Calling `mutate()`, we revalidate all pages
+-            set({ _i: true, _r: options.revalidate })
+-          }
++          // We must write metadata to the cache BEFORE calling swr.mutate.
++          // This allows SWR to merge our metadata with the new data, ensuring
++          // flags like _r (revalidate) and size (instanceId) are preserved.
++          setRef.current({
++            _i: isUndefined(data),
++            _r: options.revalidate,
++            [instanceId]: resolvePageSize()
++          } as any)
+         }
+
+         return arguments.length
+@@ -264,7 +280,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
+       },
+       // swr.mutate is always the same reference
+       // eslint-disable-next-line react-hooks/exhaustive-deps
+-      [infiniteKey, cache]
++      [infiniteKey, cache, resolvePageSize, instanceId]
+     )
+     // Extend the SWR API
+
+@@ -272,10 +288,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
+       (arg: number | ((size: number) => number)) => {
+         // It is possible that the key is still falsy.
+         if (!infiniteKey) return EMPTY_PROMISE
+-        const [, changeSize] = createCacheHelper<
+-          Data,
+-          SWRInfiniteCacheValue<Data, any>
+-        >(cache, infiniteKey)
++
+         let size
+         if (isFunction(arg)) {
+           size = arg(resolvePageSize())
+@@ -284,7 +297,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
+         }
+         if (typeof size != 'number') return EMPTY_PROMISE
+
+-        changeSize({ _l: size })
++        setRef.current({ [instanceId]: size } as any)
+         lastPageSizeRef.current = size
+
+         // Calculate the page data after the size change.
+@@ -315,7 +328,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
+       },
+       // exclude getKey from the dependencies, which isn't allowed to change during the lifecycle
+       // eslint-disable-next-line react-hooks/exhaustive-deps
+-      [infiniteKey, cache, mutate, resolvePageSize]
++      [infiniteKey, cache, mutate, resolvePageSize, instanceId]
+     )
+
+     // Use getter functions to avoid unnecessary re-renders caused by triggering
+@@ -325,7 +338,12 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
+       setSize,
+       mutate,
+       get data() {
+-        return swr.data
++        const d = swr.data
++        if (isExplicitSize && !isUndefined(d)) {
++          const currentSize = resolvePageSize()
++          if (d.length > currentSize) return d.slice(0, currentSize)
++        }
++        return d
+       },
+       get error() {
+         return swr.error

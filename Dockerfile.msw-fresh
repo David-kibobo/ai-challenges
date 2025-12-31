@@ -1,0 +1,39 @@
+FROM public.ecr.aws/x8v8d7g8/mars-base:latest
+
+# Set the initial working directory to /app
+WORKDIR /app
+
+ENV NODE_ENV=development
+ENV NODE_OPTIONS=--experimental-vm-modules
+
+# --- 1. Clone and Checkout Base Commit ---
+# Clone the MSW repo fresh into a subdirectory
+RUN git clone https://github.com/mswjs/msw.git /app/msw
+WORKDIR /app/msw
+# Checkout the base commit (using a placeholder for your actual ID)
+# Use your base commit ID here: 013304188497e55dda84659a4cad6ef947322d6a
+RUN git checkout 013304188497e55dda84659a4cad6ef947322d6a
+
+# --- 2. Copy Patch Files ---
+# Move back to /app to copy patches from the host context. 
+# Then move the patches into the /app/msw repository.
+WORKDIR /app
+COPY test.patch /app/msw/test.patch
+COPY solution.patch /app/msw/solution.patch # FIX: Use solution.patch, not test.patch twice
+
+# --- 3. Install Dependencies and Apply Patches ---
+WORKDIR /app/msw
+
+# Install dependencies needed for the tests and the solution
+# NOTE: We use a non-frozen install initially for max compatibility.
+RUN pnpm install
+
+# Apply the test and solution patches
+RUN git apply test.patch
+RUN git apply solution.patch
+
+# Make test.sh executable (assuming test.patch includes this file)
+RUN chmod +x ./test.sh
+
+# Set the final entry point for interactive debugging
+CMD ["/bin/bash"]

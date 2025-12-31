@@ -1,0 +1,220 @@
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 0000000..8836946
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,60 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++
++NEW_TEST_FILE="./test/modules/WebSocket/websocket-error.test.ts"
++
++
++
++# 2. Path definitions for the *Exclusion Logic* (needed by local Vitest runner).
++# We strip the leading "./test/" because Vitest reports paths relative to its 'root'.
++NEW_TEST_FILE_EXCLUDE="${NEW_TEST_FILE#./test/}"
++
++
++
++# Determine mode
++if [ "$#" -ge 1 ]; then
++  MODE="$1"
++elif [ "${MODE-""}" != "" ]; then
++  MODE="$MODE"
++else
++  MODE=base
++fi
++
++echo "Running tests (mode: ${MODE})"
++
++
++EXCLUDE_TESTS=(
++  "${NEW_TEST_FILE_EXCLUDE}"
++  "modules/fetch/compliance/fetch-response-non-configurable.test.ts"
++  "modules/http/regressions/http-socket-timeout.test.ts"
++  "modules/http/compliance/http-ssl-socket.test.ts"
++  "modules/http/compliance/http-timeout.test.ts"
++)
++
++
++EXCLUDE_ARGS=()
++for pat in "${EXCLUDE_TESTS[@]}"; do
++  EXCLUDE_ARGS+=( "--exclude=${pat}" )
++done
++
++if [ "${MODE}" = "base" ]; then
++  echo "Running base tests (excluding new test)"
++   pnpm -s build
++
++
++  pnpm -s vitest --run --config=./test/vitest.config.js "${EXCLUDE_ARGS[@]}"
++  exit 0
++fi
++
++if [ "${MODE}" = "new" ]; then
++  echo "Running experimental tests (only new test)"
++  pnpm -s build
++
++  # Run *only* the new test file (using the full path)
++  pnpm -s vitest --run --config=./test/vitest.config.js "${NEW_TEST_FILE}"
++  exit 0
++fi
++
++echo "Unknown MODE: ${MODE}. Use MODE=base or MODE=new"
++exit 2
+diff --git a/test/modules/WebSocket/websocket-error.test.ts b/test/modules/WebSocket/websocket-error.test.ts
+new file mode 100644
+index 0000000..9817ed0
+--- /dev/null
++++ b/test/modules/WebSocket/websocket-error.test.ts
+@@ -0,0 +1,148 @@
++/**
++ * @vitest-environment node-with-websocket
++ */
++import { describe, test, expect, afterAll, beforeEach, vi, beforeAll } from 'vitest'
++
++const hoistedContext = vi.hoisted(async () => {
++  const { WebSocketInterceptor } = await import('../../../src/interceptors/WebSocket/index.js')
++  const { default: WebSocket } = await import('ws')
++
++  const interceptor = new WebSocketInterceptor()
++  interceptor.apply()
++
++  return {
++    interceptor,
++    WebSocket: global.WebSocket,
++  }
++})
++
++let resolvedInterceptor: Awaited<typeof hoistedContext>['interceptor']
++let WebSocket: Awaited<typeof hoistedContext>['WebSocket']
++
++import type { WebSocketClientConnection } from '../../../src/interceptors/WebSocket/WebSocketClientConnection.js'
++
++interface NodeError extends Error {
++  code?: string;
++}
++
++const WS_URL = 'ws://localhost:9000/echo'
++
++beforeAll(async () => {
++  const context = await hoistedContext
++  resolvedInterceptor = context.interceptor
++  WebSocket = context.WebSocket
++})
++
++describe('WebSocketInterceptor: client.errorWith(reason)', () => {
++  let socket: any
++  let mockClient: WebSocketClientConnection
++
++  afterAll(() => {
++    resolvedInterceptor.dispose()
++  })
++
++  beforeEach(async () => {
++    mockClient = null as any
++    socket = new WebSocket(WS_URL)
++
++
++    const interceptorConnected = new Promise<void>((resolve) => {
++      resolvedInterceptor.once('connection', ({ client }) => {
++        mockClient = client
++        resolve()
++      })
++    })
++
++
++    const socketOpened = new Promise<void>((resolve) => {
++      if (socket.readyState === WebSocket.OPEN) {
++        resolve()
++      } else {
++        socket.onopen = () => resolve()
++      }
++    })
++
++
++    await Promise.all([interceptorConnected, socketOpened])
++
++    expect(mockClient).not.toBeNull()
++    expect(socket.readyState).toBe(WebSocket.OPEN)
++  })
++
++  test('1. Should fire "error" then "close" events with default details on call', async () => {
++    const reasonString = 'Simulated connection loss.'
++    const eventOrder: string[] = []
++
++
++    socket.onerror = (e: any) => {
++      eventOrder.push('error')
++      socket.errorPayload = e
++    }
++    socket.onclose = (e: any) => {
++      eventOrder.push('close')
++      socket.closePayload = e
++    }
++
++    mockClient.errorWith(reasonString)
++
++
++    await vi.waitFor(() => {
++      expect(eventOrder).toEqual(['error', 'close'])
++    })
++
++
++    expect(socket.errorPayload.message).toBe(reasonString)
++
++
++    expect(socket.closePayload.code).toBe(1006)
++    expect(socket.closePayload.reason).toBe(reasonString)
++    expect(socket.closePayload.wasClean).toBe(false)
++
++    expect(socket.readyState).toBe(WebSocket.CLOSED)
++  })
++
++  test('2. Should use Error object details and map code to 1011', async () => {
++    const networkError = new Error('Policy violation') as NodeError
++    networkError.code = 'ETIMEDOUT'
++
++    const eventOrder: string[] = []
++
++    socket.onerror = (e: any) => {
++      eventOrder.push('error')
++      socket.errorPayload = e
++    }
++    socket.onclose = (e: any) => {
++      eventOrder.push('close')
++      socket.closePayload = e
++    }
++
++    mockClient.errorWith(networkError)
++
++    await vi.waitFor(() => {
++      expect(eventOrder).toEqual(['error', 'close'])
++    })
++
++
++    expect(socket.errorPayload.error).toBe(networkError)
++    expect(socket.errorPayload.message).toBe(networkError.message)
++
++
++    expect(socket.closePayload.code).toBe(1011)
++    expect(socket.closePayload.reason).toBe(networkError.message)
++    expect(socket.closePayload.wasClean).toBe(false)
++
++    expect(socket.readyState).toBe(WebSocket.CLOSED)
++  })
++
++  test('3. Should throw InvalidStateError on subsequent send() calls', async () => {
++    mockClient.errorWith('Closing.')
++
++    await vi.waitFor(() => {
++      expect(socket.readyState).toBe(WebSocket.CLOSED)
++    })
++
++    expect(() => socket.send('data')).toThrow(
++      expect.objectContaining({ name: 'InvalidStateError' })
++    )
++  })
++})

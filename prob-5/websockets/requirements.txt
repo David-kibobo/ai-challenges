@@ -1,0 +1,16 @@
+attrs==25.4.0
+coverage==7.11.0
+idna==3.11
+iniconfig==2.3.0
+outcome==1.3.0.post0
+packaging==25.0
+pluggy==1.6.0
+Pygments==2.19.2
+pytest==8.4.2
+pytest-asyncio==1.2.0
+pytest-timeout==2.4.0
+sniffio==1.3.1
+sortedcontainers==2.4.0
+trio==0.31.0
+typing_extensions==4.15.0
+-e git+https://github.com/python-websockets/websockets@db5b08b73c3c9e4bf842543de1d018bec85d8a7e#egg=websockets

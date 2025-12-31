@@ -1,0 +1,36 @@
+
+##  Problem Description.
+
+Python-dependency-injector is used a lot for frameworks like FastAPI and other big software projects. It has a Closing helper manager that's supposed to help clean up resources, like database sessions, when injected into functions.
+Right now, Closing messes up when there's a problem. Instead of doing a rollback when something goes wrong, it skips it, tries to commit anyway, and then just cleans up. This is an unprecedented behavior.
+
+If we don't fix this, things can go wrong:
+
+- Data can get messed up.
+- Tests can pass when they shouldn't.
+- Stuff can run slowly because of unnecessary work.
+- Security can be at risk if some data gets committed when it shouldn't.
+- People using it will get confused because it doesn't act how they expect.
+
+## Agent Instructions
+You are required to adjust Closing so as to  run rollback on exceptions. 
+Expected behavior:
+- On success: commit then cleanup.
+- On exception: rollback then cleanup.
+- Must function with synchronous and asynchronous providers.
+- Current commit behavior must not change.
+
+## Testing Assumptions
+Tests will import Closing and instantiate it in both synchronous and asynchronous contexts.
+Tests may call the standard methods: commit(), rollback(), and close().
+
+
+## Environment Setup
+
+* Repository: [https://github.com/ets-labs/python-dependency-injector](https://github.com/ets-labs/python-dependency-injector)
+* Issue: #909 Closing does not respect if an exception has been thrown
+The commit has to use is: 5acddac
+
+
+
+

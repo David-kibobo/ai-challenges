@@ -1,0 +1,72 @@
+diff --git a/src/_internal/utils/config-context.ts b/src/_internal/utils/config-context.ts
+index eeade58..690905f 100644
+--- a/src/_internal/utils/config-context.ts
++++ b/src/_internal/utils/config-context.ts
+@@ -13,10 +13,39 @@ import { initCache } from './cache'
+ import { mergeConfigs } from './merge-config'
+ import { UNDEFINED, mergeObjects, isFunction } from './shared'
+ import { useIsomorphicLayoutEffect } from './env'
+-import type { SWRConfiguration, FullConfiguration } from '../types'
++import type { SWRConfiguration, FullConfiguration, Cache } from '../types'
+
+ export const SWRConfigContext = createContext<Partial<FullConfiguration>>({})
+
++// Minimal helper to handle fallback materialization logic
++const materializeFallbackCache = (
++  cacheInstance: Cache,
++  fallbackData: Record<string, any>,
++  parentConfig: Partial<FullConfiguration>,
++  cacheContext: ReturnType<typeof initCache> | typeof UNDEFINED
++) => {
++  // Hydrate if a new cache instance was created or we are the root config
++  const shouldHydrate = !!cacheContext || Object.keys(parentConfig).length === 0
++
++  if (shouldHydrate) {
++    for (const key in fallbackData) {
++      if (Object.prototype.hasOwnProperty.call(fallbackData, key)) {
++        if (!cacheInstance.get(key)) {
++          const data = fallbackData[key]
++          // Exclude function types to match SWR serialization rules
++          if (typeof data !== 'function') {
++            cacheInstance.set(key, {
++              data,
++              error: UNDEFINED,
++              _k: key
++            } as any)
++          }
++        }
++      }
++    }
++  }
++}
++
+ const SWRConfig: FC<
+   PropsWithChildren<{
+     value?:
+@@ -56,6 +85,26 @@ const SWRConfig: FC<
+     ;(extendedConfig as any).mutate = cacheContext[1]
+   }
+
++  // Materialize fallback data.
++  // NOTE: This side effect is intentionally placed in useMemo to guarantee the cache is
++  // populated synchronously during the render phase. This ensures the initial state
++  // is available before any child component's useSWR hook attempts to read the cache,
++  // satisfying SWR's synchronous initialization contract.
++  useMemo(() => {
++    const cacheInstance =
++      (cacheContext && cacheContext[0]) ||
++      (extendedConfig as any).cache ||
++      defaultCache
++    const fallbackData = extendedConfig?.fallback || {}
++
++    materializeFallbackCache(
++      cacheInstance as Cache,
++      fallbackData,
++      parentConfig,
++      cacheContext
++    )
++  }, [cacheContext, extendedConfig?.fallback, parentConfig])
++
+   // Unsubscribe events.
+   useIsomorphicLayoutEffect(() => {
+     if (cacheContext) {

@@ -1,0 +1,403 @@
+Problem Title:
+Retry statistics not recorded for wrapped functions
+
+Problem Brief:
+In Tenacity, the retry decorator is used to automatically retry a function upon failure. The decorator exposes a statistics attribute intended to track the number of attempts and the outcome of the retries. Currently, if a retry-decorated function is wrapped by another decorator, or if it succeeds after one or more retries, retry.statistics may remain empty. This prevents users from accessing reliable retry metrics and distinguishing between success and failure attempts.
+
+Agent Instructions:
+Your task is to ensure that for any function decorated with Tenacity’s @retry:
+    -The statistics attribute is always populated after the function invocation.
+    Statistics must accurately reflect:
+        -the number of attempts, and the final outcome (success or failure).
+    -This behavior must hold even when the retry-decorated function is wrapped by other decorators.
+    -Statistics must be available for both successful executions and those that terminate in a RetryError.
+Test Assumptions:
+Functions will be decorated with @retry(stop=stop_after_attempt(N), reraise=True/False).
+-Wrapped functions may use one or multiple additional decorators.
+-Tests will call the function and then inspect .retry.statistics to verify it contains the expected keys (attempt_number, outcome) and values.
+-Both failing and eventually succeeding functions should record retry statistics.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Copyright 2025
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+Test for issue #519: Retry statistics not accessible when retry-decorated function is wrapped.
+
+When a function decorated with @retry is wrapped by another decorator, the statistics
+attribute should still be accessible on the wrapped function.
+"""
+import functools
+
+import pytest
+from tenacity import retry, stop_after_attempt, RetryError, wait_fixed
+
+
+def outer_wrapper(fn):
+    """
+    Wrapper that preserves functools metadata and also preserves
+    the `.retry` attribute (if present) on the wrapped callable.
+    """
+    @functools.wraps(fn)
+    def wrapped(*args, **kwargs):
+        return fn(*args, **kwargs)
+
+    # preserve .retry if the inner function had it
+    if hasattr(fn, "retry"):
+        wrapped.retry = getattr(fn, "retry")
+    return wrapped
+
+
+def simple_wrapper(fn):
+    """Simple wrapper without preserving .retry attribute."""
+    @functools.wraps(fn)
+    def wrapped(*args, **kwargs):
+        return fn(*args, **kwargs)
+    return wrapped
+
+
+def multi_wrapper(fn):
+    """Wrapper that wraps multiple times."""
+    @functools.wraps(fn)
+    def inner(*args, **kwargs):
+        return fn(*args, **kwargs)
+    
+    @functools.wraps(inner)
+    def outer(*args, **kwargs):
+        return inner(*args, **kwargs)
+    
+    if hasattr(fn, "retry"):
+        outer.retry = getattr(fn, "retry")
+    return outer
+
+
+def _get_retry_obj(callable_obj):
+    """
+    Helper to find the tenacity retrying object for a callable.
+    Tries callable.retry first, then callable.__wrapped__.retry.
+    """
+    retry_obj = getattr(callable_obj, "retry", None)
+    if retry_obj is not None:
+        return retry_obj
+    inner = getattr(callable_obj, "__wrapped__", None)
+    if inner is not None:
+        return getattr(inner, "retry", None)
+    return None
+
+
+def _assert_nonempty_stats(stats, expected_attempts=None):
+    """
+    Assert that statistics dict is non-empty and optionally check attempt count.
+    """
+    assert isinstance(stats, dict), "statistics must be a dict"
+    assert stats, "statistics is empty (no retry info recorded)"
+    if expected_attempts is not None and "attempt_number" in stats:
+        assert stats["attempt_number"] == expected_attempts
+
+
+def test_statistics_base_case():
+    """
+    Verify that retry.statistics is set for a plain retry-decorated function.
+    Use reraise=False so the decorator raises RetryError on final failure (stable behavior).
+    """
+    @retry(stop=stop_after_attempt(3), reraise=False)
+    def f():
+        raise ValueError("fail intentionally")
+
+    # retries will happen and final exception should be RetryError
+    with pytest.raises(RetryError):
+        f()
+
+    retry_obj = _get_retry_obj(f)
+    assert retry_obj is not None, "retry object not found on decorated function"
+    stats = retry_obj.statistics
+    _assert_nonempty_stats(stats, expected_attempts=3)
+
+
+def test_statistics_wrapped_case():
+    """
+    Verify that retry.statistics is set even if the retry-decorated function
+    is wrapped by another decorator (issue #519). Again use reraise=False to
+    reliably catch RetryError.
+    """
+    @outer_wrapper
+    @retry(stop=stop_after_attempt(3), reraise=False)
+    def f_wrapped():
+        raise ValueError("fail intentionally")
+
+    with pytest.raises(RetryError):
+        f_wrapped()
+
+    retry_obj = _get_retry_obj(f_wrapped)
+    assert retry_obj is not None, "retry object not found on wrapped function"
+    stats = retry_obj.statistics
+    _assert_nonempty_stats(stats, expected_attempts=3)
+
+
+def test_statistics_success_case():
+    """
+    Control test: statistics for a retry-decorated function that succeeds after 1 retry.
+    Use reraise=False so no exception escapes on final failure.
+    """
+    call_count = {"n": 0}
+
+    @retry(stop=stop_after_attempt(3), reraise=False)
+    def f_success():
+        call_count["n"] += 1
+        # fail first time, then succeed
+        if call_count["n"] < 2:
+            raise ValueError("fail once")
+        return "ok"
+
+    result = f_success()
+    assert result == "ok"
+
+    retry_obj = _get_retry_obj(f_success)
+    assert retry_obj is not None, "retry object not found on success-case function"
+    stats = retry_obj.statistics
+    # stats must be non-empty; if attempt_number present, expect 2
+    _assert_nonempty_stats(stats, expected_attempts=2)
+
+
+def test_statistics_simple_wrapper_case():
+    """
+    Edge case: Statistics should be accessible even with a simple wrapper that
+    doesn't explicitly preserve the .retry attribute.
+    """
+    @simple_wrapper
+    @retry(stop=stop_after_attempt(2), reraise=False)
+    def f_simple():
+        raise ValueError("fail")
+
+    with pytest.raises(RetryError):
+        f_simple()
+
+    retry_obj = _get_retry_obj(f_simple)
+    assert retry_obj is not None, "retry object not found on simply wrapped function"
+    stats = retry_obj.statistics
+    _assert_nonempty_stats(stats, expected_attempts=2)
+
+
+def test_statistics_multi_wrapper_case():
+    """
+    Edge case: Statistics should be accessible with multiple layers of wrapping.
+    """
+    @multi_wrapper
+    @retry(stop=stop_after_attempt(2), reraise=False)
+    def f_multi():
+        raise ValueError("fail")
+
+    with pytest.raises(RetryError):
+        f_multi()
+
+    retry_obj = _get_retry_obj(f_multi)
+    assert retry_obj is not None, "retry object not found on multi-wrapped function"
+    stats = retry_obj.statistics
+    _assert_nonempty_stats(stats, expected_attempts=2)
+
+
+def test_statistics_wrapped_success_case():
+    """
+    Edge case: Statistics for wrapped function that succeeds after retries.
+    """
+    call_count = {"n": 0}
+
+    @outer_wrapper
+    @retry(stop=stop_after_attempt(3), reraise=False)
+    def f_wrapped_success():
+        call_count["n"] += 1
+        if call_count["n"] < 2:
+            raise ValueError("fail once")
+        return "success"
+
+    result = f_wrapped_success()
+    assert result == "success"
+
+    retry_obj = _get_retry_obj(f_wrapped_success)
+    assert retry_obj is not None, "retry object not found on wrapped success function"
+    stats = retry_obj.statistics
+    _assert_nonempty_stats(stats, expected_attempts=2)
+
+
+def test_statistics_with_wait_strategy():
+    """
+    Edge case: Statistics should work with wait strategies, not just stop conditions.
+    """
+    @outer_wrapper
+    @retry(stop=stop_after_attempt(2), wait=wait_fixed(0.01), reraise=False)
+    def f_with_wait():
+        raise ValueError("fail")
+
+    with pytest.raises(RetryError):
+        f_with_wait()
+
+    retry_obj = _get_retry_obj(f_with_wait)
+    assert retry_obj is not None, "retry object not found on function with wait strategy"
+    stats = retry_obj.statistics
+    _assert_nonempty_stats(stats, expected_attempts=2)
+
+
+def test_statistics_direct_access():
+    """
+    Edge case: Statistics should be directly accessible via .retry.statistics
+    on wrapped function if .retry is preserved.
+    """
+    @outer_wrapper
+    @retry(stop=stop_after_attempt(2), reraise=False)
+    def f_direct():
+        raise ValueError("fail")
+
+    with pytest.raises(RetryError):
+        f_direct()
+
+    # Should be able to access directly if .retry is preserved
+    if hasattr(f_direct, "retry"):
+        stats = f_direct.retry.statistics
+        _assert_nonempty_stats(stats, expected_attempts=2)
+    else:
+        # Fallback to __wrapped__ if .retry not preserved
+        retry_obj = _get_retry_obj(f_direct)
+        assert retry_obj is not None
+        stats = retry_obj.statistics
+        _assert_nonempty_stats(stats, expected_attempts=2)
+
+
+def test_statistics_empty_before_call():
+    """
+    Edge case: Statistics should be empty before the function is called.
+    """
+    @outer_wrapper
+    @retry(stop=stop_after_attempt(2), reraise=False)
+    def f_empty():
+        raise ValueError("fail")
+
+    retry_obj = _get_retry_obj(f_empty)
+    assert retry_obj is not None
+    # Statistics should be empty before call
+    assert retry_obj.statistics == {}
+
+    with pytest.raises(RetryError):
+        f_empty()
+
+    # Statistics should be populated after call
+    stats = retry_obj.statistics
+    _assert_nonempty_stats(stats, expected_attempts=2)
+
+
+
+# Copyright 2025
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+Test for issue #534: Incorrect exception raised with two retrying blocks in function.
+
+When two Retrying blocks are used in sequence, the second block's exception
+should be raised, but unittest's output may show the first block's exception
+instead, causing confusion.
+"""
+import unittest
+from unittest.mock import MagicMock
+
+from tenacity import Retrying, stop_after_attempt
+
+
+class TestIssue534(unittest.TestCase):
+    """Test case for issue #534: dual retrying blocks exception handling."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.foo = MagicMock(side_effect=[2, 1])
+
+    def test_dual_retrying_blocks_exception_handling(self):
+        """
+        Test that exceptions from the second Retrying block are correctly raised.
+
+        This test reproduces issue #534 where:
+        - First Retrying block: retry 0 attempt 0 raises, retry 0 attempt 1 succeeds
+        - Second Retrying block: retry 1 attempt 0 raises
+
+        Expected: The exception from the second block should be raised and visible
+        in unittest output, not the exception from the first block.
+        """
+        # First Retrying block - should succeed after one retry
+        for attempt in Retrying(stop=stop_after_attempt(2)):
+            with attempt:
+                self.assertEqual(1, self.foo())
+
+        # Second Retrying block - should raise Exception('bippy')
+        for attempt in Retrying(stop=stop_after_attempt(2)):
+            with attempt:
+                raise Exception('bippy')
+
+    def test_dual_retrying_blocks_with_different_exceptions(self):
+        """
+        Test that different exceptions from each block are correctly distinguished.
+
+        This variant uses different exception types to make it clearer which
+        exception should be raised.
+        """
+        # First block raises ValueError, then succeeds
+        mock_func = MagicMock(side_effect=[ValueError("first"), "success"])
+        for attempt in Retrying(stop=stop_after_attempt(2)):
+            with attempt:
+                result = mock_func()
+                self.assertEqual("success", result)
+
+        # Second block raises KeyError
+        for attempt in Retrying(stop=stop_after_attempt(2)):
+            with attempt:
+                raise KeyError('second_block_exception')

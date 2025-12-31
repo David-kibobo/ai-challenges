@@ -1,306 +1,0 @@
-[?2004hroot@3bb2812d406a:/app# mkdir -p pipe logs; tmux wait -S done
-[?2004l[?2004hroot@3bb2812d406a:/app# mkfifo pipe/events.fifo; tmux wait -S done
-[?2004l[?2004hroot@3bb2812d406a:/app# cat > consumer.awk << 'EOF'
-[?2004l[?2004h> # Pure awk consumer for stateful streaming analysis
-[?2004l[?2004h> 
-[?2004l[?2004h> BEGIN {
-[?2004l[?2004h>     # Initialize variables
-[?2004l[?2004h>     delete sessions;  # sessions[user][session_id] = timestamp
-[?2004l[?2004h>     delete user_count; # user_count[user] = current_admin_session_count
-[?2004l[?2004h>     FS = ""
-[?2004l[?2004h>     alert_threshold = 3
-[?2004l[?2004h>     window_seconds = 10
-[?2004l[?2004h>     last_eviction = 0
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> # Simple JSON parser for our specific format
-[?2004l[?2004h> function parse_json(line,    i, key, val, in_key, in_val, quote_count, brackets, brace_count) {
-[?2004l[?2004h>     # Extract ts
-[?2004l[?2004h>     match(line, /"ts": *([0-9]+)/, arr)
-[?2004l[?2004h>     if (arr[1] == "") return 0
-[?2004l[?2004h>     ts = arr[1]
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Extract user (can contain Unicode)
-[?2004l[?2004h>     match(line, /"user": *"([^"\\]|\\.)*"/, arr)
-[?2004l[?2004h>     if (arr[1] == "") return 0
-[?2004l[?2004h>     gsub(/^"|"$/g, "", arr[0])
-[?2004l[?2004h>     sub(/^".*:" */, "", arr[0])
-[?2004l[?2004h>     gsub(/^"|"$/g, "", arr[0])
-[?2004l[?2004h>     user = arr[0]
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Extract session
-[?2004l[?2004h>     match(line, /"session": *"[^"]+"/, arr)
-[?2004l[?2004h>     if (arr[0] == "") return 0
-[?2004l[?2004h>     sub(/^".*:" */, "", arr[0])
-[?2004l[?2004h>     gsub(/^"|"$/g, "", arr[0])
-[?2004l[?2004h>     session = arr[0]
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Check if admin (meta.admin=true)
-[?2004l[?2004h>     admin = 0
-[?2004l[?2004h>     if (match(line, /"meta": *\{[^\}]*"admin": *true/)) admin = 1
-[?2004l[?2004h>     
-[?2004l[?2004h>     return 1
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> # Evict sessions older than 10 seconds
-[?2004l[?2004h> function evict_old_sessions(current_ts) {
-[?2004l[?2004h>     # Only evict once per second to avoid overhead
-[?2004l[?2004h>     if (int(current_ts/1000) <= last_eviction) return
-[?2004l[?2004h>     last_eviction = int(current_ts/1000)
-[?2004l[?2004h>     
-[?2004l[?2004h>     # Iterate through all user sessions and remove old ones
-[?2004l[?2004h>     for (u in sessions) {
-[?2004l[?2004h>         for (s in sessions[u]) {
-[?2004l[?2004h>             if (sessions[u][s] < current_ts - window_seconds * 1000) {
-[?2004l[?2004h>                 delete sessions[u][s]
-[?2004l[?2004h>             }
-[?2004l[?2004h>         }
-[?2004l[?2004h>         # Update user count
-[?2004l[?2004h>         cnt = 0
-[?2004l[?2004h>         for (s in sessions[u]) cnt++
-[?2004l[?2004h>         user_count[u] = cnt
-[?2004l[?2004h>     }
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> # Add a new admin session
-[?2004l[?2004h> function add_admin_session(user, session, ts) {
-[?2004l[?2004h>     if (!(user in sessions)) {
-[?2004l[?2004h>         sessions[user][session] = ts
-[?2004l[?2004h>         user_count[user] = 1
-[?2004l[?2004h>     } else if (!(session in sessions[user])) {
-[?2004l[?2004h>         sessions[user][session] = ts
-[?2004l[?2004h>         user_count[user]++
-[?2004l[?2004h>     } else {
-[?2004l[?2004h>         # Update timestamp if session already exists
-[?2004l[?2004h>         sessions[user][session] = ts
-[?2004l[?2004h>     }
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> # Generate ISO8601 timestamp from Unix ms
-[?2004l[?2004h> function iso8601(ts) {
-[?2004l[?2004h>     # Convert ms to seconds for strftime
-[?2004l[?2004h>     return strftime("%Y-%m-%dT%H:%M:%S", int(ts/1000)) "Z"
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> # Main processing
-[?2004l[?2004h> {
-[?2004l[?2004h>     # Skip empty lines
-[?2004l[?2004h>     if (NF == 0) next
-[?2004l[?2004h>     
-[?2004l[?2004h>     # Parse JSON line
-[?2004l[?2004h>     if (!parse_json($0)) next  # Skip malformed lines
-[?2004l[?2004h>     
-[?2004l[?2004h>     # Get current time from ts field
-[?2004l[?2004h>     current_ts = ts
-[?2004l[?2004h>     
-[?2004l[?2004h>     # Evict old sessions
-[?2004l[?2004h>     evict_old_sessions(current_ts)
-[?2004l[?2004h>     
-[?2004l[?2004h>     # Process admin session
-[?2004l[?2004h>     if (admin) {
-[?2004l[?2004h>         add_admin_session(user, session, current_ts)
-[?2004l[?2004h>         
-[?2004l[?2004h>         # Check alert condition
-[?2004l[?2004h>         if (user_count[user] >= alert_threshold) {
-[?2004l[?2004h>             # Avoid duplicate alerts
-[?2004l[?2004h>             if (!(user in alerted) || alerted[user] < current_ts - 1000) {
-[?2004l[?2004h>                 print "ALERT", user, user_count[user], "admin-sessions in 10s at", iso8601(current_ts) > "alerts.txt"
-[?2004l[?2004h>                 alerted[user] = current_ts  # Rate limit alerts
-[?2004l[?2004h>             }
-[?2004l[?2004h>         }
-[?2004l[?2004h>     }
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> END {
-[?2004l[?2004h>     # Cleanup
-[?2004l[?2004h>     close("alerts.txt")
-[?2004l[?2004h> }
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@3bb2812d406a:/app# cat > producer.sh << 'EOF'
-[?2004l[?2004h> #!/bin/bash
-[?2004l[?2004h> 
-[?2004l[?2004h> # Configuration
-[?2004l[?2004h> LOG_FILE="logs/events.log"
-[?2004l[?2004h> MAX_SIZE=1024  # Rotate after ~1KB for frequent rotation
-[?2004l[?2004h> ROTATION_COUNT=3
-[?2004l[?2004h> 
-[?2004l[?2004h> # Unicode test users
-[?2004l[?2004h> USERS=("赵钱孙" "李四" "张三" "王五" "Nakamura" "Suzuki" "Tanaka" "佐藤" "山本" "高橋")
-[?2004l[?2004h> 
-[?2004l[?2004h> # Ensure log directory exists
-[?2004l[?2004h> mkdir -p logs
-[?2004l[?2004h> 
-[?2004l[?2004h> # Clear existing logs
-[?2004l[?2004h> > "$LOG_FILE"
-[?2004l[?2004h> for i in $(seq 1 $ROTATION_COUNT); do
-[?2004l[?2004h>     > "$LOG_FILE.$i"
-[?2004l[?2004h> done
-[?2004l[?2004h> > "alerts.txt"
-[?2004l[?2004h> 
-[?2004l[?2004h> # Function to rotate logs
-[?2004l[?2004h> rotate_logs() {
-[?2004l[?2004h>     # Remove the oldest
-[?2004l[?2004h>     rm -f "$LOG_FILE.$ROTATION_COUNT"
-[?2004l[?2004h>     # Shift existing logs
-[?2004l[?2004h>     for i in $(seq $ROTATION_COUNT-1 -1 1); do
-[?2004l[?2004h>         if [ -f "$LOG_FILE.$i" ]; then
-[?2004l[?2004h>             mv "$LOG_FILE.$i" "$LOG_FILE.$(($i+1))"
-[?2004l[?2004h>         fi
-[?2004l[?2004h>     done
-[?2004l[?2004h>     # Move current to .1
-[?2004l[?2004h>     if [ -f "$LOG_FILE" ]; then
-[?2004l[?2004h>         mv "$LOG_FILE" "$LOG_FILE.1"
-[?2004l[?2004h>     fi
-[?2004l[?2004h>     # Create new log
-[?2004l[?2004h>     > "$LOG_FILE"
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> # Generate a random timestamp
-[?2004l[?2004h> get_timestamp() {
-[?2004l[?2004h>     echo "1720000000$(printf %03d $(shuf -i 0-999 -n 1))$(printf %03d $(shuf -i 0-999 -n 1))"
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> # Main event loop
-[?2004l[?2004h> start_time=$(date +%s%3N)
-[?2004l[?2004h> end_time=$((start_time + 30000))  # 30 seconds
-[?2004l[?2004h> line_count=0
-[?2004l[?2004h> 
-[?2004l[?2004h> while [ $(date +%s%3N) -lt $end_time ]; do
-[?2004l[?2004h>     # Random delay between 40-70ms
-[?2004l[?2004h>     sleep $(shuf -i 40-70 -n 1 | awk '{print $1/1000}')
-[?2004l[?2004h>     
-[?2004l[?2004h>     # Randomly decide if this line is malformed (5-10%)
-[?2004l[?2004h>     if [ $(shuf -i 1-100 -n 1) -le 8 ]; then
-[?2004l[?2004h>         # Malformed line - missing quotes, brackets, etc.
-[?2004l[?2004h>         case $(shuf -i 1-3 -n 1) in
-[?2004l[?2004h>             1) echo "{ts: $(get_timestamp), session: abc$(shuf -i 100-999 -n 1), user: ${USERS[RANDOM % ${#USERS[@]}]}, meta: {admin: true}}" ;;
-[?2004l[?2004h>             2) echo "{\"ts\": $(get_timestamp), \"session\": abc$(shuf -i 100-999 -n 1), \"user\": \"${USERS[RANDOM % ${#USERS[@]}]}\", \"meta\": {\"admin\": true}" ;;
-[?2004l[?2004h>             3) echo "{\"ts\": $(get_timestamp), \"session\": abc$(shuf -i 100-999 -n 1), \"user\": \"${USERS[RANDOM % ${#USERS[@]}]}\", \"meta\": {\"admin\": true}}" | rev ;;
-[?2004l[?2004h>         esac
-[?2004l[?2004h>     else
-[?2004l[?2004h>         # Valid line
-[?2004l[?2004h>         USER="${USERS[RANDOM % ${#USERS[@]}]}"
-[?2004l[?2004h>         SESSION="abc$(shuf -i 100-999 -n 1)"
-[?2004l[?2004h>         TS=$(get_timestamp)
-[?2004l[?2004h>         ADMIN="false"
-[?2004l[?2004h>         if [ $(shuf -i 1-100 -n 1) -le 60 ]; then
-[?2004l[?2004h>             ADMIN="true"
-[?2004l[?2004h>         fi
-[?2004l[?2004h>         echo "{\"ts\": $TS, \"session\": \"$SESSION\", \"user\": \"$USER\", \"meta\": {\"admin\": $ADMIN}}"
-[?2004l[?2004h>     fi | tee -a "$LOG_FILE"
-[?2004l[?2004h>     
-[?2004l[?2004h>     # Check log size and rotate if necessary
-[?2004l[?2004h>     if [ -f "$LOG_FILE" ] && [ $(stat -c %s "$LOG_FILE") -gt $MAX_SIZE ]; then
-[?2004l[?2004h>         rotate_logs
-[?2004l[?2004h>     fi
-[?2004l[?2004h>     
-[?2004l[?2004h>     line_count=$((line_count + 1))
-[?2004l[?2004h> done
-[?2004l[?2004h> 
-[?2004l[?2004h> # Output final count for supervisor
-[?2004l[?2004h> echo "$line_count"
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@3bb2812d406a:/app# 
-[?2004l[?2004hroot@3bb2812d406a:/app# chmod +x producer.sh; tmux wait -S done
-[?2004l[?2004hroot@3bb2812d406a:/app# cat > run.sh << 'EOF'
-[?2004l[?2004h> #!/bin/bash
-[?2004l[?2004h> 
-[?2004l[?2004h> # Supervisor script with flock for idempotency
-[?2004l[?2004h> exec 200>/tmp/run.lock
-[?2004l[?2004h> if ! flock -n 200; then
-[?2004l[?2004h>     echo "Already running" >&2
-[?2004l[?2004h>     exit 1
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Ensure FIFO exists
-[?2004l[?2004h> if [ ! -p "pipe/events.fifo" ]; then
-[?2004l[?2004h>     echo "FIFO does not exist" >&2
-[?2004l[?2004h>     exit 1
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Initialize files
-[?2004l[?2004h> > "alerts.txt"
-[?2004l[?2004h> 
-[?2004l[?2004h> # Start consumer first (reads from FIFO)
-[?2004l[?2004h> cat pipe/events.fifo | awk -f consumer.awk &
-[?2004l[?2004h> CONSUMER_PID=$!
-[?2004l[?2004h> 
-[?2004l[?2004h> # Record consumer start time in ms
-[?2004l[?2004h> CONSUMER_START=$(date +%s%3N)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Small delay to ensure consumer is ready
-[?2004l[?2004h> sleep 0.1
-[?2004l[?2004h> 
-[?2004l[?2004h> # Start producer (writes to FIFO via tee)
-[?2004l[?2004h> ./producer.sh > pipe/events.fifo &
-[?2004l[?2004h> PRODUCER_PID=$!
-[?2004l[?2004h> 
-[?2004l[?2004h> # Record producer start time
-[?2004l[?2004h> PRODUCER_START=$(date +%s%3N)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Let it run for ~32 seconds
-[?2004l[?2004h> sleep 32
-[?2004l[?2004h> 
-[?2004l[?2004h> # Capture end times
-[?2004l[?2004h> PRODUCER_END=$(date +%s%3N)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Stop producer first
-[?2004l[?2004h> if kill $PRODUCER_PID 2>/dev/null; then
-[?2004l[?2004h>     # Wait for producer to finish and get line count
-[?2004l[?2004h>     PRODUCER_LINES=$(wait $PRODUCER_PID)
-[?2004l[?2004h> else
-[?2004l[?2004h>     PRODUCER_LINES=0
-[?2004l[?2004h> fi
-[?2004l[?2004h> 
-[?2004l[?2004h> # Stop consumer
-[?2004l[?2004h> kill $CONSUMER_PID 2>/dev/null && wait $CONSUMER_PID
-[?2004l[?2004h> CONSUMER_END=$(date +%s%3N)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Count alerts
-[?2004l[?2004h> ALERTS=$(grep "^ALERT" alerts.txt | wc -l)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Check rotations - count how many rotation files have content
-[?2004l[?2004h> ROTATIONS=0
-[?2004l[?2004h> for i in 1 2 3; do
-[?2004l[?2004h>     if [ -f "logs/events.log.$i" ] && [ $(stat -c %s "logs/events.log.$i") -gt 100 ]; then
-[?2004l[?2004h>         ROTATIONS=$((ROTATIONS + 1))
-[?2004l[?2004h>     fi
-[?2004l[?2004h> done
-[?2004l[?2004h> 
-[?2004l[?2004h> # Get distinct alert users (including non-ASCII)
-[?2004l[?2004h> DISTINCT_USERS=$(grep "^ALERT" alerts.txt | awk '{print $2}' | sort -u | wc -l)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Verify we have at least 2 distinct users with alerts and one non-ASCII
-[?2004l[?2004h> NON_ASCII_ALERTS=$(grep "^ALERT" alerts.txt | grep -E "[\\x80-\\xFF]" | wc -l)
-[?2004l[?2004h> 
-[?2004l[?2004h> # Create summary.json
-[?2004l[?2004h> cat > summary.json << EOF
-[?2004l[?2004h> {
-[?2004l[?2004h>     "producer_lines_total": $PRODUCER_LINES,
-[?2004l[?2004h>     "alerts": $ALERTS,
-[?2004l[?2004h>     "rotations_min": $ROTATIONS,
-[?2004l[?2004h>     "parallel": true
-[?2004l[?2004h> }
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@3bb2812d406a:/app# 
-[?2004l[?2004hroot@3bb2812d406a:/app# # Create timeline.json
-[?2004l[?2004hroot@3bb2812d406a:/app# cat > timeline.json << EOF
-[?2004l[?2004h> {
-[?2004l[?2004h>     "consumer_start_ms": $CONSUMER_START,
-[?2004l[?2004h>     "producer_start_ms": $PRODUCER_START,
-[?2004l[?2004h>     "consumer_end_ms": $CONSUMER_END,
-[?2004l[?2004h>     "producer_end_ms": $PRODUCER_END
-[?2004l[?2004h> }
-[?2004l[?2004h> }
-[?2004l[?2004h> EOF
-[?2004l[?2004hroot@3bb2812d406a:/app# 
-[?2004l[?2004hroot@3bb2812d406a:/app# # Validate requirements
-[?2004l[?2004hroot@3bb2812d406a:/app# if [ $PRODUCER_LINES -ge 1100 ] && [ $ALERTS -ge 3 ] && [ $DISTINCT_USERS -ge 2 ] && [ $NON_ASCII_ALERTS -ge 1 ] && [ $ROTATIONS -ge 1 ]; then
-[?2004l[?2004h>     echo "DONE"
-[?2004l[?2004h> else
-[?2004l[?2004h>     echo "FAILED requirements" >&2
-[?2004l[?2004h>     exit 1
-[?2004l[?2004h> fi
-[?2004l-bash: [: -ge: unary operator expected
-FAILED requirements
-logout

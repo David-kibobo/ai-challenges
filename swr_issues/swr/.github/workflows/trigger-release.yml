@@ -1,0 +1,56 @@
+on:
+  workflow_dispatch:
+    inputs:
+      releaseType:
+        description: Release stable or beta?
+        required: true
+        type: choice
+        options:
+          - beta
+          - stable
+
+      semverType:
+        description: semver type?
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+name: Trigger Release
+
+env:
+  SEMVER_TYPE: ${{ github.event.inputs.semverType }}
+  RELEASE_TYPE: ${{ github.event.inputs.releaseType }}
+
+jobs:
+  start:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+          token: ${{ secrets.RELEASE_BOT_GITHUB_TOKEN }}
+      - name: Install
+        uses: ./.github/workflows/install
+      - name: Test
+        run: |
+          pnpm clean
+          pnpm build
+          pnpm run-all-checks
+          pnpm test:build
+
+      - name: Configure git
+        run: |
+          git config user.name "vercel-release-bot"
+          git config user.email "infra+release@vercel.com"
+
+      - name: Bump version and tag
+        run: |
+          node ./scripts/bump-next-version.js
+
+      - name: Git push
+        run: |
+          git push origin main
+          git push origin --tags

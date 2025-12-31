@@ -1,0 +1,26 @@
+# Keep .git so we preserve history
+# Ignore Python junk
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual envs
+venv/
+.venv/
+check_performance/
+               ↑
+
+# Ignore build/test artifacts
+*.log
+*.tmp
+*.out
+*.egg-info
+dist/
+build/
+
+# Ignore editor junk
+.DS_Store
+*.swp
+.idea/
+.vscode/

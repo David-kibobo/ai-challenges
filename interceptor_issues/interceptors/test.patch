@@ -1,0 +1,262 @@
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 0000000..6361cd9
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,59 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++
++NEW_TEST_FILE="./test/modules/http/intercept/client-request.socket-properties.test.ts"
++
++
++
++# 2. Path definitions for the *Exclusion Logic* (needed by local Vitest runner).
++# We strip the leading "./test/" because Vitest reports paths relative to its 'root'.
++NEW_TEST_FILE_EXCLUDE="${NEW_TEST_FILE#./test/}"
++
++
++
++# Determine mode
++if [ "$#" -ge 1 ]; then
++  MODE="$1"
++elif [ "${MODE-""}" != "" ]; then
++  MODE="$MODE"
++else
++  MODE=base
++fi
++
++echo "Running tests (mode: ${MODE})"
++
++
++EXCLUDE_TESTS=(
++  "${NEW_TEST_FILE_EXCLUDE}"
++  "modules/fetch/compliance/fetch-response-non-configurable.test.ts"
++  "modules/http/regressions/http-socket-timeout.test.ts"
++  "modules/http/compliance/http-ssl-socket.test.ts"
++)
++
++
++EXCLUDE_ARGS=()
++for pat in "${EXCLUDE_TESTS[@]}"; do
++  EXCLUDE_ARGS+=( "--exclude=${pat}" )
++done
++
++if [ "${MODE}" = "base" ]; then
++  echo "Running base tests (excluding new test)"
++   pnpm -s build
++
++
++  pnpm -s vitest --run --config=./test/vitest.config.js "${EXCLUDE_ARGS[@]}"
++  exit 0
++fi
++
++if [ "${MODE}" = "new" ]; then
++  echo "Running experimental tests (only new test)"
++  pnpm -s build
++
++  # Run *only* the new test file (using the full path)
++  pnpm -s vitest --run --config=./test/vitest.config.js "${NEW_TEST_FILE}"
++  exit 0
++fi
++
++echo "Unknown MODE: ${MODE}. Use MODE=base or MODE=new"
++exit 2
+\ No newline at end of file
+diff --git a/test/modules/http/intercept/client-request.socket-properties.test.ts b/test/modules/http/intercept/client-request.socket-properties.test.ts
+new file mode 100644
+index 0000000..6a6943d
+--- /dev/null
++++ b/test/modules/http/intercept/client-request.socket-properties.test.ts
+@@ -0,0 +1,189 @@
++import { vi, it, expect, beforeAll, afterEach, afterAll } from 'vitest'
++import http from 'node:http'
++import https from 'node:https'
++
++
++import { ClientRequestInterceptor } from '../../../../src/interceptors/ClientRequest'
++
++const HeadersStub = typeof Headers === 'undefined' ? class MockHeaders { } : Headers;
++
++
++class MockResponse {
++  public status: number;
++  public statusText: string = 'OK';
++  public headers: any;
++  public ok: boolean;
++  public redirected: boolean = false;
++  public body: null = null;
++  public type: string = 'default';
++
++  constructor(status: number) {
++    this.status = status;
++    this.ok = status >= 200 && status < 300;
++    this.headers = new HeadersStub();
++  }
++
++  json() { return Promise.resolve({}); }
++  text() { return Promise.resolve(''); }
++  arrayBuffer() { return Promise.resolve(new ArrayBuffer(0)); }
++  clone() { return new MockResponse(this.status); }
++}
++
++
++const interceptor = new ClientRequestInterceptor()
++let originalTlsReject: string | undefined
++
++interface SocketAddresses {
++  localAddress: string | undefined;
++  remoteAddress: string | undefined;
++  family: string | undefined;
++}
++
++
++// --- Setup/Teardown ---
++
++beforeAll(async () => {
++  originalTlsReject = process.env.NODE_TLS_REJECT_UNAUTHORIZED
++  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
++  interceptor.apply()
++})
++
++afterEach(() => {
++  (interceptor as any).removeAllListeners()
++})
++
++afterAll(async () => {
++  interceptor.dispose()
++
++  if (originalTlsReject !== undefined) {
++    process.env.NODE_TLS_REJECT_UNAUTHORIZED = originalTlsReject
++  } else {
++    delete process.env.NODE_TLS_REJECT_UNAUTHORIZED
++  }
++})
++
++
++async function testSocketAddresses(
++  protocol: typeof http | typeof https,
++  protocolName: string,
++  useConstructor: boolean = false
++) {
++  let capturedAddresses: SocketAddresses | undefined;
++  let unhandledCrash: Error | undefined;
++  const TEST_URL = `${protocolName}://localhost/socket-test`
++
++  let resolveSocketPromise: (socket: any) => void;
++  const socketPromise = new Promise<any>((resolve) => {
++    resolveSocketPromise = resolve;
++  });
++
++
++  await new Promise<void>((resolve, reject) => {
++
++    interceptor.once('request', async ({ controller }) => {
++      const socketRef = await socketPromise;
++
++      try {
++        const mockResponse = new MockResponse(200);
++        controller.respondWith(mockResponse as any);
++
++        if (socketRef) {
++          const addressInfo = socketRef.address();
++
++          capturedAddresses = {
++            localAddress: socketRef.localAddress,
++            remoteAddress: socketRef.remoteAddress,
++            family: addressInfo.family,
++          };
++        }
++      } catch (error) {
++        unhandledCrash = error as Error;
++      }
++
++      resolve();
++    });
++
++    const req = useConstructor && protocol.ClientRequest
++      ? new protocol.ClientRequest(TEST_URL)
++      : protocol.request(TEST_URL);
++
++    req.on('socket', (socket: any) => {
++      resolveSocketPromise(socket);
++    });
++
++    req.on('error', (err: any) => {
++      if (err.code !== 'ECONNREFUSED') reject(err);
++    });
++
++    req.end();
++  });
++
++  // --- Assertions ---
++  expect(unhandledCrash).toBeUndefined();
++  expect(capturedAddresses).toBeDefined();
++
++  const localAddress = capturedAddresses!.localAddress;
++  const remoteAddress = capturedAddresses!.remoteAddress;
++  const family = capturedAddresses!.family;
++
++
++  expect(localAddress).toBeDefined();
++  expect(remoteAddress).toBeDefined();
++  expect(family).toBeDefined();
++
++  expect(remoteAddress).toEqual(localAddress);
++  expect(localAddress).toMatch(/^127\.0\.0\.1$|^::1$/);
++
++  if (localAddress!.includes(':')) {
++    expect(family).toEqual('IPv6');
++  } else {
++    expect(family).toEqual('IPv4');
++  }
++}
++
++
++
++async function testUninterceptedRequest(protocol: typeof http | typeof https) {
++
++  const UNHANDLED_URL = 'http://127.0.0.2:1337/check'
++
++  return new Promise<void>((resolve) => {
++
++    (interceptor as any).once('unhandledRequest', ({ request }: any) => {
++
++      if (request.url.includes('127.0.0.2')) {
++        resolve();
++      }
++    });
++
++    const req = protocol.request(UNHANDLED_URL);
++
++
++    req.on('error', () => {
++      resolve();
++    });
++
++    req.on('response', () => resolve());
++
++    req.end();
++  });
++}
++
++
++it('should ensure local and remote socket addresses are initialized after HTTP interception', async () => {
++  await testSocketAddresses(http, 'http');
++});
++
++it('should ensure local and remote socket addresses are initialized after HTTPS interception', async () => {
++  await testSocketAddresses(https, 'https');
++});
++
++
++it('should isolate mock state after an unintercepted HTTP request', async () => {
++  await testUninterceptedRequest(http);
++  await testSocketAddresses(http, 'http');
++});
++
++it('should ensure properties are initialized when using the direct ClientRequest constructor', async () => {
++  await testSocketAddresses(http, 'http', true);
++});
+\ No newline at end of file

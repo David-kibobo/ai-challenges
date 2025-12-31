@@ -1,0 +1,9 @@
+0000000000000000000000000000000000000000 5acddac9c15e87edff76846e8903a3c4552da22b David Kibobo <dkibobo@aims.edu.gh> 1760656625 +0300	branch: Created from HEAD
+5acddac9c15e87edff76846e8903a3c4552da22b cc9b93ccdda174dd5edc5709b1aca7aa1f8a4f8e David Kibobo <dkibobo@aims.edu.gh> 1760843126 +0300	commit: Problem 1 submission files
+cc9b93ccdda174dd5edc5709b1aca7aa1f8a4f8e b15dc9ecb7129aaafa5354f134107d8891ca6507 David Kibobo <dkibobo@aims.edu.gh> 1760851659 +0300	commit: added test.patch for separation of concerns
+b15dc9ecb7129aaafa5354f134107d8891ca6507 2098c22ce993a770c23bbe0e914d9ce8c236b409 David Kibobo <dkibobo@aims.edu.gh> 1761938749 +0300	commit: Ignore test.patch
+2098c22ce993a770c23bbe0e914d9ce8c236b409 1580806ba85f88684c2652e1b3456322bafccf20 David Kibobo <dkibobo@aims.edu.gh> 1761945971 +0300	commit: ignore solution.pacth
+1580806ba85f88684c2652e1b3456322bafccf20 ad899a6057c3bef7fd7a8aa55beb258925c5431f David Kibobo <dkibobo@aims.edu.gh> 1761993818 +0300	commit (merge): Accept all incoming changes from temp-common-fix
+ad899a6057c3bef7fd7a8aa55beb258925c5431f 38eaa12c52988291fcf6c34f280370bba7622536 David Kibobo <dkibobo@aims.edu.gh> 1761995555 +0300	commit: Fix async/sync closing behavior
+38eaa12c52988291fcf6c34f280370bba7622536 6e5ce9e1634d14cfedb85982c8ce38b50841e642 David Kibobo <dkibobo@aims.edu.gh> 1761995745 +0300	commit: added test.patch and solution.patch to gitignore
+6e5ce9e1634d14cfedb85982c8ce38b50841e642 5ea8e6c7c6037504808905e472284bed419f21e2 David Kibobo <dkibobo@aims.edu.gh> 1762179130 +0300	commit: added patches ongitignore

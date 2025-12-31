@@ -1,0 +1,567 @@
+diff --git a/fsspec/tests/test_simplecache_leak.py b/fsspec/tests/test_simplecache_leak.py
+new file mode 100644
+index 0000000..ce57adf
+--- /dev/null
++++ b/fsspec/tests/test_simplecache_leak.py
+@@ -0,0 +1,539 @@
++# -*- coding: utf-8 -*-
++from typing import Dict
++from pathlib import Path
++import fsspec
++import pytest
++
++
++def make_simplecache_fs(cache_dir: Path):
++    return fsspec.filesystem(
++        "simplecache",
++        target_protocol="memory",
++        cache_storage=str(cache_dir),
++    )
++
++
++def _mem_key_for_variant(variant: str) -> str:
++    if "::" in variant:
++        _, tail = variant.split("::", 1)
++    else:
++        tail = variant
++    if tail.startswith("memory://"):
++        tail = tail[len("memory://") :]
++    if not tail.startswith("/"):
++        tail = "/" + tail
++    return tail
++
++
++def write_to_shared_memory_backend(mapping: Dict[str, bytes]) -> None:
++    memfs = fsspec.filesystem("memory")
++    for variant, data in mapping.items():
++        key = _mem_key_for_variant(variant)
++        parent = "/".join(key.split("/")[:-1]) or "/"
++        try:
++            memfs.makedirs(parent, exist_ok=True)
++        except Exception:
++            pass
++        with memfs.open(key, "wb") as f:
++            f.write(data)
++
++
++def get_cache_len(fs) -> int:
++
++    return len(getattr(fs, "_cache", {}))
++
++
++def count_cache_files(cache_dir: Path) -> int:
++
++    return sum(1 for p in cache_dir.rglob("*") if p.is_file())
++
++
++def allowed_growth(n: int) -> int:
++    return max(10, n // 10)
++
++
++def small_n_allowed(n: int) -> int:
++    if n <= 5:
++        return 1
++    return allowed_growth(n)
++
++
++def test_query_order_deduplication(tmp_path):
++    cache_dir = tmp_path / "cache_qorder"
++    cache_dir.mkdir()
++    fs = make_simplecache_fs(cache_dir)
++
++    base = "simplecache::memory://canon/params/file"
++    v1 = f"{base}?a=1&b=2"
++    v2 = f"{base}?b=2&a=1"
++
++    mapping = {v1: b"params", v2: b"params"}
++    write_to_shared_memory_backend(mapping)
++
++    before_mem = get_cache_len(fs)
++    before_disk = count_cache_files(cache_dir)
++
++    for _ in range(3):
++        with fs.open(v1, "rb") as f:
++            assert f.read() == b"params"
++        with fs.open(v2, "rb") as f:
++            assert f.read() == b"params"
++
++    after_mem = get_cache_len(fs)
++    after_disk = count_cache_files(cache_dir)
++
++    assert (after_mem - before_mem) <= small_n_allowed(
++        2
++    ), f"Memory cache grew too much for parameter-order dedup: {before_mem}->{after_mem}"
++    assert (after_disk - before_disk) <= small_n_allowed(
++        2
++    ), f"Disk cache grew too much for parameter-order dedup: {before_disk}->{after_disk}"
++
++
++def test_parameter_order_permutations_strict(tmp_path):
++    cache_dir = tmp_path / "cache_param_permutations_strict"
++    cache_dir.mkdir()
++    fs = make_simplecache_fs(cache_dir)
++
++    base = "simplecache::memory://perm/strict/file"
++    variants = [
++        f"{base}?a=1&b=2&c=3",
++        f"{base}?b=2&c=3&a=1",
++        f"{base}?c=3&a=1&b=2",
++        f"{base}?a=1&b=2&c=3#frag",
++    ]
++    mapping = {v: b"P" for v in variants}
++    write_to_shared_memory_backend(mapping)
++
++    before_mem = get_cache_len(fs)
++
++    for _ in range(4):
++        for v in variants:
++            with fs.open(v, "rb") as f:
++                assert f.read() == b"P"
++
++    after_mem = get_cache_len(fs)
++
++    assert (after_mem - before_mem) <= small_n_allowed(
++        len(variants)
++    ), f"Parameter permutations did not dedupe strictly: {before_mem}->{after_mem}"
++
++
++def test_minor_parameter_variants_dedup(tmp_path):
++    cache_dir = tmp_path / "cache_minor"
++    cache_dir.mkdir()
++    fs = make_simplecache_fs(cache_dir)
++
++    base = "simplecache::memory://minor/test/file"
++    variants = [
++        base,
++        f"{base}?a=1",
++        f"{base}?a=2",
++        f"{base}?x=hello",
++        f"{base}?x=world",
++    ]
++    mapping = {v: b"minor" for v in variants}
++    write_to_shared_memory_backend(mapping)
++
++    before_mem = get_cache_len(fs)
++    before_disk = count_cache_files(cache_dir)
++
++    for v in variants:
++        with fs.open(v, "rb") as f:
++            assert f.read() == b"minor"
++
++    after_mem = get_cache_len(fs)
++    after_disk = count_cache_files(cache_dir)
++
++    assert (after_mem - before_mem) <= small_n_allowed(
++        len(variants)
++    ), f"Memory cache did not dedupe minor params strictly: {before_mem}->{after_mem}"
++
++    assert (after_disk - before_disk) <= small_n_allowed(
++        len(variants)
++    ), f"Disk cache grew too much for minor params: {before_disk}->{after_disk}"
++
++
++def test_fragment_handling(tmp_path):
++    cache_dir = tmp_path / "cache_frag"
++    cache_dir.mkdir()
++    fs = make_simplecache_fs(cache_dir)
++
++    base = "simplecache::memory://frag/test/file"
++    variants = [base + "#one", base + "#two", base]
++    mapping = {v: b"fraggy" for v in variants}
++    write_to_shared_memory_backend(mapping)
++
++    before_mem = get_cache_len(fs)
++    before_disk = count_cache_files(cache_dir)
++
++    for v in variants:
++        with fs.open(v, "rb") as f:
++            assert f.read() == b"fraggy"
++
++    after_mem = get_cache_len(fs)
++    after_disk = count_cache_files(cache_dir)
++
++    assert (after_mem - before_mem) <= small_n_allowed(
++        len(variants)
++    ), f"Memory cache grew too much for fragments: {before_mem}->{after_mem}"
++    assert (after_disk - before_disk) <= small_n_allowed(
++        len(variants)
++    ), f"Disk cache grew too much for fragments: {before_disk}->{after_disk}"
++
++
++def test_path_dot_normalization(tmp_path):
++    cache_dir = tmp_path / "cache_dot_norm"
++    cache_dir.mkdir()
++    fs = make_simplecache_fs(cache_dir)
++
++    variants = [
++        "simplecache::memory://dotnorm/dir/./file.txt",
++        "simplecache::memory://dotnorm/dir/file.txt",
++    ]
++    mapping = {v: b"dot" for v in variants}
++    write_to_shared_memory_backend(mapping)
++
++    before_mem = get_cache_len(fs)
++    for v in variants:
++        with fs.open(v, "rb") as f:
++            assert f.read() == b"dot"
++    after_mem = get_cache_len(fs)
++
++    assert (after_mem - before_mem) <= small_n_allowed(
++        len(variants)
++    ), f"Memory cache grew too much for './' normalization: {before_mem}->{after_mem}"
++
++
++def test_path_dotdot_normalization(tmp_path):
++    """s3://bucket/dir/../file.csv and s3://bucket/file.csv should map to the same cache identity."""
++    cache_dir = tmp_path / "cache_dotdot_norm"
++    cache_dir.mkdir()
++    fs = make_simplecache_fs(cache_dir)
++
++    variants = [
++        "simplecache::memory://dotdot/dir/sub/../file.txt",
++        "simplecache::memory://dotdot/dir/../dir/file.txt",
++        "simplecache::memory://dotdot/dir/file.txt",
++    ]
++    mapping = {v: b"dd" for v in variants}
++    write_to_shared_memory_backend(mapping)
++
++    before_mem = get_cache_len(fs)
++    for v in variants:
++        with fs.open(v, "rb") as f:
++            assert f.read() == b"dd"
++    after_mem = get_cache_len(fs)
++
++    assert (after_mem - before_mem) <= small_n_allowed(
++        len(variants)
++    ), f"Memory cache grew too much for '../' normalization: {before_mem}->{after_mem}"
++
++
++def test_many_query_variants_bounded_growth(tmp_path):
++    cache_dir = tmp_path / "cache_many_growth"
++    cache_dir.mkdir()
++    fs = make_simplecache_fs(cache_dir)
++
++    base = "simplecache::memory://stress/growth/file"
++    N_groups = 20
++    perms_per_group = 10
++    variants = []
++    mapping = {}
++
++    for gid in range(N_groups):
++        for p in range(perms_per_group):
++            if p % 3 == 0:
++                v = f"{base}?a={gid}&b=1&c={p}"
++            elif p % 3 == 1:
++                v = f"{base}?b=1&c={p}&a={gid}"
++            else:
++                v = f"{base}?c={p}&a={gid}&b=1#frag{p}"
++            variants.append(v)
++            mapping[v] = b"G" + bytes(str(gid), "ascii")
++
++    total_variants = len(variants)
++    write_to_shared_memory_backend(mapping)
++
++    before_mem = get_cache_len(fs)
++    before_disk = count_cache_files(cache_dir)
++
++    for v in variants:
++        with fs.open(v, "rb") as f:
++            assert f.read().startswith(b"G")
++
++    after_mem = get_cache_len(fs)
++    after_disk = count_cache_files(cache_dir)
++
++    expected_logical = N_groups
++    max_allowed = expected_logical + allowed_growth(total_variants)
++
++    # Lower bound: at least one cache entry per logical group
++    assert (
++        after_mem - before_mem
++    ) >= expected_logical, f"In-memory cache under-deduped groups: expected at least {expected_logical}, got {after_mem - before_mem}"
++    assert (
++        after_disk - before_disk
++    ) >= expected_logical, f"Disk cache under-deduped groups: expected at least {expected_logical}, got {after_disk - before_disk}"
++
++    # Upper bound: still within allowed slack
++    assert (
++        after_mem - before_mem
++    ) <= max_allowed, f"In-memory cache grew too much for many-permutation variants: {before_mem}->{after_mem} (allow {max_allowed})"
++    assert (
++        after_disk - before_disk
++    ) <= max_allowed, f"Disk cache grew too much for many-permutation variants: {before_disk}->{after_disk} (allow {max_allowed})"
++
++
++@pytest.mark.parametrize("major_param", ["version", "dataset"])
++def test_major_query_parameters_create_distinct_entries(tmp_path, major_param):
++    cache_dir = tmp_path / f"cache_major_{major_param}"
++    cache_dir.mkdir()
++    fs = make_simplecache_fs(cache_dir)
++
++    base = "simplecache::memory://major/file"
++    v_minor1 = f"{base}?minor=1"
++    v_minor2 = f"{base}?minor=2"
++    v_major1 = f"{base}?{major_param}=1"
++    v_major2 = f"{base}?{major_param}=2"
++
++    mapping = {
++        v_minor1: b"minor-content",
++        v_minor2: b"minor-content",
++        v_major1: b"major-1",
++        v_major2: b"major-2",
++    }
++    write_to_shared_memory_backend(mapping)
++
++    before_mem = get_cache_len(fs)
++    before_disk = count_cache_files(cache_dir)
++
++    for v in mapping:
++        with fs.open(v, "rb") as f:
++            assert f.read() == mapping[v]
++
++    after_mem = get_cache_len(fs)
++    after_disk = count_cache_files(cache_dir)
++
++    assert (
++        after_mem - before_mem
++    ) >= 3, f"Memory cache missing expected entries for {major_param}"
++    assert (after_mem - before_mem) <= 3 + small_n_allowed(
++        4
++    ), f"Memory cache grew too much for {major_param}"
++    assert (
++        after_disk - before_disk
++    ) >= 3, f"Disk cache missing expected entries for {major_param}"
++    assert (after_disk - before_disk) <= 3 + small_n_allowed(
++        4
++    ), f"Disk cache grew too much for {major_param}"
++
++
++def test_mixed_fs_and_fsspec_open_dedupe(tmp_path, monkeypatch):
++
++    cache_dir = tmp_path / "cache_mixed_iface"
++    cache_dir.mkdir()
++    fs = make_simplecache_fs(cache_dir)
++
++    base = "simplecache::memory://iface/file"
++    variants_fs = [f"{base}?a={i}" for i in range(2)]
++    variants_fsspec = [f"{base}?b={i}" for i in range(2)]
++
++    mapping = {v: b"iface" for v in variants_fs + variants_fsspec}
++    write_to_shared_memory_backend(mapping)
++
++    before_mem = get_cache_len(fs)
++
++    # Wrap fsspec.filesystem to capture simplecache instances created by fsspec.open
++    orig_factory = fsspec.filesystem
++    created_simplecache = []
++
++    def spy_factory(protocol, *args, **kwargs):
++        obj = orig_factory(protocol, *args, **kwargs)
++        if protocol == "simplecache":
++            created_simplecache.append(obj)
++        return obj
++
++    monkeypatch.setattr(fsspec, "filesystem", spy_factory)
++
++    try:
++        for v in variants_fs:
++            with fs.open(v, "rb") as f:
++                assert f.read() == b"iface"
++
++        for v in variants_fsspec:
++            with fsspec.open(v, "rb") as f:
++                assert f.read() == b"iface"
++    finally:
++        # restore
++        monkeypatch.setattr(fsspec, "filesystem", orig_factory)
++
++    after_mem = get_cache_len(fs)
++
++    assert (after_mem - before_mem) <= small_n_allowed(
++        len(variants_fs) + len(variants_fsspec)
++    ), f"Cross-interface dedupe failed: {before_mem}->{after_mem}"
++
++    if created_simplecache:
++        created_total = sum(get_cache_len(c) for c in created_simplecache)
++        assert created_total <= small_n_allowed(
++            len(variants_fs) + len(variants_fsspec)
++        ) + len(
++            created_simplecache
++        ), "fsspec.open created simplecache instances with unexpected cache growth"
++
++
++def test_cache_persists_to_disk(tmp_path):
++    cache_dir = tmp_path / "cache_persist"
++    cache_dir.mkdir()
++    fs = make_simplecache_fs(cache_dir)
++
++    n = 15
++    variants = [f"simplecache::memory://persist/file_{i}.txt" for i in range(n)]
++    mapping = {v: f"data-{i}".encode() for i, v in enumerate(variants)}
++    write_to_shared_memory_backend(mapping)
++
++    before_disk = count_cache_files(cache_dir)
++
++    for v in variants:
++        with fs.open(v, "rb") as f:
++            assert f.read()
++
++    after_disk = count_cache_files(cache_dir)
++
++    expected_logical = n
++    slack = allowed_growth(n)
++
++    lower = max(0, expected_logical - slack)
++    upper = expected_logical + slack
++    added = after_disk - before_disk
++    assert (
++        lower <= added <= upper
++    ), f"Disk cache files {added} out of expected range [{lower}, {upper}] for {expected_logical} logical files"
++
++
++def test_large_scale_reopen_stability(tmp_path):
++    cache_dir = tmp_path / "cache_reopen_large_final"
++    cache_dir.mkdir()
++    fs = make_simplecache_fs(cache_dir)
++
++    base = "simplecache::memory://reopen/final/file"
++    N = 200
++    variants = []
++    mapping = {}
++    for i in range(N):
++        v = f"{base}?a={i}&b=1"
++        variants.append(v)
++        mapping[v] = b"stable"
++
++    write_to_shared_memory_backend(mapping)
++
++    for v in variants:
++        with fs.open(v, "rb") as f:
++            assert f.read() == b"stable"
++
++    initial_mem = get_cache_len(fs)
++
++    for _ in range(5):
++        for v in variants:
++            with fs.open(v, "rb") as f:
++                assert f.read() == b"stable"
++
++    final_mem = get_cache_len(fs)
++
++    assert (
++        final_mem == initial_mem
++    ), f"In-memory cache changed after repeated reopens: {initial_mem}->{final_mem}"
++
++
++def test_fetch_preserves_original_query(monkeypatch, tmp_path):
++    cache_dir = tmp_path / "cache_fetch_preserve"
++    cache_dir.mkdir()
++
++    orig_factory = fsspec.filesystem
++    seen_paths = []
++
++    def spy_factory(protocol, *args, **kwargs):
++        fsobj = orig_factory(protocol, *args, **kwargs)
++        if protocol == "memory":
++            orig_open = fsobj.open
++
++            def spy_open(path, *a, **kw):
++                try:
++                    seen_paths.append(path)
++                except Exception:
++                    seen_paths.append(repr(path))
++                return orig_open(path, *a, **kw)
++
++            monkeypatch.setattr(fsobj, "open", spy_open)
++        return fsobj
++
++    monkeypatch.setattr(fsspec, "filesystem", spy_factory)
++
++    try:
++        fs = make_simplecache_fs(cache_dir)
++        v = "simplecache::memory://fetchtest/file?a=1&b=2"
++
++        memfs = orig_factory("memory")
++        key = _mem_key_for_variant(v)
++        parent = "/".join(key.split("/")[:-1]) or "/"
++        memfs.makedirs(parent, exist_ok=True)
++        with memfs.open(key, "wb") as f:
++            f.write(b"fetch-preserve")
++
++        with fs.open(v, "rb") as f:
++            assert f.read() == b"fetch-preserve"
++
++        assert any(
++            "a=1" in str(p) and "b=2" in str(p) for p in seen_paths
++        ), f"No backend open path preserved the original query: {seen_paths}"
++    finally:
++        monkeypatch.setattr(fsspec, "filesystem", orig_factory)
++
++
++def test_minor_parameter_variants_content_distinct_create_entries(tmp_path):
++    cache_dir = tmp_path / "cache_minor_content_distinct"
++    cache_dir.mkdir()
++    fs = make_simplecache_fs(cache_dir)
++
++    base = "simplecache::memory://minor/content/file"
++    variants = [
++        base,
++        f"{base}?a=1",
++        f"{base}?a=2",
++    ]
++
++    mapping = {
++        variants[0]: b"content-base",
++        variants[1]: b"content-a1",
++        variants[2]: b"content-a2",
++    }
++    write_to_shared_memory_backend(mapping)
++
++    before_mem = get_cache_len(fs)
++    before_disk = count_cache_files(cache_dir)
++
++    for v in variants:
++        with fs.open(v, "rb") as f:
++            assert f.read() == mapping[v]
++
++    after_mem = get_cache_len(fs)
++    after_disk = count_cache_files(cache_dir)
++
++    distinct_contents = len({mapping[v] for v in mapping})
++    total_variants = len(variants)
++
++    assert (
++        after_mem - before_mem
++    ) >= distinct_contents, f"Memory cache missing entries for distinct minor contents: expected >= {distinct_contents}, got {after_mem - before_mem}"
++    assert (
++        after_disk - before_disk
++    ) >= distinct_contents, f"Disk cache missing entries for distinct minor contents: expected >= {distinct_contents}, got {after_disk - before_disk}"
++
++    upper_allowed = distinct_contents + small_n_allowed(total_variants)
++    assert (
++        after_mem - before_mem
++    ) <= upper_allowed, f"Memory cache grew too much for content-distinct minors: {before_mem}->{after_mem} (allow {upper_allowed})"
++    assert (
++        after_disk - before_disk
++    ) <= upper_allowed, f"Disk cache grew too much for content-distinct minors: {before_disk}->{after_disk} (allow {upper_allowed})"
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 0000000..fbb56f6
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,16 @@
++#!/usr/bin/env bash
++set -e
++
++if [ "$1" = "base" ]; then
++    echo "Running baseline tests (ignoring failing base tests)..."
++    python -m pytest -q fsspec/tests \
++        --ignore=fsspec/tests/test_simplecache_leak.py
++elif [ "$1" = "new" ]; then
++    echo "Running new tests..."
++    python -m pytest -q fsspec/tests/test_simplecache_leak.py
++else
++    echo "Usage: ./test.sh [base|new]"
++    exit 1
++fi
++
++# Ready for submission

@@ -1,0 +1,95 @@
+diff --git a/t/unit/utils/test_log_buffering.py b/t/unit/utils/test_log_buffering.py
+new file mode 100644
+index 000000000..a7495363f
+--- /dev/null
++++ b/t/unit/utils/test_log_buffering.py
+@@ -0,0 +1,42 @@
++import logging
++from unittest.mock import Mock
++from celery.utils.log import LoggingProxy
++
++def test_partial_writes_are_buffered():
++    mock_logger = Mock(spec=logging.Logger)
++    mock_logger.handlers = []
++
++    proxy = LoggingProxy(mock_logger, loglevel=logging.WARNING)
++
++    proxy.write("Load")
++    proxy.write("ing")
++    proxy.write("...")
++
++    assert mock_logger.log.call_count == 0, (
++        f"Premature logging! Expected 0 calls, got {mock_logger.log.call_count}. "
++        "Proxy failed to buffer partial writes."
++    )
++
++    proxy.write("Done\n")
++
++    assert mock_logger.log.call_count == 1
++    args, _ = mock_logger.log.call_args
++    assert args[1] == "Loading...Done"
++
++def test_closed_proxy_flushes_buffer():
++    mock_logger = Mock(spec=logging.Logger)
++    mock_logger.handlers = []
++
++    proxy = LoggingProxy(mock_logger, loglevel=logging.ERROR)
++
++    proxy.write("Unfinished error message")
++
++    assert mock_logger.log.call_count == 0, (
++        "Premature logging! The proxy flushed before close() was called."
++    )
++
++    proxy.close()
++
++    assert mock_logger.log.call_count == 1
++    assert "Unfinished error message" in mock_logger.log.call_args[0][1]
++
+\ No newline at end of file
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 000000000..8571e0aea
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,40 @@
++#!/usr/bin/env bash
++set -e
++
++# Force Celery to allow root execution for testing
++export C_FORCE_ROOT=1
++
++NEW_TEST_FILE="t/unit/utils/test_log_buffering.py"
++
++IGNORE_FLAGS="--ignore=t/unit/backends/test_gcs.py \
++              --ignore=t/unit/backends/test_mongodb.py \
++              --ignore=t/unit/backends/test_base.py \
++              --ignore=t/unit/concurrency/test_gevent.py \
++              --ignore=t/unit/bin \
++              --ignore=t/unit/app/test_preload_cli.py"
++
++if [ "$1" = "base" ]; then
++    echo "======================================================="
++    echo "  RUNNING BASELINE (Ignoring Core irrelevant failing tests)"
++    echo "======================================================="
++
++    python -m pytest -q t/unit \
++        $IGNORE_FLAGS \
++        --ignore="$NEW_TEST_FILE"
++
++elif [ "$1" = "new" ]; then
++    echo "======================================================="
++    echo "  RUNNING NEW TEST "
++    echo "======================================================="
++
++    if [ ! -f "$NEW_TEST_FILE" ]; then
++        echo "Error: Reproduction test file '$NEW_TEST_FILE' not found."
++        exit 1
++    fi
++
++    python -m pytest -v "$NEW_TEST_FILE"
++
++else
++    echo "Usage: ./test.sh [base|new]"
++    exit 1
++fi

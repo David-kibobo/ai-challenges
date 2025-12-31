@@ -1,0 +1,88 @@
+From 5a231e54b08287e374c8777d178cf12b98f409e1 Mon Sep 17 00:00:00 2001
+From: Contributor <anon@example.com>
+Date: Wed, 15 Oct 2025 07:47:37 +0300
+Subject: [PATCH] Dockerfile ready for submission
+
+---
+ Dockerfile                            | 22 +++++++---------------
+ fsspec/tests/test_simplecache_leak.py | 16 +++-------------
+ 2 files changed, 10 insertions(+), 28 deletions(-)
+
+diff --git a/Dockerfile b/Dockerfile
+index fdad8b7..2d0b8be 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,22 +1,14 @@
+-# Use an official Python runtime
+-FROM python:3.11-slim
++FROM public.ecr.aws/x8v8d7g8/mars-base:latest
+ 
+-# Set working directory
+ WORKDIR /app
+ 
+-# Install system deps
+-RUN apt-get update && apt-get install -y \
+-    git \
+-    && rm -rf /var/lib/apt/lists/*
+ 
+-# Copy repo into container
+-COPY . /app
++COPY . .
+ 
+-# Make test.sh executable
+-RUN chmod +x test.sh
+ 
+-# Install fsspec in editable mode with test deps
+-RUN pip install -e .[tests]
++RUN pip install -e ".[tests]" pytest numpy pandas pyarrow aiohttp
+ 
+-# Default command runs the test script
+-CMD ["./test.sh"]
++
++
++
++CMD ["/bin/bash"]
+diff --git a/fsspec/tests/test_simplecache_leak.py b/fsspec/tests/test_simplecache_leak.py
+index c932f24..5542829 100644
+--- a/fsspec/tests/test_simplecache_leak.py
++++ b/fsspec/tests/test_simplecache_leak.py
+@@ -7,10 +7,7 @@ import pytest
+ # -------------------- helpers --------------------
+ 
+ def make_simplecache_fs(cache_dir: Path):
+-    """
+-    Create a simplecache filesystem pointing at an in-test memory backend and
+-    configured to use `cache_dir` for disk-backed files.
+-    """
++    
+     return fsspec.filesystem(
+         "simplecache",
+         target_protocol="memory",
+@@ -19,10 +16,7 @@ def make_simplecache_fs(cache_dir: Path):
+ 
+ 
+ def _mem_key_for_variant(variant: str) -> str:
+-    """
+-    Convert a simplecache-style variant URI into a memory backend key used by
+-    the 'memory' filesystem used in tests.
+-    """
++   
+     if "::" in variant:
+         _, tail = variant.split("::", 1)
+     else:
+@@ -35,11 +29,7 @@ def _mem_key_for_variant(variant: str) -> str:
+ 
+ 
+ def write_to_shared_memory_backend(mapping: Dict[str, bytes]) -> None:
+-    """
+-    Prepopulate the 'memory' backend with variant-specific bytes. This makes
+-    tests that rely on preserving the original fetch path fail if the
+-    implementation strips query strings when fetching.
+-    """
++   
+     memfs = fsspec.filesystem("memory")
+     for variant, data in mapping.items():
+         key = _mem_key_for_variant(variant)
+-- 
+2.30.2
+

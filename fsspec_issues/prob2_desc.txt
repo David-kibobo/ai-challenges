@@ -1,0 +1,119 @@
+
+Problem title:
+Wrong behavior of fs.get when copying a directory into an existing directory
+
+Problem Brief:
+When copying a source directory into an existing target directory using fsspec’s fs.get, repeated calls can create unwanted nested directories. For example, copying remote/dir into local/dir twice may produce local/dir/dir/... instead of placing the source contents directly under local/dir.
+
+The goal is to ensure that repeated calls preserve the source contents directly under the target, maintaining subdirectory structure and including empty directories.
+
+In cases where a file and directory share the same name at the target, standard filesystem behavior applies: either raising an error or replacing the target, depending on typical overwrite semantics. Parent directories for the target may be created automatically. Async behavior is not required.
+Agent Instructions:
+Implement a solution that ensures:
+    -Repeated calls to fs.get copying a source directory into an existing target directory do not create nested directories.
+    -The contents of the source directory always appear directly under the target directory.
+    -All files and subdirectories from the source appear in the target directory in the same relative structure.
+    -Empty directories from the source also exist in the target directory.
+    -Standard fs.get parameters, such as recursive, continue to function as expected.
+
+Test Assumptions:
+    -Tests will obtain a filesystem object using fsspec.filesystem().
+    -The filesystem object exposes the public method:fs.get(source: str, target: str, recursive: bool = True, overwrite: bool = False)
+    -When overwrite=True, existing files may be replaced; when overwrite=False, copying over existing files should raise FileExistsError.
+    -fs.get may create parent directories as needed.
+    -Tests will check the contents of the target directory after one or more calls to fs.get to verify correct behavior.
+
+
+
+
+
+
+
+
+Repo URL: https://github.com/fsspec/filesystem_spec
+issue url: https://github.com/fsspec/filesystem_spec/issues/1851
+
+Base commit: a6b9954224602b77e6ca759576c0d3bc51a4c90e
+shortcode_commit: 79dbdcd
+
+:Remove white spaces: sed -i 's/[[:space:]]\+$//' test.patch
+diff --git a/fsspec/implementations/dirfs.py b/fsspec/implementations/dirfs.py
+index c0623b8..7f3fd63 100644
+--- a/fsspec/implementations/dirfs.py
++++ b/fsspec/implementations/dirfs.py
+@@ -1,6 +1,10 @@
++import os
++import logging
++import asyncio
+ from .. import filesystem
+ from ..asyn import AsyncFileSystem
+ 
++logger = logging.getLogger(__name__)
+ 
+ class DirFileSystem(AsyncFileSystem):
+     """Directory prefix filesystem
+@@ -200,11 +204,62 @@ class DirFileSystem(AsyncFileSystem):
+     def get_file(self, rpath, lpath, **kwargs):
+         return self.fs.get_file(self._join(rpath), lpath, **kwargs)
+ 
++    # -----------------------------
++    # _get / get methods updated with interception
++    # -----------------------------
++    def _adjust_recursive_dir_dest(self, joined_rpath, args, kwargs):
++        """Return possibly adjusted args to avoid nested dir/dir on recursive copy.
++
++        Keeps overwrite semantics and prepares parent directory. Uses os.path for consistency.
++        """
++        recursive = kwargs.get("recursive", False)
++        if not recursive or not args:
++            return args
++        dest = args[0]
++        if not isinstance(dest, (str, os.PathLike)):
++            logger.info("Skipping recursive dest adjustment for non-path dest: %r", dest)
++            return args
++
++        # Use wrapped FS separator for remote/source path parsing
++        src_base = joined_rpath.rstrip(self.sep).split(self.sep)[-1] if joined_rpath else ""
++        dest_base = os.path.basename(str(dest).rstrip(self.sep))
++
++        if dest_base != src_base:
++            return args
++
++        # Handle file-vs-dir collision at destination path
++        if os.path.exists(dest) and os.path.isfile(dest):
++            overwrite = bool(kwargs.get("overwrite") or kwargs.get("mode") == "overwrite")
++            if overwrite:
++                try:
++                    os.remove(dest)
++                except OSError as e:
++                    logger.error("Failed to remove destination file %r: %s", dest, e, exc_info=True)
++                    raise
++            else:
++                raise FileExistsError(f"Destination exists as a file: {dest}")
++
++        parent = os.path.dirname(str(dest)) or "."
++        try:
++            os.makedirs(parent, exist_ok=True)
++        except OSError as e:
++            logger.error("Failed to ensure destination parent directory %r: %s", parent, e, exc_info=True)
++            raise
++
++        return (parent,) + args[1:]
++
+     async def _get(self, rpath, *args, **kwargs):
+-        return await self.fs._get(self._join(rpath), *args, **kwargs)
++        joined_rpath = self._join(rpath)
++        new_args = self._adjust_recursive_dir_dest(joined_rpath, args, kwargs)
++
++        if hasattr(self.fs, "_get") and asyncio.iscoroutinefunction(getattr(self.fs, "_get")):
++            return await self.fs._get(joined_rpath, *new_args, **kwargs)
++        return await asyncio.to_thread(self.fs.get, joined_rpath, *new_args, **kwargs)
+ 
+     def get(self, rpath, *args, **kwargs):
+-        return self.fs.get(self._join(rpath), *args, **kwargs)
++        joined_rpath = self._join(rpath)
++        new_args = self._adjust_recursive_dir_dest(joined_rpath, args, kwargs)
++        return self.fs.get(joined_rpath, *new_args, **kwargs)
+ 
+     async def _isfile(self, path):
+         return await self.fs._isfile(self._join(path))

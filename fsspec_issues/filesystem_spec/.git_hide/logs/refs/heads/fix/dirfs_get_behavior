@@ -1,0 +1,6 @@
+0000000000000000000000000000000000000000 a6b9954224602b77e6ca759576c0d3bc51a4c90e David Kibobo <dkibobo@aims.edu.gh> 1762707982 +0300	branch: Created from a6b9954224602b77e6ca759576c0d3bc51a4c90e
+a6b9954224602b77e6ca759576c0d3bc51a4c90e 571033480156a65e4aaad3d3f59117dbbf96500c David Kibobo <dkibobo@aims.edu.gh> 1762735079 +0300	commit: DirFS get(): pass overwrite to inner fs.get()
+571033480156a65e4aaad3d3f59117dbbf96500c 78c138d6978dd9d02656a2f1b7d9241b2351c9c2 David Kibobo <dkibobo@aims.edu.gh> 1762735321 +0300	commit: DirFS tests: overwrite=True added, test.sh added
+78c138d6978dd9d02656a2f1b7d9241b2351c9c2 1dc1121c0c8bd773d5f52a48be93278f53ed8ba2 David Kibobo <dkibobo@aims.edu.gh> 1762773289 +0300	commit: Update dirfs.py fix and sync test_dirfs.py with latest test behavior
+1dc1121c0c8bd773d5f52a48be93278f53ed8ba2 c006bd40944dc60c2f2667f729a108cb7867a70a David Kibobo <dkibobo@aims.edu.gh> 1762786673 +0300	commit: Fix DirFileSystem get() behavior with preserved docstrings
+c006bd40944dc60c2f2667f729a108cb7867a70a 85be21747b92255f52bcbe6776b0a750c34a8882 David Kibobo <dkibobo@aims.edu.gh> 1762806404 +0300	commit: Final solution possible for now

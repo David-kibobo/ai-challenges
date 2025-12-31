@@ -1,0 +1,69 @@
+diff --git a/src/interceptors/fetch/index.ts b/src/interceptors/fetch/index.ts
+index 9eabba4..b37a492 100644
+--- a/src/interceptors/fetch/index.ts
++++ b/src/interceptors/fetch/index.ts
+@@ -114,11 +114,34 @@ export class FetchInterceptor extends Interceptor<HttpRequestEventMap> {
+           })
+ 
+           // Decompress the mocked response body, if applicable.
+-          const decompressedStream = decompressResponse(rawResponse)
++          const decompressedStream = decompressResponse(
++            rawResponse,
++            request.signal
++          )
++
++          let responseStream = decompressedStream
++
++          /**
++           * @note Bridge the request's AbortSignal to the mocked response body.
++           * This ensures that the underlying stream is cancelled if the request is aborted.
++           */
++          if (responseStream === null && rawResponse.body && request.signal) {
++            const bridge = new TransformStream()
++
++            rawResponse.body
++              .pipeTo(bridge.writable, { signal: request.signal })
++              .catch((error) => {
++                if (error.name === 'AbortError') return
++                this.logger.error('Mocked stream encountered an error:', error)
++              })
++
++            responseStream = bridge.readable
++          }
++
+           const response =
+-            decompressedStream === null
++            responseStream === null
+               ? rawResponse
+-              : new FetchResponse(decompressedStream, rawResponse)
++              : new FetchResponse(responseStream, rawResponse)
+ 
+           FetchResponse.setUrl(request.url, response)
+ 
+diff --git a/src/interceptors/fetch/utils/decompression.ts b/src/interceptors/fetch/utils/decompression.ts
+index 583d4a3..5aa9ff0 100644
+--- a/src/interceptors/fetch/utils/decompression.ts
++++ b/src/interceptors/fetch/utils/decompression.ts
+@@ -63,7 +63,8 @@ function createDecompressionStream(
+ }
+ 
+ export function decompressResponse(
+-  response: Response
++  response: Response,
++  signal?: AbortSignal
+ ): ReadableStream<any> | null {
+   if (response.body === null) {
+     return null
+@@ -80,6 +81,11 @@ export function decompressResponse(
+   // Use `pipeTo` and return the decompression stream's readable
+   // instead of `pipeThrough` because that will lock the original
+   // response stream, making it unusable as the input to Response.
+-  response.body.pipeTo(decompressionStream.writable)
++  // Wire the AbortSignal to the pipeTo operation to ensure the decompression
++  // pipeline is torn down if the request is aborted.
++  response.body.pipeTo(decompressionStream.writable, {
++    signal,
++  }).catch(() => {})
++  
+   return decompressionStream.readable
+ }

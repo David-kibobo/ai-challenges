@@ -1,0 +1,20 @@
+# Minimal Dockerfile — use base image, clone, copy payload, install, run tests
+FROM public.ecr.aws/x8v8d7g8/mars-base:latest
+
+WORKDIR /app
+
+# Clone upstream msw at specified commit
+ARG BASE_COMMIT="063564ee43f068372fa7c2c9152ceb82ade7cc8f"
+RUN git clone https://github.com/mswjs/msw.git /app/msw
+WORKDIR /app/msw
+RUN git -C /app/msw fetch --all && git -C /app/msw checkout ${BASE_COMMIT}
+
+# Copy prepared payload (modified package.json, lockfile, tests, test.sh)
+COPY patch_payload/ ./
+
+# Run install and make test script executable
+RUN pnpm install --frozen-lockfile || true
+RUN chmod +x ./test.sh || true
+
+# Default command
+CMD ["/bin/bash"]

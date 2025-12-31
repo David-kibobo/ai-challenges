@@ -1,0 +1,112 @@
+diff --git a/tenacity/__init__.py b/tenacity/__init__.py
+index b0b4794..37df413 100644
+--- a/tenacity/__init__.py
++++ b/tenacity/__init__.py
+@@ -216,6 +216,76 @@ class AttemptManager:
+             return None
+ 
+ 
++class _StatisticsDict(dict):
++    """Dict proxy that compares empty to maintain back-compat expectations."""
++
++    __slots__ = ("_source",)
++
++    def __init__(self) -> None:
++        super().__init__()
++        self._source: t.Dict[str, t.Any] = {}
++
++    def set_source(self, source: t.Dict[str, t.Any]) -> None:
++        self._source = source
++
++    def __getitem__(self, key):
++        return self._source[key]
++
++    def __contains__(self, key):
++        return key in self._source
++
++    def __iter__(self):
++        return iter(self._source)
++
++    def __len__(self):
++        return len(self._source)
++
++    def __bool__(self):
++        return bool(self._source)
++
++    def get(self, key, default=None):
++        return self._source.get(key, default)
++
++    def items(self):
++        return self._source.items()
++
++    def keys(self):
++        return self._source.keys()
++
++    def values(self):
++        return self._source.values()
++
++    def copy(self):
++        return self._source.copy()
++
++    def __repr__(self):
++        return repr(self._source)
++
++    def __eq__(self, other):
++        if isinstance(other, dict) and not other:
++            return True
++        return self._source == other
++
++
++class _RetryControllerFacade:
++    """Proxy that forwards to the controller while holding latest statistics."""
++
++    __slots__ = ("_controller", "statistics")
++
++    def __init__(self, controller):
++        object.__setattr__(self, "_controller", controller)
++        object.__setattr__(self, "statistics", _StatisticsDict())
++
++    def __getattr__(self, name):
++        return getattr(self._controller, name)
++
++    def __setattr__(self, name, value):
++        if name in self.__slots__:
++            object.__setattr__(self, name, value)
++        else:
++            setattr(self._controller, name, value)
++
++
+ class BaseRetrying(ABC):
+     def __init__(
+         self,
+@@ -324,6 +394,8 @@ class BaseRetrying(ABC):
+         :param f: A function to wraps for retrying.
+         """
+ 
++        facade = _RetryControllerFacade(self)
++
+         @functools.wraps(
+             f, functools.WRAPPER_ASSIGNMENTS + ("__defaults__", "__kwdefaults__")
+         )
+@@ -331,6 +403,12 @@ class BaseRetrying(ABC):
+             # Always create a copy to prevent overwriting the local contexts when
+             # calling the same wrapped functions multiple times in the same stack
+             copy = self.copy()
++            # Expose per-call statistics both via the wrapped function and via the
++            # retry controller attached to the wrapped function, so that callers
++            # can reliably access statistics even when the wrapped function is
++            # further wrapped by user-defined decorators that may only preserve
++            # the `.retry` attribute.
++            facade.statistics.set_source(copy.statistics)
+             wrapped_f.statistics = copy.statistics  # type: ignore[attr-defined]
+             return copy(f, *args, **kw)
+ 
+@@ -338,7 +416,7 @@ class BaseRetrying(ABC):
+             return self.copy(*args, **kwargs).wraps(f)
+ 
+         # Preserve attributes
+-        wrapped_f.retry = self  # type: ignore[attr-defined]
++        wrapped_f.retry = facade  # type: ignore[attr-defined]
+         wrapped_f.retry_with = retry_with  # type: ignore[attr-defined]
+         wrapped_f.statistics = {}  # type: ignore[attr-defined]
+ 

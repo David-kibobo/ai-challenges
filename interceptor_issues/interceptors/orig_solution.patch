@@ -1,0 +1,56 @@
+diff --git a/src/interceptors/fetch/index.ts b/src/interceptors/fetch/index.ts
+index 9eabba4..b5df6ac 100644
+--- a/src/interceptors/fetch/index.ts
++++ b/src/interceptors/fetch/index.ts
+@@ -114,11 +114,21 @@ export class FetchInterceptor extends Interceptor<HttpRequestEventMap> {
+           })
+
+           // Decompress the mocked response body, if applicable.
+-          const decompressedStream = decompressResponse(rawResponse)
++          let responseBodyStream = decompressResponse(rawResponse)
++
++          // Ensure the AbortSignal cancels the source stream.
++          if (responseBodyStream === null && rawResponse.body) {
++             const identity = new TransformStream()
++             rawResponse.body.pipeTo(identity.writable, {
++               signal: request.signal
++             }).catch(() => {})
++             responseBodyStream = identity.readable
++          }
++
+           const response =
+-            decompressedStream === null
++            responseBodyStream === null
+               ? rawResponse
+-              : new FetchResponse(decompressedStream, rawResponse)
++              : new FetchResponse(responseBodyStream, rawResponse)
+
+           FetchResponse.setUrl(request.url, response)
+
+@@ -211,4 +221,4 @@ export class FetchInterceptor extends Interceptor<HttpRequestEventMap> {
+       )
+     })
+   }
+-}
++}
+\ No newline at end of file
+diff --git a/src/interceptors/fetch/utils/decompression.ts b/src/interceptors/fetch/utils/decompression.ts
+index 583d4a3..25eb921 100644
+--- a/src/interceptors/fetch/utils/decompression.ts
++++ b/src/interceptors/fetch/utils/decompression.ts
+@@ -70,7 +70,7 @@ export function decompressResponse(
+   }
+
+   const decompressionStream = createDecompressionStream(
+-    response.headers.get('content-encoding') || ''
++    response.headers?.get('content-encoding') || ''
+   )
+
+   if (!decompressionStream) {
+@@ -82,4 +82,4 @@ export function decompressResponse(
+   // response stream, making it unusable as the input to Response.
+   response.body.pipeTo(decompressionStream.writable)
+   return decompressionStream.readable
+-}
++}
+\ No newline at end of file

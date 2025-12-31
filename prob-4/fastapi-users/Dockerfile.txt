@@ -1,0 +1,21 @@
+FROM public.ecr.aws/x8v8d7g8/mars-base:latest
+
+WORKDIR /app
+
+# Copy all source files into the container
+COPY . .
+
+
+RUN pip install -e ".[tests]" \
+    pytest \
+    pytest-asyncio \
+    pytest-mock \
+    aiohttp \
+    anyio \
+    asgi_lifespan \
+    httpx \
+    httpx_oauth 
+
+
+# Default command for Ship-d to run tests
+CMD ["/bin/bash"]

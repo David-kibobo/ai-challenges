@@ -1,0 +1,26 @@
+name: 'Install'
+description: 'Set up and install dependencies'
+runs:
+  using: composite
+  steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+
+    - name: Lock Corepack version
+      shell: bash
+      run: pnpm i -g corepack@0.31.0
+
+    - name: Use Node.js lts
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        corepack enable
+        node -v
+        pnpm -v
+        pnpm install

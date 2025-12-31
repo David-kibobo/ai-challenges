@@ -1,0 +1,23 @@
+🧠 Problem Brief
+
+In the WebSockets library, when a connection is closed, pending pings are acknowledged to ensure all heartbeat operations finish properly. Under certain concurrent conditions, this process can raise a RuntimeError: dictionary changed size during iteration.
+
+The issue arises when the internal data structure tracking pending pings is modified while being iterated over during acknowledgment. This leads to a crash and incomplete cleanup. The error is most likely to occur in multi-threaded or high-traffic environments, especially under Python’s free-threaded mode, where multiple operations can act on the same connection simultaneously.
+
+The goal is to make the acknowledgment step safe and deterministic — it should complete normally without runtime exceptions, even when new pings arrive or existing ones are removed during closure. After the fix, connection shutdown should always complete cleanly, ensuring all pending pings are handled gracefully and the internal state is cleared without interruption.
+
+🧰 Agent Instructions
+
+You need to adjust the logic responsible for acknowledging pending pings during connection closure so that it no longer fails due to concurrent modifications. The fix must preserve all existing functionality and external behavior while preventing this race condition.
+
+🧪 Test Expectations:
+    -Tests will import Connection from websockets.sync.connection.
+    -They will create a Connection instance by connecting to a local WebSocket server using websockets.sync.client.connect.
+    -Tests will exercise the connection by sending pings via Connection.ping() and closing it via Connection.close().
+    -Tests expect all pending pings to be acknowledged during closure and the connection to terminate cleanly.
+    -If the connection cannot be established or the public API cannot be used, tests will fail.
+
+Base commit: dbc73ba69b01c8e162d6bc28091bf9effeb1df33: Short code: 22b9e18
+ 
+ Remove whitw spaces:
+ sed -i 's/[[:space:]]\+$//' test.patch

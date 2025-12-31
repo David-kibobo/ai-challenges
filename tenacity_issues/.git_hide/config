@@ -1,0 +1,17 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+[remote "origin"]
+	url = https://github.com/jd/tenacity.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "main"]
+	remote = origin
+	merge = refs/heads/main
+[branch "tests/retry-statistics-wrapped"]
+	vscode-merge-base = origin/main
+[branch "fix/retry-statistics-wrapped"]
+	vscode-merge-base = origin/main
+[branch "fix/retry-statistics"]
+	vscode-merge-base = origin/main

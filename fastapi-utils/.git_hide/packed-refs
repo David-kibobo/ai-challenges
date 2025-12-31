@@ -1,0 +1,20 @@
+# pack-refs with: peeled fully-peeled sorted 
+019cb10c78e9159059a42126560d92783e8d6ba1 refs/remotes/origin/autoversion
+e2c4150944304926bc4671518cc06019ac4a2ad9 refs/remotes/origin/changelog-ci
+2b055102e82439bc52aef451e36896fac988b63c refs/remotes/origin/chore/migrate-to-uv
+77d6455776bc34fad5bf784abd85525dc6debf3c refs/remotes/origin/chore/update-to-38
+1493dc9e55d53c4adeb5fb39072fab9b559056c3 refs/remotes/origin/dependabot/github_actions/abatilo/actions-poetry-4.0.0
+322e58f2b72408a218cd1e2c6f55ee5c827a3d57 refs/remotes/origin/dependabot/pip/jinja2-3.1.5
+98c6b5a1f1273061a319161c283f402d0daa542d refs/remotes/origin/dependabot/pip/mypy-1.14.1
+fc9525b9551b64da6d57abe012d16649522aea7a refs/remotes/origin/dependabot/pip/psutil-7.0.0
+d3516416b4c4c191305f441c9418d6e3b293d1ea refs/remotes/origin/dependabot/pip/pydantic-2.10.4
+63c440826c3ad36814185ad40a9db7c380863618 refs/remotes/origin/dependabot/pip/pydantic-settings-2.8.1
+6948667a57e134d128164655b44c66d45a9a0bbc refs/remotes/origin/generic-cbv
+e9e7e2c834d703503a3bf5d5605db6232dd853b9 refs/remotes/origin/master
+5923a0ef85d4ded81e4fdde30539472efe260236 refs/remotes/origin/release/0.8.0
+3f2a6f33d7c2ceba05add5d0354607d4b09192a7 refs/tags/0.7.0
+7d37e44ec7feca00aca454373870b6fba3e8c284 refs/tags/0.8.0
+62f1f61bd1d10c200ac5d3cad324c3d944064db6 refs/tags/v0.1.1
+25ca875200ff0e05f9cd7cfdf5ae8218c8985887 refs/tags/v0.2.0
+af95ff4a8195caaa9edaa3dbd5b6eeb09691d9c7 refs/tags/v0.2.1
+cac20da613608f78c124c075a7724b027936b2d7 refs/tags/v0.6.0

@@ -1,0 +1,72 @@
+diff --git a/fsspec/implementations/dirfs.py b/fsspec/implementations/dirfs.py
+index c0623b8..5da183b 100644
+--- a/fsspec/implementations/dirfs.py
++++ b/fsspec/implementations/dirfs.py
+@@ -1,7 +1,8 @@
++import os
++import asyncio
+ from .. import filesystem
+ from ..asyn import AsyncFileSystem
+ 
+-
+ class DirFileSystem(AsyncFileSystem):
+     """Directory prefix filesystem
+ 
+@@ -200,11 +201,55 @@ class DirFileSystem(AsyncFileSystem):
+     def get_file(self, rpath, lpath, **kwargs):
+         return self.fs.get_file(self._join(rpath), lpath, **kwargs)
+ 
++    # -----------------------------
++    # _get / get methods updated with interception
++    # -----------------------------
++    def _adjust_recursive_dir_dest(self, joined_rpath, args, kwargs):
++        """Adjust args for recursive dir copies to avoid nested dir/dir structures.
++
++        When source and destination basenames match, rewrite the destination to its
++        parent directory, removing any existing destination file when overwrite is
++        requested and ensuring the parent directory exists. Copying remains fully
++        delegated to the wrapped filesystem.
++        """
++        recursive = kwargs.get("recursive", False)
++        if not recursive or not args:
++            return args
++        dest = args[0]
++        if not isinstance(dest, (str, os.PathLike)):
++            return args
++
++        # Use wrapped FS separator for remote/source path parsing
++        src_base = joined_rpath.rstrip(self.sep).split(self.sep)[-1] if joined_rpath else ""
++        dest_base = os.path.basename(str(dest).rstrip(self.sep))
++
++        if dest_base != src_base:
++            return args
++
++        # If destination exists as a file, respect overwrite semantics
++        if os.path.isfile(dest):
++            overwrite = bool(kwargs.get("overwrite") or kwargs.get("mode") == "overwrite")
++            if overwrite:
++                os.remove(dest)
++            else:
++                raise FileExistsError(f"Destination exists as a file: {dest}")
++
++        parent = os.path.dirname(str(dest)) or "."
++        os.makedirs(parent, exist_ok=True)
++        return (parent,) + args[1:]
++
+     async def _get(self, rpath, *args, **kwargs):
+-        return await self.fs._get(self._join(rpath), *args, **kwargs)
++        joined_rpath = self._join(rpath)
++        new_args = self._adjust_recursive_dir_dest(joined_rpath, args, kwargs)
++
++        if hasattr(self.fs, "_get") and asyncio.iscoroutinefunction(getattr(self.fs, "_get")):
++            return await self.fs._get(joined_rpath, *new_args, **kwargs)
++        return await asyncio.to_thread(self.fs.get, joined_rpath, *new_args, **kwargs)
+ 
+     def get(self, rpath, *args, **kwargs):
+-        return self.fs.get(self._join(rpath), *args, **kwargs)
++        joined_rpath = self._join(rpath)
++        new_args = self._adjust_recursive_dir_dest(joined_rpath, args, kwargs)
++        return self.fs.get(joined_rpath, *new_args, **kwargs)
+ 
+     async def _isfile(self, path):
+         return await self.fs._isfile(self._join(path))

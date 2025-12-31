@@ -1,0 +1,246 @@
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 00000000..8d37c9d2
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,56 @@
++#!/bin/bash
++set -e
++
++if [ "$1" == "base" ]; then
++    echo "Running base tests (ignoring known failing suites and tests_closing)..."
++    python -m  pytest tests \
++        --ignore=tests/tests_closing \
++         --continue-on-collection-errors \
++        --ignore=tests/unit/containers/instance/test_async_resources_py36.py \
++        --ignore=tests/unit/containers/instance/test_load_config_py2_py3.py \
++        --ignore=tests/unit/ext/test_starlette.py \
++        --ignore=tests/unit/providers/async/test_delegated_singleton_py36.py \
++        --ignore=tests/unit/providers/async/test_delegated_thread_local_singleton_py36.py \
++        --ignore=tests/unit/providers/async/test_delegated_thread_safe_singleton_py36.py \
++        --ignore=tests/unit/providers/async/test_dependency_py36.py \
++        --ignore=tests/unit/providers/async/test_dict_py36.py \
++        --ignore=tests/unit/providers/async/test_factory_aggregate_py36.py \
++        --ignore=tests/unit/providers/async/test_factory_py36.py \
++        --ignore=tests/unit/providers/async/test_list_py36.py \
++        --ignore=tests/unit/providers/async/test_override_py36.py \
++        --ignore=tests/unit/providers/async/test_provided_instance_py36.py \
++        --ignore=tests/unit/providers/async/test_singleton_py36.py \
++        --ignore=tests/unit/providers/async/test_thread_local_singleton_py36.py \
++        --ignore=tests/unit/providers/async/test_thread_safe_singleton_py36.py \
++        --ignore=tests/unit/providers/async/test_typing_stubs_py36.py \
++        --ignore=tests/unit/providers/configuration/test_from_yaml_py2_py3.py \
++        --ignore=tests/unit/providers/configuration/test_yaml_files_in_init_py2_py3.py \
++        --ignore=tests/unit/providers/coroutines/test_coroutine_py35.py \
++        --ignore=tests/unit/providers/resource/test_async_resource_py35.py \
++        --ignore=tests/unit/wiring/provider_ids/test_autoloader_py36.py \
++        --ignore=tests/unit/wiring/string_ids/test_async_injections_py36.py \
++        --ignore=tests/unit/ext/test_aiohttp_py35.py \
++        --ignore=tests/unit/ext/test_flask_py2_py3.py \
++        --ignore=tests/unit/providers/configuration/test_from_pydantic_py36.py \
++        --ignore=tests/unit/providers/configuration/test_from_yaml_with_env_py2_py3.py \
++        --ignore=tests/unit/providers/configuration/test_pydantic_settings_in_init_py36.py \
++        --ignore=tests/unit/schema/test_container_api_py36.py \
++        --ignore=tests/unit/schema/test_integration_py36.py \
++        --ignore=tests/unit/wiring/test_fastapi_py36.py \
++        --ignore=tests/unit/wiring/test_fastdepends.py \
++        --ignore=tests/unit/wiring/test_flask_py36.py\
++        --ignore=tests/unit/wiring/provider_ids/test_async_injections_py36.py\
++        --ignore=tests/unit/providers/callables/test_callable_py2_py3.py \
++        --ignore=tests/unit/providers/factories/test_factory_py2_py3.py \
++        --ignore=tests/unit/providers/resource/test_resource_py35.py \
++        --ignore=tests/unit/providers/singleton/test_singleton_py2_py3.py
++
++
++elif [ "$1" == "new" ]; then
++    echo "Running new tests (only tests_closing)...."
++    python -m pytest tests/tests_closing
++
++else
++    echo "Usage: ./test.sh [base|new]"
++    exit 1
++fi
+diff --git a/tests/tests_closing/test_closing_async.py b/tests/tests_closing/test_closing_async.py
+new file mode 100644
+index 00000000..35686023
+--- /dev/null
++++ b/tests/tests_closing/test_closing_async.py
+@@ -0,0 +1,86 @@
++import pytest
++from dependency_injector import containers, providers
++from dependency_injector.wiring import inject, Provide, Closing
++
++created_async_sessions = []
++
++
++class MockSession:
++    def __init__(self):
++        self.committed = False
++        self.rolled_back = False
++        self.closed = False
++        self.order = []
++
++    async def commit(self):
++        self.committed = True
++        self.order.append("commit")
++
++    async def rollback(self):
++        self.rolled_back = True
++        self.order.append("rollback")
++
++    async def close(self):
++        self.closed = True
++        self.order.append("close")
++
++
++async def init_session_async():
++    s = MockSession()
++    created_async_sessions.append(s)
++    try:
++        yield s
++    finally:
++        await s.close()
++
++
++class AsyncContainer(containers.DeclarativeContainer):
++    async_session = providers.Resource(init_session_async)
++
++
++@inject
++async def async_handler(session: MockSession = Closing[Provide[AsyncContainer.async_session]]):
++
++    _ = session
++    return "ok"
++
++
++@inject
++async def async_handler_error(session: MockSession = Closing[Provide[AsyncContainer.async_session]]):
++
++    raise RuntimeError("boom")
++
++
++@pytest.mark.asyncio
++async def test_async_commit_on_success():
++    created_async_sessions.clear()
++    container = AsyncContainer()
++    container.wire(modules=[__name__])
++
++    await async_handler()
++    s = created_async_sessions.pop()
++
++    assert s.committed is True
++    assert s.rolled_back is False
++    assert s.closed is True
++
++
++    assert s.order == ["commit", "close"], f"Expected commit before close, got {s.order}"
++
++
++@pytest.mark.asyncio
++async def test_async_rollback_on_exception():
++    created_async_sessions.clear()
++    container = AsyncContainer()
++    container.wire(modules=[__name__])
++
++    with pytest.raises(RuntimeError):
++        await async_handler_error()
++    s = created_async_sessions.pop()
++
++
++    assert s.committed is False
++    assert s.rolled_back is True
++    assert s.closed is True
++
++    assert s.order == ["rollback", "close"], f"Expected rollback before close, got {s.order}"
+diff --git a/tests/tests_closing/test_closing_sync.py b/tests/tests_closing/test_closing_sync.py
+new file mode 100644
+index 00000000..497ab5d1
+--- /dev/null
++++ b/tests/tests_closing/test_closing_sync.py
+@@ -0,0 +1,86 @@
++import pytest
++from dependency_injector import containers, providers
++from dependency_injector.wiring import inject, Provide, Closing
++
++created_sessions = []
++
++
++class MockSession:
++    def __init__(self):
++        self.committed = False
++        self.rolled_back = False
++        self.closed = False
++        self.order = []
++
++    def commit(self):
++        self.committed = True
++        self.order.append("commit")
++
++    def rollback(self):
++        self.rolled_back = True
++        self.order.append("rollback")
++
++    def close(self):
++        self.closed = True
++        self.order.append("close")
++
++
++def init_session():
++    s = MockSession()
++    created_sessions.append(s)
++    try:
++        yield s
++    finally:
++        s.close()
++
++
++class Container(containers.DeclarativeContainer):
++    session = providers.Resource(init_session)
++
++
++@inject
++def handler(session: MockSession = Closing[Provide[Container.session]]):
++
++    _ = session
++    return "ok"
++
++
++@inject
++def handler_error(session: MockSession = Closing[Provide[Container.session]]):
++
++    raise RuntimeError("boom")
++
++
++def test_commit_on_success():
++    created_sessions.clear()
++    container = Container()
++    container.wire(modules=[__name__])
++
++    handler()
++    s = created_sessions.pop()
++
++
++    assert s.committed is True
++    assert s.rolled_back is False
++    assert s.closed is True
++
++
++    assert s.order == ["commit", "close"], f"Expected commit before close, got {s.order}"
++
++
++def test_rollback_on_exception():
++    created_sessions.clear()
++    container = Container()
++    container.wire(modules=[__name__])
++
++    with pytest.raises(RuntimeError):
++        handler_error()
++    s = created_sessions.pop()
++
++
++    assert s.committed is False
++    assert s.rolled_back is True
++    assert s.closed is True
++
++
++    assert s.order == ["rollback", "close"], f"Expected rollback before close, got {s.order}"

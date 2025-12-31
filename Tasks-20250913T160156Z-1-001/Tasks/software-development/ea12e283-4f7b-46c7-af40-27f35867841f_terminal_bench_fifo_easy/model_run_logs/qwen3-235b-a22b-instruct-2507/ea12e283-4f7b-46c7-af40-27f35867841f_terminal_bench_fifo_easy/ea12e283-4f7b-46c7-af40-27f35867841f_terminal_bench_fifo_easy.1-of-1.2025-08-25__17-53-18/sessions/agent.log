@@ -1,5 +1,0 @@
-[?2004hroot@f796a07054fe:/app# mkdir -p pipe logs; tmux wait -S done
-[?2004l[?2004hroot@f796a07054fe:/app# mkfifo pipe/events.fifo; tmux wait -S done
-[?2004l[?2004hroot@f796a07054fe:/app# ./run.sh; tmux wait -S done
-[?2004l-bash: ./run.sh: Permission denied
-[?2004hroot@f796a07054fe:/app# 

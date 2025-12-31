@@ -1,0 +1,929 @@
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 00000000..6dfd126b
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,48 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++# Determine mode
++if [ "$#" -ge 1 ]; then
++  MODE="$1"
++elif [ "${MODE-""}" != "" ]; then
++  MODE="$MODE"
++else
++  MODE=base
++fi
++
++echo "Running tests (mode: ${MODE})"
++
++
++EXCLUDES=(
++  "third-party/axios-error-response.test.ts"
++  "third-party/axios-upload.node.test.ts"
++  "msw-api/setup-server/resetHandlers.node.test.ts"
++  "msw-api/setup-server/scenarios/fall-through.node.test.ts"
++  "msw-api/setup-server/scenarios/on-unhandled-request/callback.node.test.ts"
++  "msw-api/setup-server/scenarios/on-unhandled-request/default.node.test.ts"
++)
++
++
++EXCLUDE_ARGS=()
++for pat in "${EXCLUDES[@]}"; do
++  EXCLUDE_ARGS+=( "--exclude=${pat}" )
++done
++
++if [ "${MODE}" = "base" ]; then
++  echo "Running base tests"
++  pnpm -s build
++
++
++  pnpm -s vitest --run --config=./test/node/vitest.config.ts "${EXCLUDE_ARGS[@]}"
++  exit 0
++fi
++
++if [ "${MODE}" = "new" ]; then
++  echo "Running experimental tests"
++    pnpm -s build
++  pnpm -s vitest --run --config=./test/cleanup-tests/vitest.config.ts || exit 1
++  exit 0
++fi
++
++echo "Unknown MODE: ${MODE}. Use MODE=base or MODE=new"
++exit 2
+diff --git a/test/cleanup-tests/setup-sse.ts b/test/cleanup-tests/setup-sse.ts
+new file mode 100644
+index 00000000..fd5eaf62
+--- /dev/null
++++ b/test/cleanup-tests/setup-sse.ts
+@@ -0,0 +1,16 @@
++// test/setup-sse.ts
++
++import { EventSource } from 'eventsource'
++import { fetch, Headers, Request, Response } from 'undici'
++
++  ; (globalThis as any).EventSource = EventSource;
++; (global as any).EventSource = EventSource;
++
++if (typeof globalThis.fetch === 'undefined') {
++  ; (globalThis as any).fetch = fetch as any
++    ; (globalThis as any).Headers = Headers
++    ; (globalThis as any).Request = Request
++    ; (globalThis as any).Response = Response
++}
++
++console.log('[setup-sse] EventSource polyfilled with "eventsource" package.')
+\ No newline at end of file
+diff --git a/test/cleanup-tests/sse/sse-test-cleanup.test.ts b/test/cleanup-tests/sse/sse-test-cleanup.test.ts
+new file mode 100644
+index 00000000..c4575422
+--- /dev/null
++++ b/test/cleanup-tests/sse/sse-test-cleanup.test.ts
+@@ -0,0 +1,825 @@
++import { setupServer } from 'msw/node';
++import { sse, http, HttpResponse } from 'msw';
++import { test, expect, describe, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
++
++const STREAM_URL = 'http://localhost/stream';
++const MESSAGE_RECEIVE_TIMEOUT = 1500;
++
++const path = require('path');
++const SOLVER_PATH = path.resolve(__dirname, '../../../src/core/utils/msw-sse-tools.ts');
++
++interface TestMswSseHandlerReturn {
++  mswSseHandler: ({ client, request }: { client: any, request: Request }) => Promise<void>;
++  getActiveHandlerPromises: () => Promise<void>[];
++  stopHandlerActivity: () => void;
++  injectThrowingSend?: (shouldThrow: boolean) => void;
++}
++
++let createTestMswSseHandlerFactory: (options?: { leaseTimeoutMs?: number }) => TestMswSseHandlerReturn;
++let solverModule: any;
++let resetClientLeaseOnActivity: ((correlationKey: string) => void) | undefined;
++try {
++  // Assuming the module is correctly imported here
++  solverModule = await import(SOLVER_PATH);
++
++  if (solverModule.createSseClientTracker) {
++    resetClientLeaseOnActivity = solverModule.resetClientLeaseOnActivity;
++
++    // --- STANDARD HANDLER FACTORY (Sends app data every 100ms) ---
++    createTestMswSseHandlerFactory = (options) => {
++      const connectionTracker = new Map<string, Promise<void>>();
++      const intervals = new Set<NodeJS.Timeout>();
++      let shouldSendThrow = false;
++
++      const injectThrowingSend = (shouldThrow: boolean) => {
++        shouldSendThrow = shouldThrow;
++      };
++
++      const mswSseHandler = async ({ client, request }: { client: any, request: Request }) => {
++        const tracker = solverModule.createSseClientTracker(client, request, options?.leaseTimeoutMs);
++        const connectionId = tracker.connectionId;
++
++        let messageInterval: NodeJS.Timeout | null = null;
++
++        connectionTracker.set(client.id || String(connectionId), tracker.keepAlivePromise);
++
++        const handleCleanup = () => {
++          if (messageInterval) {
++            clearInterval(messageInterval);
++            intervals.delete(messageInterval);
++            messageInterval = null;
++          }
++          connectionTracker.delete(client.id || String(connectionId));
++        };
++
++        tracker.onClose(handleCleanup);
++
++        messageInterval = setInterval(() => {
++          try {
++            if (shouldSendThrow) {
++              throw new Error("Simulated Send Failure");
++            }
++            if (tracker.sendApplicationData) {
++              tracker.sendApplicationData({ event: 'message', data: `TEST_MSG:${connectionId}:${Date.now()}` });
++            } else {
++              client.send({ event: 'message', data: `TEST_MSG:${connectionId}:${Date.now()}` });
++            }
++          } catch (err: any) {
++            tracker.emitClose('data-send-failed');
++          }
++        }, 100);
++
++        intervals.add(messageInterval);
++
++        await tracker.keepAlivePromise;
++
++        if (messageInterval) { clearInterval(messageInterval); }
++      };
++
++      return {
++        mswSseHandler,
++        getActiveHandlerPromises: () => Array.from(connectionTracker.values()),
++        stopHandlerActivity: () => {
++          intervals.forEach(clearInterval);
++          intervals.clear();
++          shouldSendThrow = false;
++        },
++        injectThrowingSend
++      };
++    };
++  } else {
++    throw new Error("Module found but export missing");
++  }
++
++} catch (error) {
++  // Fallback handler factory if module import fails
++  createTestMswSseHandlerFactory = () => {
++    const leakedPromises: Promise<void>[] = [];
++    const mswSseHandler = async ({ client }: { client: any }) => {
++      const leakyPromise = new Promise<void>(() => { });
++      leakedPromises.push(leakyPromise);
++
++      setInterval(() => {
++        try {
++          client.send({ event: 'message', data: 'leaking...' });
++        } catch (e) { }
++      }, 100);
++
++      await leakyPromise;
++    };
++
++    return {
++      mswSseHandler,
++      getActiveHandlerPromises: () => leakedPromises,
++      stopHandlerActivity: () => { },
++      injectThrowingSend: () => { }
++    };
++  };
++}
++
++// --- PING-ONLY HANDLER FACTORY (NEW: Used for the final test) ---
++const customPingOnlyHandlerFactory = (options: { leaseTimeoutMs?: number }) => {
++  const connectionTracker = new Map<string, Promise<void>>();
++
++  const mswSseHandler = async ({ client, request }: { client: any, request: Request }) => {
++    // This handler ONLY creates the tracker and awaits its internal closure promise.
++    // It purposefully does NOT set up a messageInterval or other activity.
++    const tracker = solverModule.createSseClientTracker(client, request, options?.leaseTimeoutMs);
++    const connectionId = tracker.connectionId;
++
++    const handleCleanup = () => {
++      connectionTracker.delete(client.id || String(connectionId));
++    };
++
++    tracker.onClose(handleCleanup);
++    connectionTracker.set(client.id || String(connectionId), tracker.keepAlivePromise);
++
++    await tracker.keepAlivePromise;
++  };
++
++  return {
++    mswSseHandler,
++    getActiveHandlerPromises: () => Array.from(connectionTracker.values()),
++    stopHandlerActivity: () => { },
++    injectThrowingSend: () => { }
++  };
++};
++
++try {
++  if (typeof (globalThis as any).EventSource === 'undefined') {
++    const EventSourcePkg = require('eventsource');
++    (globalThis as any).EventSource = EventSourcePkg;
++  }
++} catch (error) { console.error('Failed to load eventsource polyfill', error); }
++
++
++async function until<T>(predicate: () => T | undefined | null, timeout = 2000, interval = 50) {
++  const deadline = Date.now() + timeout;
++
++  while (Date.now() < deadline) {
++    const val = predicate();
++    if (val !== undefined && val !== null) return val;
++
++
++    if (vi.isFakeTimers()) {
++      await vi.advanceTimersByTimeAsync(interval);
++    } else {
++      await new Promise(r => setTimeout(r, interval));
++    }
++  }
++  throw new Error('Timeout waiting for condition');
++}
++
++
++describe(`msw-sse-tools: API cleanup behavior`, () => {
++  let server: ReturnType<typeof setupServer>;
++  const receivedMessages: Record<string, { msg: string; t: number }[]> = {};
++
++  let handlerFactory: TestMswSseHandlerReturn;
++  let activeEventSources: EventSource[] = [];
++
++  const sentMessages: Record<string, { event?: string; data: string | null }[]> = {};
++
++
++  beforeAll(() => {
++    vi.useFakeTimers();
++    server = setupServer();
++    server.listen({ onUnhandledRequest: 'bypass' });
++  });
++
++  afterAll(() => {
++    server.close();
++    vi.useRealTimers();
++  });
++
++  beforeEach(() => {
++    vi.clearAllTimers();
++    Object.keys(receivedMessages).forEach(key => delete receivedMessages[key]);
++    Object.keys(sentMessages).forEach(key => delete sentMessages[key]);
++    server.resetHandlers();
++    activeEventSources = [];
++    vi.restoreAllMocks();
++
++    // Set up the default handler factory for the majority of tests
++    handlerFactory = createTestMswSseHandlerFactory();
++    server.use(sse(STREAM_URL, handlerFactory.mswSseHandler) as any);
++  });
++
++  afterEach(() => {
++    activeEventSources.forEach(es => {
++      if (es.readyState !== EventSource.CLOSED) es.close();
++    });
++
++    handlerFactory.stopHandlerActivity();
++  });
++
++  test('single client disconnects gracefully after explicit close', async () => {
++    const clientLabel = 'Client1';
++    receivedMessages[clientLabel] = [];
++    const es = new EventSource(STREAM_URL);
++    activeEventSources.push(es);
++
++    es.addEventListener('message', (e: any) => {
++      if (receivedMessages[clientLabel]) {
++        receivedMessages[clientLabel].push({ msg: String(e.data), t: Date.now() });
++      }
++    });
++
++    await until(() => receivedMessages[clientLabel]?.length > 0 ? true : null, MESSAGE_RECEIVE_TIMEOUT);
++    await until(() => handlerFactory.getActiveHandlerPromises().length === 1 ? true : null, MESSAGE_RECEIVE_TIMEOUT);
++
++    const keepAlivePromise = handlerFactory.getActiveHandlerPromises()[0];
++
++    es.close();
++
++    await vi.advanceTimersByTimeAsync(100);
++
++    const result = await Promise.race([
++      keepAlivePromise.then(() => 'RESOLVED'),
++      new Promise(r => setTimeout(() => r('TIMEOUT'), 1000))
++    ]);
++
++    expect(result, 'keepAlivePromise must resolve').toBe('RESOLVED');
++    expect(handlerFactory.getActiveHandlerPromises().length, 'Active handlers count').toBe(0);
++  }, 15000);
++
++  test('multiple clients disconnect gracefully under stress', async () => {
++    const NUM_CLIENTS = 10;
++    for (let i = 0; i < NUM_CLIENTS; i++) {
++      const clientLabel = `Client${i}`;
++      receivedMessages[clientLabel] = [];
++      const es = new EventSource(STREAM_URL);
++      activeEventSources.push(es);
++      es.addEventListener('message', (e: any) => {
++        if (receivedMessages[clientLabel]) {
++          receivedMessages[clientLabel].push({ msg: String(e.data), t: Date.now() });
++        }
++      });
++      await vi.advanceTimersByTimeAsync(10);
++    }
++
++    await Promise.all(Array.from({ length: NUM_CLIENTS }).map((_, i) =>
++      until(() => receivedMessages[`Client${i}`]?.length > 0 ? true : null, MESSAGE_RECEIVE_TIMEOUT * 2)
++    ));
++
++    await until(() => handlerFactory.getActiveHandlerPromises().length === NUM_CLIENTS ? true : null, MESSAGE_RECEIVE_TIMEOUT);
++
++    const allPromises = handlerFactory.getActiveHandlerPromises();
++
++    activeEventSources.forEach(es => es.close());
++
++    await vi.advanceTimersByTimeAsync(500);
++
++    await Promise.race([
++      Promise.allSettled(allPromises),
++      new Promise(r => setTimeout(r, 500))
++    ]);
++
++    expect(handlerFactory.getActiveHandlerPromises().length).toBe(0);
++  }, 30000);
++
++  test('connection forcibly closed when inactivity exceeds lease timeout', async () => {
++    const FORCED_TIMEOUT_MS = 600;
++    server.resetHandlers();
++    handlerFactory = createTestMswSseHandlerFactory({ leaseTimeoutMs: FORCED_TIMEOUT_MS });
++    server.use(sse(STREAM_URL, handlerFactory.mswSseHandler) as any);
++
++    const clientLabel = 'ForcedCloseClient';
++    receivedMessages[clientLabel] = [];
++    const es = new EventSource(STREAM_URL);
++    activeEventSources.push(es);
++    es.addEventListener('message', (e: any) => {
++      if (receivedMessages[clientLabel]) receivedMessages[clientLabel].push({ msg: String(e.data), t: Date.now() });
++    });
++
++    await until(() => receivedMessages[clientLabel]?.length > 0 ? true : null, MESSAGE_RECEIVE_TIMEOUT);
++    expect(handlerFactory.getActiveHandlerPromises().length).toBe(1);
++
++
++    handlerFactory.stopHandlerActivity();
++
++
++    await vi.advanceTimersByTimeAsync(FORCED_TIMEOUT_MS + 200);
++
++    expect(handlerFactory.getActiveHandlerPromises().length, 'Handler MUST close after timeout').toBe(0);
++
++    if (es.readyState !== EventSource.CLOSED) es.close();
++  }, 10000);
++
++  test('connectionId is present and promise resolves on explicit emitClose(reason)', async () => {
++    const clientLabel = 'IdAndReasonClient';
++    let connectionId: number | undefined;
++
++    server.resetHandlers();
++
++    server.use(sse(STREAM_URL, async ({ client, request }) => {
++
++      const tracker = (solverModule as any).createSseClientTracker(client, request);
++      connectionId = tracker.connectionId;
++
++      let messageInterval = setInterval(() => {
++        if (tracker.sendApplicationData) {
++          tracker.sendApplicationData({ event: 'message', data: `TEST_MSG:${connectionId}:${Date.now()}` });
++        } else {
++          client.send({ event: 'message', data: `TEST_MSG:${connectionId}:${Date.now()}` });
++        }
++      }, 100);
++
++
++      tracker.onClose(() => clearInterval(messageInterval));
++
++      await until(() => receivedMessages[clientLabel]?.length > 2 ? true : null, 5000);
++
++
++      tracker.emitClose('TEST_REASON_MANUAL');
++
++
++      await tracker.keepAlivePromise;
++
++    }) as any);
++
++
++    receivedMessages[clientLabel] = [];
++    const es = new EventSource(STREAM_URL);
++    activeEventSources.push(es);
++    es.addEventListener('message', (e: any) => {
++      if (receivedMessages[clientLabel]) receivedMessages[clientLabel].push({ msg: String(e.data), t: Date.now() });
++    });
++
++
++    await vi.advanceTimersByTimeAsync(400);
++
++
++    expect(connectionId, 'connectionId must be a number.').toEqual(expect.any(Number));
++
++
++    if (es.readyState !== EventSource.CLOSED) es.close();
++  }, 10000);
++
++  test('client activity resets lease timeout, keeping session alive', async () => {
++    const SHORT_LEASE_TIMEOUT_MS = 600;
++
++    server.resetHandlers();
++    handlerFactory = createTestMswSseHandlerFactory({ leaseTimeoutMs: SHORT_LEASE_TIMEOUT_MS });
++
++
++    server.use(
++      http.post('http://localhost/user-activity', ({ request }) => {
++        if (resetClientLeaseOnActivity) {
++          resetClientLeaseOnActivity(STREAM_URL);
++        }
++        return new HttpResponse(null, { status: 204 });
++      }),
++      sse(STREAM_URL, handlerFactory.mswSseHandler) as any
++    );
++
++    const clientLabel = 'ActivityResetClient';
++    receivedMessages[clientLabel] = [];
++
++    const es = new EventSource(STREAM_URL);
++    activeEventSources.push(es);
++
++    es.addEventListener('message', (e: any) => {
++      if (receivedMessages[clientLabel]) {
++        receivedMessages[clientLabel].push({ msg: String(e.data), t: Date.now() });
++      }
++    });
++
++    await until(() => receivedMessages[clientLabel]?.length > 0 ? true : null, MESSAGE_RECEIVE_TIMEOUT);
++
++    expect(handlerFactory.getActiveHandlerPromises().length, 'Handler should be active initially').toBe(1);
++
++    await vi.advanceTimersByTimeAsync(101);
++
++    handlerFactory.stopHandlerActivity();
++
++    await vi.advanceTimersByTimeAsync(500);
++
++    expect(handlerFactory.getActiveHandlerPromises().length, 'Handler must be active before reset post').toBe(1);
++
++
++    await fetch('http://localhost/user-activity', { method: 'POST' });
++    await Promise.resolve();
++
++
++    await vi.advanceTimersByTimeAsync(500);
++
++    expect(handlerFactory.getActiveHandlerPromises().length,
++      'Handler must remain active because the POST reset the lease').toBe(1);
++
++
++    es.close();
++    await vi.advanceTimersByTimeAsync(800);
++
++    expect(handlerFactory.getActiveHandlerPromises().length, 'Handler must close after EventSource close')
++      .toBe(0);
++  }, 15000);
++
++  test('multiple clients coexist with different individual lease timeouts', async () => {
++    const LEASE_A = 600;
++    const LEASE_B = 1500;
++
++    server.resetHandlers();
++
++    const handlerFactoryA = createTestMswSseHandlerFactory({ leaseTimeoutMs: LEASE_A });
++    const handlerFactoryB = createTestMswSseHandlerFactory({ leaseTimeoutMs: LEASE_B });
++
++    server.use(
++      sse(`${STREAM_URL}/a`, handlerFactoryA.mswSseHandler) as any,
++      sse(`${STREAM_URL}/b`, handlerFactoryB.mswSseHandler) as any
++    );
++
++    const esA = new EventSource(`${STREAM_URL}/a`);
++    activeEventSources.push(esA);
++    const esB = new EventSource(`${STREAM_URL}/b`);
++    activeEventSources.push(esB);
++
++    await vi.advanceTimersByTimeAsync(200);
++
++    handlerFactoryA.stopHandlerActivity();
++    handlerFactoryB.stopHandlerActivity();
++
++    await vi.advanceTimersByTimeAsync(800);
++
++    expect(handlerFactoryA.getActiveHandlerPromises().length,
++      `Client A must timeout after ${LEASE_A}ms.`).toBe(0);
++    expect(handlerFactoryB.getActiveHandlerPromises().length,
++      `Client B must still be active.`).toBe(1);
++
++    await vi.advanceTimersByTimeAsync(800);
++
++    expect(handlerFactoryA.getActiveHandlerPromises().length).toBe(0);
++    expect(handlerFactoryB.getActiveHandlerPromises().length,
++      `Client B must timeout after ${LEASE_B}ms.`).toBe(0);
++
++    if (esA.readyState !== EventSource.CLOSED) esA.close();
++    if (esB.readyState !== EventSource.CLOSED) esB.close();
++  }, 15000);
++
++  test('Connection IDs are unique for multiple clients', async () => {
++    const NUM_CLIENTS = 5;
++    const clientIds = new Set<number>();
++
++    server.resetHandlers();
++
++    server.use(sse(STREAM_URL, async ({ client, request }) => {
++
++      const tracker = (solverModule as any).createSseClientTracker(client, request);
++
++      clientIds.add(tracker.connectionId);
++
++
++      await new Promise(r => setTimeout(r, 50));
++
++
++      tracker.emitClose('TEST_UNIQUENESS');
++
++      await tracker.keepAlivePromise;
++    }) as any);
++
++    for (let i = 0; i < NUM_CLIENTS; i++) {
++      const es = new EventSource(STREAM_URL);
++      activeEventSources.push(es);
++
++      es.close();
++    }
++
++    await vi.advanceTimersByTimeAsync(100);
++
++    expect(clientIds.size, `Must have exactly ${NUM_CLIENTS} unique connection IDs`).toBe(NUM_CLIENTS);
++
++  }, 10000);
++
++  test('resetClientLeaseOnActivity must only affect the specified correlationKey', async () => {
++    const LEASE_A = 600;
++    const LEASE_B = 600;
++
++    const URL_A = `${STREAM_URL}/reset-me`;
++    const URL_B = `${STREAM_URL}/leave-me-alone`;
++
++
++    server.resetHandlers();
++    server.use(
++      http.post('http://localhost/activity', () => {
++
++        if (resetClientLeaseOnActivity) {
++          resetClientLeaseOnActivity(URL_A);
++        }
++        return new HttpResponse(null, { status: 204 });
++      })
++    );
++
++
++    handlerFactory = createTestMswSseHandlerFactory({ leaseTimeoutMs: LEASE_A });
++    server.use(
++      sse(URL_A, handlerFactory.mswSseHandler) as any,
++      sse(URL_B, handlerFactory.mswSseHandler) as any
++    );
++
++    const esA = new EventSource(URL_A);
++    activeEventSources.push(esA);
++    const esB = new EventSource(URL_B);
++    activeEventSources.push(esB);
++
++
++    await vi.advanceTimersByTimeAsync(100);
++    expect(handlerFactory.getActiveHandlerPromises().length).toBe(2);
++    handlerFactory.stopHandlerActivity();
++
++
++    await vi.advanceTimersByTimeAsync(500);
++    expect(handlerFactory.getActiveHandlerPromises().length, 'Both active before reset').toBe(2);
++
++
++    await fetch('http://localhost/activity', { method: 'POST' });
++    await Promise.resolve();
++
++    await vi.advanceTimersByTimeAsync(150);
++
++
++    await until(() => handlerFactory.getActiveHandlerPromises().length === 1, 500);
++
++
++    expect(handlerFactory.getActiveHandlerPromises().length, 'Only 1 handler must remain active (Client A)').toBe(1);
++
++
++    expect(esA.readyState, 'Client A (reset) must be OPEN').toBe(EventSource.OPEN);
++
++
++    await vi.advanceTimersByTimeAsync(600);
++
++
++    expect(handlerFactory.getActiveHandlerPromises().length, 'Both handlers must be closed').toBe(0);
++
++    if (esA.readyState !== EventSource.CLOSED) esA.close();
++    if (esB.readyState !== EventSource.CLOSED) esB.close();
++  }, 15000);
++
++
++  test('tracker must emit pings without resetting the inactivity lease', async () => {
++    const LEASE_TIMEOUT_MS = 600;
++
++    server.resetHandlers();
++    handlerFactory = createTestMswSseHandlerFactory({ leaseTimeoutMs: LEASE_TIMEOUT_MS });
++    server.use(sse(STREAM_URL, handlerFactory.mswSseHandler) as any);
++
++    let clientSpy: any;
++
++    const trackerSpy = vi.spyOn(solverModule, 'createSseClientTracker').mockImplementation((client, request, leaseTimeoutMs) => {
++      clientSpy = client;
++      trackerSpy.mockRestore();
++      return solverModule.createSseClientTracker(client, request, leaseTimeoutMs);
++    });
++
++    const es = new EventSource(STREAM_URL);
++    activeEventSources.push(es);
++
++    await until(() => handlerFactory.getActiveHandlerPromises().length === 1 && clientSpy !== undefined, 500);
++    await vi.advanceTimersByTimeAsync(0);
++
++    expect(clientSpy, 'clientSpy must be defined after wait and micro-delay').toBeDefined();
++
++    const originalClientSend = clientSpy.send;
++    const sendMock = vi.fn(originalClientSend);
++
++    Object.defineProperty(clientSpy, 'send', {
++      value: sendMock,
++      configurable: true
++    });
++
++    const keepAlivePromise = handlerFactory.getActiveHandlerPromises()[0];
++
++    handlerFactory.stopHandlerActivity();
++
++    await vi.advanceTimersByTimeAsync(LEASE_TIMEOUT_MS - 50);
++
++    expect(sendMock).toHaveBeenCalled();
++
++    expect(handlerFactory.getActiveHandlerPromises().length,
++      'Handler must remain active until lease expires').toBe(1);
++
++    await vi.advanceTimersByTimeAsync(150);
++
++    await until(() => handlerFactory.getActiveHandlerPromises().length === 0, 500);
++    expect(handlerFactory.getActiveHandlerPromises().length,
++      'Handler MUST close after lease timeout').toBe(0);
++
++    sendMock.mockRestore();
++    if (es.readyState !== EventSource.CLOSED) es.close();
++  }, 10000);
++
++  test('send failure (data or ping) triggers automatic connection closure by tracker', async () => {
++
++    const LEASE_TIMEOUT_MS = 5000;
++
++    let capturedKeepAlivePromise: Promise<void> | undefined;
++    let clientSpy: any;
++    let sendMock: ReturnType<typeof vi.fn> = vi.fn();
++
++    server.resetHandlers();
++
++    const customHandlerFactory = createTestMswSseHandlerFactory({ leaseTimeoutMs: LEASE_TIMEOUT_MS });
++
++    const trackerSpy = vi.spyOn(solverModule, 'createSseClientTracker').mockImplementation((client: any, request, leaseTimeoutMs) => {
++
++      clientSpy = client;
++
++      const originalClientSend = client.send;
++      sendMock = vi.fn(originalClientSend);
++
++      sendMock.mockImplementation(() => {
++        throw new Error("Simulated Transport Error");
++      });
++
++      Object.defineProperty(client, 'send', {
++        value: sendMock,
++        configurable: true
++      });
++
++      trackerSpy.mockRestore();
++
++      const actualTracker = solverModule.createSseClientTracker(client, request, leaseTimeoutMs);
++
++      capturedKeepAlivePromise = actualTracker.keepAlivePromise;
++
++      return actualTracker;
++    });
++
++
++    server.use(sse(STREAM_URL, customHandlerFactory.mswSseHandler) as any);
++
++    handlerFactory = customHandlerFactory;
++
++    const es = new EventSource(STREAM_URL);
++    activeEventSources.push(es);
++
++    await until(() => capturedKeepAlivePromise !== undefined && clientSpy !== undefined, MESSAGE_RECEIVE_TIMEOUT);
++    await vi.advanceTimersByTimeAsync(0);
++
++    const keepAlivePromise = capturedKeepAlivePromise as Promise<void>;
++
++    expect(keepAlivePromise, 'keepAlivePromise must be defined after capture').toBeDefined();
++
++    handlerFactory.stopHandlerActivity();
++
++    await vi.runAllTimersAsync();
++
++    await vi.advanceTimersByTimeAsync(0);
++
++    let resolved = false;
++    await keepAlivePromise.then(() => resolved = true).catch(() => { });
++
++    expect(resolved, 'keepAlivePromise must resolve immediately on send failure').toBe(true);
++
++    await until(() => handlerFactory.getActiveHandlerPromises().length === 0, 50);
++
++    expect(handlerFactory.getActiveHandlerPromises().length,
++      'Active handlers count must be zero after failure').toBe(0);
++
++    sendMock.mockRestore();
++    if (es.readyState !== EventSource.CLOSED) es.close();
++  }, 15000);
++
++  test('continuous data messages reset lease and prevent timeout', async () => {
++    const SHORT_LEASE_TIMEOUT_MS = 600;
++
++    server.resetHandlers();
++
++    handlerFactory = createTestMswSseHandlerFactory({ leaseTimeoutMs: SHORT_LEASE_TIMEOUT_MS });
++    server.use(sse(STREAM_URL, handlerFactory.mswSseHandler) as any);
++
++    const clientLabel = 'ContinuousMsgClient';
++    receivedMessages[clientLabel] = [];
++    let receivedCount = 0;
++
++    const es = new EventSource(STREAM_URL);
++    activeEventSources.push(es);
++
++    es.addEventListener('message', (e: any) => {
++      if (receivedMessages[clientLabel]) {
++        receivedMessages[clientLabel].push({ msg: String(e.data), t: Date.now() });
++        receivedCount++;
++      }
++    });
++
++    await until(() => handlerFactory.getActiveHandlerPromises().length === 1 && receivedCount > 0, MESSAGE_RECEIVE_TIMEOUT);
++
++    const initialCount = receivedCount;
++
++    const TIME_TO_ADVANCE = SHORT_LEASE_TIMEOUT_MS + 500;
++    await vi.advanceTimersByTimeAsync(TIME_TO_ADVANCE);
++
++    expect(handlerFactory.getActiveHandlerPromises().length,
++      `Handler must be active (messages should reset lease)`).toBe(1);
++
++    expect(receivedCount).toBeGreaterThan(initialCount + 4);
++
++    handlerFactory.stopHandlerActivity();
++
++    await vi.advanceTimersByTimeAsync(SHORT_LEASE_TIMEOUT_MS - 100);
++
++    expect(handlerFactory.getActiveHandlerPromises().length,
++      'Handler must still be active just before final timeout').toBe(1);
++
++    await vi.advanceTimersByTimeAsync(200);
++
++    await until(() => handlerFactory.getActiveHandlerPromises().length === 0, 500);
++
++    expect(handlerFactory.getActiveHandlerPromises().length,
++      `Handler must close after final inactivity timeout`).toBe(0);
++
++    es.close();
++  }, 15000);
++
++  test('tracker must validate ping cadence: interval <= leaseTimeout / 2', async () => {
++
++    let clientSpy: any;
++    let capturedTracker: any;
++    const pingTimestamps: number[] = [];
++    let sendMock: ReturnType<typeof vi.fn> = vi.fn();
++
++    const LEASE_TIMEOUT_MS = 1500;
++
++
++    const MAX_ALLOWED_INTERVAL_CONTRACT = Math.floor(LEASE_TIMEOUT_MS / 2)-1;
++    const MAX_EXPECTED_INTERVAL = MAX_ALLOWED_INTERVAL_CONTRACT;
++
++    vi.useFakeTimers();
++
++
++    const trackerSpy = vi.spyOn(solverModule, 'createSseClientTracker').mockImplementation((client, request, leaseTimeoutMs) => {
++      clientSpy = client;
++      trackerSpy.mockRestore();
++
++      const tracker = solverModule.createSseClientTracker(client, request, leaseTimeoutMs);
++      capturedTracker = tracker;
++
++      return tracker;
++    });
++
++
++    server.resetHandlers();
++
++    const pingHandlerFactory = customPingOnlyHandlerFactory({ leaseTimeoutMs: LEASE_TIMEOUT_MS });
++
++
++    server.use(sse(STREAM_URL, async ({ client, request }) => {
++      const originalClientSend = client.send;
++      sendMock = vi.fn((...args: any[]) => {
++
++        if (args[0]?.event === 'ping') {
++          pingTimestamps.push(Date.now());
++        }
++        return originalClientSend.apply(client, args);
++      });
++
++      Object.defineProperty(client, 'send', { value: sendMock, configurable: true });
++      sendMock.mockClear();
++
++      await pingHandlerFactory.mswSseHandler({ client, request });
++
++    }) as any);
++
++
++    const es = new EventSource(STREAM_URL);
++    activeEventSources.push(es);
++
++
++    await until(() => pingHandlerFactory.getActiveHandlerPromises().length === 1, 500);
++
++
++    const TIME_TO_ADVANCE_BEFORE_TIMEOUT = LEASE_TIMEOUT_MS - 1;
++
++    await vi.advanceTimersByTimeAsync(TIME_TO_ADVANCE_BEFORE_TIMEOUT);
++
++    expect(pingHandlerFactory.getActiveHandlerPromises().length,
++      `Connection must be active at ${TIME_TO_ADVANCE_BEFORE_TIMEOUT}ms`).toBe(1);
++
++
++    expect(pingTimestamps.length,
++      `Should have captured at least 2 pings over ${TIME_TO_ADVANCE_BEFORE_TIMEOUT}ms. Captured ${pingTimestamps.length}.`
++    ).toBeGreaterThanOrEqual(2);
++
++    let maxInterval = 0;
++    for (let i = 1; i < pingTimestamps.length; i++) {
++      const interval = pingTimestamps[i] - pingTimestamps[i - 1];
++      if (interval > maxInterval) {
++        maxInterval = interval;
++      }
++    }
++
++
++    expect(maxInterval,
++      `Max measured interval (${maxInterval}ms) must be less than or equal to the max allowed interval (${MAX_EXPECTED_INTERVAL}ms)`
++    ).toBeLessThanOrEqual(MAX_EXPECTED_INTERVAL);
++
++
++    await vi.advanceTimersByTimeAsync(2);
++    expect(pingHandlerFactory.getActiveHandlerPromises().length,
++      'Connection must close immediately after lease timeout').toBe(0);
++
++
++    if (es.readyState !== EventSource.CLOSED) es.close();
++    sendMock.mockRestore();
++  }, 15000);
++});
+\ No newline at end of file
+diff --git a/test/cleanup-tests/vitest.config.ts b/test/cleanup-tests/vitest.config.ts
+new file mode 100644
+index 00000000..1c1713b0
+--- /dev/null
++++ b/test/cleanup-tests/vitest.config.ts
+@@ -0,0 +1,13 @@
++// test/cleanup-tests/vitest.config.ts
++import { defineConfig } from 'vitest/config';
++import path from 'path';
++
++export default defineConfig({
++  test: {
++    dir: './test/cleanup-tests',
++    globals: true,
++    environment: 'node',
++    setupFiles: [path.resolve(__dirname, './setup-sse.ts')],
++    testTimeout: 20000,
++  },
++});
+\ No newline at end of file

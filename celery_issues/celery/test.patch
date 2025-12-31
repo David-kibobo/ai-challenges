@@ -1,0 +1,93 @@
+diff --git a/t/unit/utils/test_log_buffering.py b/t/unit/utils/test_log_buffering.py
+new file mode 100644
+index 000000000..58dfd6511
+--- /dev/null
++++ b/t/unit/utils/test_log_buffering.py
+@@ -0,0 +1,43 @@
++import logging
++from unittest.mock import Mock
++from celery.utils.log import LoggingProxy
++
++
++def test_partial_writes_are_buffered():
++    mock_logger = Mock(spec=logging.Logger)
++    mock_logger.handlers = []
++
++    proxy = LoggingProxy(mock_logger, loglevel=logging.WARNING)
++
++    proxy.write("Load")
++    proxy.write("ing")
++    proxy.write("...")
++
++    assert mock_logger.log.call_count == 0, (
++        f"Premature logging! Expected 0 calls, got {mock_logger.log.call_count}. "
++        "Proxy failed to buffer partial writes."
++    )
++
++    proxy.write("Done\n")
++
++    assert mock_logger.log.call_count == 1
++    args, _ = mock_logger.log.call_args
++    assert args[1] == "Loading...Done"
++
++
++def test_closed_proxy_flushes_buffer():
++    mock_logger = Mock(spec=logging.Logger)
++    mock_logger.handlers = []
++
++    proxy = LoggingProxy(mock_logger, loglevel=logging.ERROR)
++
++    proxy.write("Unfinished error message")
++
++    assert (
++        mock_logger.log.call_count == 0
++    ), "Premature logging! The proxy flushed before close() was called."
++
++    proxy.close()
++
++    assert mock_logger.log.call_count == 1
++    assert "Unfinished error message" in mock_logger.log.call_args[0][1]
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 000000000..274ba3ea7
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,38 @@
++#!/usr/bin/env bash
++set -e
++
++NEW_TEST_FILE="t/unit/utils/test_log_buffering.py"
++
++# Bypassing root security checks for Docker environments
++export C_FORCE_ROOT=1
++
++# Targeted ignores for tests that fail due to Docker/Environment restrictions
++TARGETED_IGNORES="--ignore=t/unit/utils/test_platforms.py \
++                  --ignore=t/unit/app/test_preload_cli.py"
++
++if [ "$1" = "base" ]; then
++    echo "======================================================="
++    echo "  RUNNING TARGETED BASELINE (With Timeout Protection)"
++    echo "======================================================="
++
++
++    # --timeout=60: Force kill any test (like worker subprocesses) that hangs > 60s
++    python -m pytest -q -x --timeout=60 \
++        t/unit/utils/ \
++        t/unit/app/ \
++        t/unit/worker/ \
++        $TARGETED_IGNORES \
++        --ignore="$NEW_TEST_FILE"
++
++elif [ "$1" = "new" ]; then
++    echo "======================================================="
++    echo "  RUNNING NEW TEST VERIFICATION"
++    echo "======================================================="
++
++
++    python -m pytest -v --timeout=60 "$NEW_TEST_FILE"
++
++else
++    echo "Usage: ./test.sh [base|new]"
++    exit 1
++fi

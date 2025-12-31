@@ -1,0 +1,18 @@
+FROM public.ecr.aws/x8v8d7g8/mars-base:latest
+
+WORKDIR /app
+
+COPY . .
+
+# Install project dependencies + test plugins  
+RUN pip install -e ".[tests]" \
+    pytest \
+    numpy \
+    pandas \
+    pyarrow \
+    aiohttp \
+    pytest-mock \
+    pytest-asyncio \
+    anyio
+
+CMD ["/bin/bash"]
