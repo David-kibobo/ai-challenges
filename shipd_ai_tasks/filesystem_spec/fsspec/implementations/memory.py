@@ -39,11 +39,6 @@ class MemoryFileSystem(AbstractFileSystem):
             return path.rstrip("/")
         path = path.lstrip("/").rstrip("/")
         return "/" + path if path else ""
-     # --- NEW METHOD ---
-    def _get_cache_key(self, path):
-        """Canonical key for memory cache (trivial for in-memory FS)."""
-        return self._strip_protocol(path)
-    # --- END NEW METHOD ---
 
     def ls(self, path, detail=True, **kwargs):
         path = self._strip_protocol(path)

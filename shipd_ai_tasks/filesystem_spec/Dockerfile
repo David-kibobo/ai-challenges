@@ -11,10 +11,9 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     zlib1g-dev \
  && rm -rf /var/lib/apt/lists/*
 
-
 COPY . .
 
 
-RUN pip install -e ".[test]" && pip check
+RUN pip install -e ".[test]" pytest-timeout && pip check
 
 CMD ["/bin/bash"]

@@ -55,9 +55,7 @@ class LocalFileSystem(AbstractFileSystem):
     def rmdir(self, path):
         path = self._strip_protocol(path)
         os.rmdir(path)
-    def _get_cache_key(self, path):
-        """Canonical key for local cache."""
-        return self._strip_protocol(path)
+
     def ls(self, path, detail=False, **kwargs):
         path = self._strip_protocol(path)
         path_info = self.info(path)
@@ -168,6 +166,10 @@ class LocalFileSystem(AbstractFileSystem):
         """
         path1 = self._strip_protocol(path1)
         path2 = self._strip_protocol(path2)
+
+        if self.auto_mkdir:
+            self.makedirs(self._parent(path2), exist_ok=True)
+
         shutil.move(path1, path2)
 
     def link(self, src, dst, **kwargs):
@@ -514,3 +516,4 @@ class LocalFileOpener(io.IOBase):
     def __exit__(self, exc_type, exc_value, traceback):
         self._incontext = False
         self.f.__exit__(exc_type, exc_value, traceback)
+        

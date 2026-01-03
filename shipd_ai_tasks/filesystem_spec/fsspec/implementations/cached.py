@@ -6,8 +6,9 @@ import os
 import tempfile
 import time
 import weakref
+from collections.abc import Callable
 from shutil import rmtree
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from fsspec import filesystem
 from fsspec.callbacks import DEFAULT_CALLBACK
@@ -737,222 +738,6 @@ class WholeFileCacheFileSystem(CachingFileSystem):
         return self._open(path, mode)
 
 
-# class SimpleCacheFileSystem(WholeFileCacheFileSystem):
-#     """Caches whole remote files on first access
-
-#     This class is intended as a layer over any other file system, and
-#     will make a local copy of each file accessed, so that all subsequent
-#     reads are local. This implementation only copies whole files, and
-#     does not keep any metadata about the download time or file details.
-#     It is therefore safer to use in multi-threaded/concurrent situations.
-
-#     This is the only of the caching filesystems that supports write: you will
-#     be given a real local open file, and upon close and commit, it will be
-#     uploaded to the target filesystem; the writability or the target URL is
-#     not checked until that time.
-
-#     """
-
-#     protocol = "simplecache"
-#     local_file = True
-#     transaction_type = WriteCachedTransaction
-
-#     def __init__(self, **kwargs):
-#         kw = kwargs.copy()
-#         for key in ["cache_check", "expiry_time", "check_files"]:
-#             kw[key] = False
-#         super().__init__(**kw)
-#         for storage in self.storage:
-#             if not os.path.exists(storage):
-#                 os.makedirs(storage, exist_ok=True)
-
-#     def _check_file(self, path):
-#         self._check_cache()
-#         sha = self._mapper(path)
-#         for storage in self.storage:
-#             fn = os.path.join(storage, sha)
-#             if os.path.exists(fn):
-#                 return fn
-
-#     def save_cache(self):
-#         pass
-
-#     def load_cache(self):
-#         pass
-
-#     def pipe_file(self, path, value=None, **kwargs):
-#         if self._intrans:
-#             with self.open(path, "wb") as f:
-#                 f.write(value)
-#         else:
-#             super().pipe_file(path, value)
-
-#     def ls(self, path, detail=True, **kwargs):
-#         path = self._strip_protocol(path)
-#         details = []
-#         try:
-#             details = self.fs.ls(
-#                 path, detail=True, **kwargs
-#             ).copy()  # don't edit original!
-#         except FileNotFoundError as e:
-#             ex = e
-#         else:
-#             ex = None
-#         if self._intrans:
-#             path1 = path.rstrip("/") + "/"
-#             for f in self.transaction.files:
-#                 if f.path == path:
-#                     details.append(
-#                         {"name": path, "size": f.size or f.tell(), "type": "file"}
-#                     )
-#                 elif f.path.startswith(path1):
-#                     if f.path.count("/") == path1.count("/"):
-#                         details.append(
-#                             {"name": f.path, "size": f.size or f.tell(), "type": "file"}
-#                         )
-#                     else:
-#                         dname = "/".join(f.path.split("/")[: path1.count("/") + 1])
-#                         details.append({"name": dname, "size": 0, "type": "directory"})
-#         if ex is not None and not details:
-#             raise ex
-#         if detail:
-#             return details
-#         return sorted(_["name"] for _ in details)
-
-#     def info(self, path, **kwargs):
-#         path = self._strip_protocol(path)
-#         if self._intrans:
-#             f = [_ for _ in self.transaction.files if _.path == path]
-#             if f:
-#                 size = os.path.getsize(f[0].fn) if f[0].closed else f[0].tell()
-#                 return {"name": path, "size": size, "type": "file"}
-#             f = any(_.path.startswith(path + "/") for _ in self.transaction.files)
-#             if f:
-#                 return {"name": path, "size": 0, "type": "directory"}
-#         return self.fs.info(path, **kwargs)
-
-#     def pipe(self, path, value=None, **kwargs):
-#         if isinstance(path, str):
-#             self.pipe_file(self._strip_protocol(path), value, **kwargs)
-#         elif isinstance(path, dict):
-#             for k, v in path.items():
-#                 self.pipe_file(self._strip_protocol(k), v, **kwargs)
-#         else:
-#             raise ValueError("path must be str or dict")
-
-#     async def _cat_file(self, path, start=None, end=None, **kwargs):
-#         logger.debug("async cat_file %s", path)
-#         path = self._strip_protocol(path)
-#         sha = self._mapper(path)
-#         fn = self._check_file(path)
-
-#         if not fn:
-#             fn = os.path.join(self.storage[-1], sha)
-#             await self.fs._get_file(path, fn, **kwargs)
-
-#         with open(fn, "rb") as f:  # noqa ASYNC230
-#             if start:
-#                 f.seek(start)
-#             size = -1 if end is None else end - f.tell()
-#             return f.read(size)
-
-#     async def _cat_ranges(
-#         self, paths, starts, ends, max_gap=None, on_error="return", **kwargs
-#     ):
-#         logger.debug("async cat ranges %s", paths)
-#         lpaths = []
-#         rset = set()
-#         download = []
-#         rpaths = []
-#         for p in paths:
-#             fn = self._check_file(p)
-#             if fn is None and p not in rset:
-#                 sha = self._mapper(p)
-#                 fn = os.path.join(self.storage[-1], sha)
-#                 download.append(fn)
-#                 rset.add(p)
-#                 rpaths.append(p)
-#             lpaths.append(fn)
-#         if download:
-#             await self.fs._get(rpaths, download, on_error=on_error)
-
-#         return LocalFileSystem().cat_ranges(
-#             lpaths, starts, ends, max_gap=max_gap, on_error=on_error, **kwargs
-#         )
-
-#     def cat_ranges(
-#         self, paths, starts, ends, max_gap=None, on_error="return", **kwargs
-#     ):
-#         logger.debug("cat ranges %s", paths)
-#         lpaths = [self._check_file(p) for p in paths]
-#         rpaths = [p for l, p in zip(lpaths, paths) if l is False]
-#         lpaths = [l for l, p in zip(lpaths, paths) if l is False]
-#         self.fs.get(rpaths, lpaths)
-#         paths = [self._check_file(p) for p in paths]
-#         return LocalFileSystem().cat_ranges(
-#             paths, starts, ends, max_gap=max_gap, on_error=on_error, **kwargs
-#         )
-
-#     def _open(self, path, mode="rb", **kwargs):
-#         path = self._strip_protocol(path)
-#         sha = self._mapper(path)
-
-#         if "r" not in mode:
-#             fn = os.path.join(self.storage[-1], sha)
-#             user_specified_kwargs = {
-#                 k: v
-#                 for k, v in kwargs.items()
-#                 if k not in ["autocommit", "block_size", "cache_options"]
-#             }  # those were added by open()
-#             return LocalTempFile(
-#                 self,
-#                 path,
-#                 mode=mode,
-#                 autocommit=not self._intrans,
-#                 fn=fn,
-#                 **user_specified_kwargs,
-#             )
-#         fn = self._check_file(path)
-#         if fn:
-#             return open(fn, mode)
-
-#         fn = os.path.join(self.storage[-1], sha)
-#         logger.debug("Copying %s to local cache", path)
-#         kwargs["mode"] = mode
-
-#         self._mkcache()
-#         self._cache_size = None
-#         if self.compression:
-#             with self.fs._open(path, **kwargs) as f, open(fn, "wb") as f2:
-#                 if isinstance(f, AbstractBufferedFile):
-#                     # want no type of caching if just downloading whole thing
-#                     f.cache = BaseCache(0, f.cache.fetcher, f.size)
-#                 comp = (
-#                     infer_compression(path)
-#                     if self.compression == "infer"
-#                     else self.compression
-#                 )
-#                 f = compr[comp](f, mode="rb")
-#                 data = True
-#                 while data:
-#                     block = getattr(f, "blocksize", 5 * 2**20)
-#                     data = f.read(block)
-#                     f2.write(data)
-#         else:
-#             self.fs.get_file(path, fn)
-#         return self._open(path, mode)
-
-# add these near top of the module (if not already present)
-# Replace the existing SimpleCacheFileSystem class with this patched version.
-
-from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
-from functools import wraps
-import os
-import logging
-
-logger = logging.getLogger("fsspec.cached")
-
-
 class SimpleCacheFileSystem(WholeFileCacheFileSystem):
     """Caches whole remote files on first access
 
@@ -966,6 +751,7 @@ class SimpleCacheFileSystem(WholeFileCacheFileSystem):
     be given a real local open file, and upon close and commit, it will be
     uploaded to the target filesystem; the writability or the target URL is
     not checked until that time.
+
     """
 
     protocol = "simplecache"
@@ -974,122 +760,14 @@ class SimpleCacheFileSystem(WholeFileCacheFileSystem):
 
     def __init__(self, **kwargs):
         kw = kwargs.copy()
-        # simplecache doesn't want periodic cache checking or expiry at init
         for key in ["cache_check", "expiry_time", "check_files"]:
             kw[key] = False
-        # initialize parent (this sets up self.fs, self.storage, self._mapper, etc.)
         super().__init__(**kw)
-
-        # ensure cache directories exist
         for storage in self.storage:
             if not os.path.exists(storage):
                 os.makedirs(storage, exist_ok=True)
 
-        # Defensive logging to see what mapper we got from parent
-        logger.debug("SimpleCacheFileSystem.__init__: orig mapper = %r", getattr(self, "_mapper", None))
-
-        # If parent created a mapper, wrap it so it always receives a normalized canonical key.
-        # If no mapper exists (very defensive), we try to create a fallback mapper and wrap that.
-        orig_mapper = getattr(self, "_mapper", None)
-        if orig_mapper is None:
-            try:
-                # create_cache_mapper is imported earlier in module
-                orig_mapper = create_cache_mapper(False)
-                self._mapper = orig_mapper
-                logger.debug("SimpleCacheFileSystem.__init__: created fallback mapper")
-            except Exception:
-                logger.debug("SimpleCacheFileSystem.__init__: no mapper and could not create fallback")
-
-        if callable(getattr(self, "_mapper", None)):
-            self.__orig_mapper = self._mapper
-
-            @wraps(self.__orig_mapper)
-            def _mapper_wrapper(p, *a, __orig=self.__orig_mapper, **kw):
-                # Defensive stringify
-                try:
-                    p_str = str(p)
-                except Exception:
-                    p_str = p
-                # Produce canonical cache key (strip simplecache wrapper and target protocol,
-                # sort query parameters deterministically, and ignore fragment).
-                key = self._get_cache_key(p_str)
-                logger.debug("SimpleCacheFileSystem._mapper_wrapper called: input=%r normalized=%r", p_str, key)
-                # Delegate to original mapper with canonical key
-                return __orig(key, *a, **kw)
-
-            self._mapper = _mapper_wrapper
-            logger.debug("SimpleCacheFileSystem.__init__: mapper wrapped for normalization")
-
-    def _normalize_path(self, path: str) -> str:
-        """
-        Normalize a path string for cache identity:
-         - ensure deterministic ordering of query params (sorted)
-         - drop fragment (fragments should not affect cache identity)
-         - preserve the scheme/netloc/path/params pieces for readability (but
-           the canonicalization step strips the outer simplecache wrapper)
-        """
-        try:
-            path_str = str(path)
-        except Exception:
-            path_str = path
-
-        parsed = urlparse(path_str)
-
-        # parse query pairs preserving blank values and repeated keys
-        qitems = parse_qsl(parsed.query, keep_blank_values=True)
-        # stable deterministic ordering
-        sorted_q = urlencode(sorted(qitems), doseq=True)
-
-        # Important: we intentionally DROP the fragment for cache identity
-        normalized = urlunparse(
-            (
-                parsed.scheme,
-                parsed.netloc,
-                parsed.path,
-                parsed.params,
-                sorted_q,
-                "",  # drop fragment -> canonical identity
-            )
-        )
-
-        logger.debug("[simplecache._normalize_path] original: %s normalized: %s", path_str, normalized)
-        return normalized
-
-    def _get_cache_key(self, path: str) -> str:
-        """
-        Produce the canonical string that will be fed into the cache mapper/hash.
-        Key steps:
-          - make it the *same canonical form* as tests that write into the backend:
-            strip the leading simplecache wrapping and feed the target FS path
-            (use self._strip_protocol to handle target-specific normalization).
-          - normalize query params and drop fragment.
-        """
-        # `self._strip_protocol` will remove the simplecache wrapper and use the
-        # target FS's strip rules, giving us the same base form the backend uses.
-        try:
-            # first get a string we can operate on
-            p = str(path)
-        except Exception:
-            p = path
-
-        try:
-            # use the instance _strip_protocol to convert "simplecache::memory://..." into
-            # the target-appropriate form (e.g. "/canon/params/file?..." for memory backend)
-            stripped = self._strip_protocol(p)
-        except Exception:
-            # defensive fallback: if _strip_protocol isn't available for some reason,
-            # proceed with original string
-            stripped = p
-
-        # Now normalize (sort query params, drop fragment)
-        canonical = self._normalize_path(stripped)
-        logger.debug("SimpleCacheFileSystem._get_cache_key: input=%r stripped=%r canonical=%r", p, stripped, canonical)
-        return canonical
-
     def _check_file(self, path):
-        """
-        Use the mapper (wrapped) which will produce a normalized hash filename.
-        """
         self._check_cache()
         sha = self._mapper(path)
         for storage in self.storage:
@@ -1098,11 +776,9 @@ class SimpleCacheFileSystem(WholeFileCacheFileSystem):
                 return fn
 
     def save_cache(self):
-        # simplecache intentionally doesn't persist metadata; no-op kept for API compatibility
         pass
 
     def load_cache(self):
-        # simplecache intentionally doesn't load metadata; no-op kept for API compatibility
         pass
 
     def pipe_file(self, path, value=None, **kwargs):
@@ -1116,7 +792,9 @@ class SimpleCacheFileSystem(WholeFileCacheFileSystem):
         path = self._strip_protocol(path)
         details = []
         try:
-            details = self.fs.ls(path, detail=True, **kwargs).copy()
+            details = self.fs.ls(
+                path, detail=True, **kwargs
+            ).copy()  # don't edit original!
         except FileNotFoundError as e:
             ex = e
         else:
@@ -1125,10 +803,14 @@ class SimpleCacheFileSystem(WholeFileCacheFileSystem):
             path1 = path.rstrip("/") + "/"
             for f in self.transaction.files:
                 if f.path == path:
-                    details.append({"name": path, "size": f.size or f.tell(), "type": "file"})
+                    details.append(
+                        {"name": path, "size": f.size or f.tell(), "type": "file"}
+                    )
                 elif f.path.startswith(path1):
                     if f.path.count("/") == path1.count("/"):
-                        details.append({"name": f.path, "size": f.size or f.tell(), "type": "file"})
+                        details.append(
+                            {"name": f.path, "size": f.size or f.tell(), "type": "file"}
+                        )
                     else:
                         dname = "/".join(f.path.split("/")[: path1.count("/") + 1])
                         details.append({"name": dname, "size": 0, "type": "directory"})
@@ -1160,24 +842,24 @@ class SimpleCacheFileSystem(WholeFileCacheFileSystem):
             raise ValueError("path must be str or dict")
 
     async def _cat_file(self, path, start=None, end=None, **kwargs):
+        logger.debug("async cat_file %s", path)
         path = self._strip_protocol(path)
-        # use wrapped mapper (normalizes) to pick cache filename but pass the
-        # original path to the backend fetch (so remote sees original query/fragment).
         sha = self._mapper(path)
         fn = self._check_file(path)
 
         if not fn:
             fn = os.path.join(self.storage[-1], sha)
-            # backend should get the original path (un-normalized)
             await self.fs._get_file(path, fn, **kwargs)
 
-        with open(fn, "rb") as f:
+        with open(fn, "rb") as f:  # noqa ASYNC230
             if start:
                 f.seek(start)
             size = -1 if end is None else end - f.tell()
             return f.read(size)
 
-    async def _cat_ranges(self, paths, starts, ends, max_gap=None, on_error="return", **kwargs):
+    async def _cat_ranges(
+        self, paths, starts, ends, max_gap=None, on_error="return", **kwargs
+    ):
         logger.debug("async cat ranges %s", paths)
         lpaths = []
         rset = set()
@@ -1195,40 +877,71 @@ class SimpleCacheFileSystem(WholeFileCacheFileSystem):
         if download:
             await self.fs._get(rpaths, download, on_error=on_error)
 
-        return LocalFileSystem().cat_ranges(lpaths, starts, ends, max_gap=max_gap, on_error=on_error, **kwargs)
+        return LocalFileSystem().cat_ranges(
+            lpaths, starts, ends, max_gap=max_gap, on_error=on_error, **kwargs
+        )
 
-    def cat_ranges(self, paths, starts, ends, max_gap=None, on_error="return", **kwargs):
+    def cat_ranges(
+        self, paths, starts, ends, max_gap=None, on_error="return", **kwargs
+    ):
         logger.debug("cat ranges %s", paths)
         lpaths = [self._check_file(p) for p in paths]
         rpaths = [p for l, p in zip(lpaths, paths) if l is False]
         lpaths = [l for l, p in zip(lpaths, paths) if l is False]
         self.fs.get(rpaths, lpaths)
         paths = [self._check_file(p) for p in paths]
-        return LocalFileSystem().cat_ranges(paths, starts, ends, max_gap=max_gap, on_error=on_error, **kwargs)
+        return LocalFileSystem().cat_ranges(
+            paths, starts, ends, max_gap=max_gap, on_error=on_error, **kwargs
+        )
 
     def _open(self, path, mode="rb", **kwargs):
         path = self._strip_protocol(path)
-        # mapper is wrapped so it normalizes internally
         sha = self._mapper(path)
 
         if "r" not in mode:
             fn = os.path.join(self.storage[-1], sha)
-            return LocalTempFile(self, path, fn, mode=mode, autocommit=not self._intrans, **kwargs)
-
-        # check disk cache using normalized mapper
+            user_specified_kwargs = {
+                k: v
+                for k, v in kwargs.items()
+                if k not in ["autocommit", "block_size", "cache_options"]
+            }  # those were added by open()
+            return LocalTempFile(
+                self,
+                path,
+                mode=mode,
+                autocommit=not self._intrans,
+                fn=fn,
+                **user_specified_kwargs,
+            )
         fn = self._check_file(path)
         if fn:
             return open(fn, mode)
 
-        # copy from backend using original path (backend should see original query/fragment)
         fn = os.path.join(self.storage[-1], sha)
         logger.debug("Copying %s to local cache", path)
         kwargs["mode"] = mode
+
         self._mkcache()
         self._cache_size = None
-        self.fs.get_file(path, fn)
+        if self.compression:
+            with self.fs._open(path, **kwargs) as f, open(fn, "wb") as f2:
+                if isinstance(f, AbstractBufferedFile):
+                    # want no type of caching if just downloading whole thing
+                    f.cache = BaseCache(0, f.cache.fetcher, f.size)
+                comp = (
+                    infer_compression(path)
+                    if self.compression == "infer"
+                    else self.compression
+                )
+                f = compr[comp](f, mode="rb")
+                data = True
+                while data:
+                    block = getattr(f, "blocksize", 5 * 2**20)
+                    data = f.read(block)
+                    f2.write(data)
+        else:
+            self.fs.get_file(path, fn)
         return self._open(path, mode)
-
 
 
 class LocalTempFile:
@@ -1288,3 +1001,4 @@ class LocalTempFile:
 
     def __getattr__(self, item):
         return getattr(self.fh, item)
+    

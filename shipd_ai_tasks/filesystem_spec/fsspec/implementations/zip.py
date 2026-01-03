@@ -82,9 +82,7 @@ class ZipFileSystem(AbstractArchiveFileSystem):
     def close(self):
         """Commits any write changes to the file. Done on ``del`` too."""
         self.zip.close()
-    def _get_cache_key(self, path):
-        """Canonical key for local cache."""
-        return self._strip_protocol(path)
+
     def _get_dirs(self):
         if self.dir_cache is None or self.mode in set("wa"):
             # when writing, dir_cache is always in the ZipFile's attributes,
@@ -177,3 +175,4 @@ class ZipFileSystem(AbstractArchiveFileSystem):
                 k: v for k, v in result.items() if k.count("/") - path_depth < maxdepth
             }
         return result if detail else sorted(result)
+    

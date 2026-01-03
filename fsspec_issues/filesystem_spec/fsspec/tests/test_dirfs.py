@@ -219,3 +219,112 @@ def test_async_dirfs_get_matches_sync_behavior(tmp_path):
 
     assert async_file.exists() and sync_file.exists()
     assert async_file.read_text() == sync_file.read_text() == "async copy"
+
+# import pytest
+# import fsspec
+# import os
+# import shutil
+# from fsspec.implementations.cached import SimpleCacheFileSystem
+# from unittest.mock import MagicMock
+
+# # 1. MOCK BACKEND TO TRACK BEHAVIOR
+# class TrackingFileSystem(fsspec.AbstractFileSystem):
+#     protocol = "track"
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.fetches = []
+
+#     def _open(self, path, mode="rb", **kwargs):
+#         # We record exactly what URL the backend received
+#         self.fetches.append(path)
+#         # Return a mock file-like object
+#         m = MagicMock()
+#         m.read.return_value = b"data"
+#         return m
+
+# fsspec.register_implementation("track", TrackingFileSystem, clobber=True)
+
+# @pytest.fixture
+# def cache_env(tmp_path):
+#     """Sets up a clean environment for each test."""
+#     storage = str(tmp_path / "cache_storage")
+#     track_fs = TrackingFileSystem()
+#     # SimpleCache using our tracker
+#     fs = SimpleCacheFileSystem(fs=track_fs, cache_storage=storage)
+#     return fs, track_fs, storage
+
+# # 2. TEST DEDUPLICATION (Behavior: Fetch count)
+# def test_deduplication_avoids_redundant_fetches(cache_env):
+#     fs, track_fs, _ = cache_env
+    
+#     # Variants of the same logical file
+#     variants = [
+#         "track://file?a=1&b=2",
+#         "track://file?b=2&a=1",
+#         "track://./file",
+#         "track://file#tag"
+#     ]
+    
+#     for url in variants:
+#         with fs.open(url) as f:
+#             f.read()
+            
+#     # Success = Only 1 fetch happened despite 4 different URL strings
+#     assert len(track_fs.fetches) == 1
+
+# # 3. TEST MAJOR PARAMETERS (Behavior: Fetch separation)
+# def test_major_parameters_create_distinct_entries(cache_env):
+#     fs, track_fs, _ = cache_env
+    
+#     fs.open("track://file?version=1").read()
+#     fs.open("track://file?version=2").read()
+#     fs.open("track://file?dataset=A").read()
+    
+#     # Success = 3 distinct version/dataset parameters must trigger 3 fetches
+#     assert len(track_fs.fetches) == 3
+
+# # 4. TEST FETCH INTEGRITY (Behavior: Raw URL preservation)
+# def test_fetch_uses_original_unnormalized_url(cache_env):
+#     fs, track_fs, _ = cache_env
+    
+#     # We provide a non-alphabetical query
+#     original_url = "track://file?z=9&a=1"
+#     fs.open(original_url).read()
+    
+#     # Success = The backend must receive the raw URL, not a normalized one
+#     assert track_fs.fetches[0] == original_url
+
+# # 5. TEST BOUNDED GROWTH (Behavior: Disk storage identity)
+# def test_bounded_disk_growth(cache_env):
+#     fs, _, storage = cache_env
+    
+#     # Fire 50 variants of the SAME logical file
+#     for i in range(50):
+#         url = f"track://file?constant=true&variant={i}"
+#         with fs.open(url) as f:
+#             f.read()
+            
+#     # Observe local storage behavior
+#     cache_files = os.listdir(storage)
+    
+#     # If deduplication is working, we should not have 50 files on disk.
+#     # We allow a small amount of "slack" as per the requirement, but 
+#     # definitely not one file per variant.
+#     assert len(cache_files) < 10
+
+# # 6. TEST PERSISTENCE CONSISTENCY
+# def test_cache_persistence_across_instances(tmp_path):
+#     storage = str(tmp_path / "persistent_cache")
+#     track_fs = TrackingFileSystem()
+    
+#     # Instance 1 fetches the file
+#     fs1 = SimpleCacheFileSystem(fs=track_fs, cache_storage=storage)
+#     fs1.open("track://file?a=1&b=2").read()
+#     assert len(track_fs.fetches) == 1
+    
+#     # Instance 2 uses a DIFFERENT variant but same logical file
+#     fs2 = SimpleCacheFileSystem(fs=track_fs, cache_storage=storage)
+#     fs2.open("track://file?b=2&a=1").read()
+    
+#     # Success = Instance 2 should find it on disk and NOT call the backend again
+#     assert len(track_fs.fetches) == 1
