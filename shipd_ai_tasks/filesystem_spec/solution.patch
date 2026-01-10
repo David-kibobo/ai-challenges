@@ -1,0 +1,196 @@
+diff --git a/fsspec/implementations/cached.py b/fsspec/implementations/cached.py
+index 8e4d0a0..8129104 100644
+--- a/fsspec/implementations/cached.py
++++ b/fsspec/implementations/cached.py
+@@ -3,11 +3,14 @@ from __future__ import annotations
+ import inspect
+ import logging
+ import os
++import posixpath
+ import tempfile
+ import time
+ import weakref
++from collections.abc import Callable
+ from shutil import rmtree
+-from typing import TYPE_CHECKING, Any, Callable, ClassVar
++from typing import TYPE_CHECKING, Any, ClassVar
++from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
+ from fsspec import filesystem
+ from fsspec.callbacks import DEFAULT_CALLBACK
+@@ -28,6 +31,48 @@ if TYPE_CHECKING:
+ logger = logging.getLogger("fsspec.cached")
+
+
++def _normalize_cache_key(path: str, cache_options: dict[str, Any] | None = None) -> str:
++    """
++    Normalize a URL to create a stable, deduplicated cache key.
++
++    Normalization Rules:
++    1. Fragments: Stripped from the URL.
++    2. Paths: Dot-segments (./ and ../) are resolved to canonical POSIX form.
++    3. Query Parameters: Sorted alphabetically. If 'same_file_keys' is in
++       cache_options, it acts as a case-insensitive allow-list.
++    """
++    if "#" not in path and "?" not in path and "/." not in path:
++        return path
++
++    cache_options = cache_options or {}
++    same_file_keys = cache_options.get("same_file_keys")
++
++    parsed = urlparse(path)
++    path_part = parsed.path
++
++    if path_part:
++        path_part = posixpath.normpath(path_part)
++        if path_part == ".":
++            path_part = ""
++
++    query_part = parsed.query
++    if query_part:
++        qs = parse_qsl(query_part, keep_blank_values=True)
++        if same_file_keys is not None:
++            allowed_lower = {k.lower() for k in same_file_keys}
++            filtered_qs = [(k, v) for k, v in qs if k.lower() in allowed_lower]
++        else:
++            filtered_qs = qs
++        filtered_qs.sort(key=lambda x: x[0])
++        query_part = urlencode(filtered_qs)
++    else:
++        query_part = ""
++
++    return urlunparse(
++        (parsed.scheme, parsed.netloc, path_part, parsed.params, query_part, "")
++    )
++
++
+ class WriteCachedTransaction(Transaction):
+     def complete(self, commit=True):
+         rpaths = [f.path for f in self.files]
+@@ -100,6 +145,8 @@ class CachingFileSystem(ChainedFileSystem):
+             week.
+         target_options: dict or None
+             Passed to the instantiation of the FS, if fs is None.
++            Supports ``cache_options`` with ``same_file_keys`` or
++            ``enable_normalization`` to control URL normalization for cache keys.
+         fs: filesystem instance
+             The target filesystem to run against. Provide this or ``protocol``.
+         same_names: bool (optional)
+@@ -160,6 +207,9 @@ class CachingFileSystem(ChainedFileSystem):
+                 same_names if same_names is not None else False
+             )
+
++        self._raw_mapper = self._mapper
++        self._mapper = self._mapped_normalize
++
+         self.target_protocol = (
+             target_protocol
+             if isinstance(target_protocol, str)
+@@ -175,6 +225,23 @@ class CachingFileSystem(ChainedFileSystem):
+
+         self._strip_protocol: Callable = _strip_protocol
+
++    def _get_deduplicated_key(self, path: str) -> str:
++        """
++        Calculates the effective cache key for a given path.
++
++        If normalization is enabled via cache_options, returns the normalized URL.
++        Otherwise, returns the path as-is.
++        """
++        opts = self.kwargs.get("cache_options")
++        if opts and (opts.get("enable_normalization") or opts.get("same_file_keys")):
++            return _normalize_cache_key(path, opts)
++        return path
++
++    def _mapped_normalize(self, path):
++        # We wrap the mapper to inject normalization before hashing.
++        # This ensures the filename on disk corresponds to the normalized URL.
++        return self._raw_mapper(self._get_deduplicated_key(path))
++
+     @staticmethod
+     def _remove_tempdir(tempdir):
+         try:
+@@ -301,6 +368,10 @@ class CachingFileSystem(ChainedFileSystem):
+         ``close_and_update`` to save the state of the blocks.
+         """
+         path = self._strip_protocol(path)
++
++        # Calculate the effective cache key (normalized if enabled).
++        # We use this key for local metadata/storage lookups to prevent bloat.
++        key = self._get_deduplicated_key(path)
+
+         path = self.fs._strip_protocol(path)
+         if "r" not in mode:
+@@ -312,7 +383,8 @@ class CachingFileSystem(ChainedFileSystem):
+                 cache_options=cache_options,
+                 **kwargs,
+             )
+-        detail = self._check_file(path)
++
++        detail = self._check_file(key)
+         if detail:
+             # file is in cache
+             detail, fn = detail
+@@ -334,7 +406,7 @@ class CachingFileSystem(ChainedFileSystem):
+                 "time": time.time(),
+                 "uid": self.fs.ukey(path),
+             }
+-            self._metadata.update_file(path, detail)
++            self._metadata.update_file(key, detail)
+             logger.debug("Creating local sparse file for %s", path)
+
+         # explicitly submitting the size to the open call will avoid extra
+@@ -358,7 +430,7 @@ class CachingFileSystem(ChainedFileSystem):
+         # set size if not already set
+         if size is None:
+             detail["size"] = f.size
+-            self._metadata.update_file(path, detail)
++            self._metadata.update_file(key, detail)
+
+         if self.compression:
+             comp = (
+@@ -390,7 +462,7 @@ class CachingFileSystem(ChainedFileSystem):
+             f.blocksize, f._fetch_range, f.size, fn, blocks, multi_fetcher=multi_fetcher
+         )
+         close = f.close
+-        f.close = lambda: self.close_and_update(f, close)
++        f.close = lambda: self.close_and_update(f, close, key)
+         self.save_cache()
+         return f
+
+@@ -402,12 +474,16 @@ class CachingFileSystem(ChainedFileSystem):
+         # Ignores extra arguments, previously same_name boolean.
+         return self._mapper(path)
+
+-    def close_and_update(self, f, close):
++    def close_and_update(self, f, close, key=None):
+         """Called when a file is closing, so store the set of blocks"""
+         if f.closed:
+             return
+-        path = self._strip_protocol(f.path)
+-        self._metadata.on_close_cached_file(f, path)
++
++        if key is None:
++            path = self._strip_protocol(f.path)
++            key = self._get_deduplicated_key(path)
++
++        self._metadata.on_close_cached_file(f, key)
+         try:
+             logger.debug("going to save")
+             self.save_cache()
+@@ -468,6 +544,8 @@ class CachingFileSystem(ChainedFileSystem):
+             "pipe",
+             "start_transaction",
+             "end_transaction",
++            "_mapped_normalize",
++            "_get_deduplicated_key",
+         }:
+             # all the methods defined in this class. Note `open` here, since
+             # it calls `_open`, but is actually in superclass
+@@ -998,4 +1076,4 @@ class LocalTempFile:
+         return f"LocalTempFile: {self.path}"
+
+     def __getattr__(self, item):
+-        return getattr(self.fh, item)
++        return getattr(self.fh, item)
+

@@ -1,0 +1,114 @@
+diff --git a/fsspec/implementations/cached.py b/fsspec/implementations/cached.py
+index 8e4d0a0..21b0cd2 100644
+--- a/fsspec/implementations/cached.py
++++ b/fsspec/implementations/cached.py
+@@ -3,11 +3,14 @@ from __future__ import annotations
+ import inspect
+ import logging
+ import os
++import posixpath
+ import tempfile
+ import time
+ import weakref
++from collections.abc import Callable
+ from shutil import rmtree
+-from typing import TYPE_CHECKING, Any, Callable, ClassVar
++from typing import TYPE_CHECKING, Any, ClassVar
++from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
+ from fsspec import filesystem
+ from fsspec.callbacks import DEFAULT_CALLBACK
+@@ -61,6 +64,7 @@ class CachingFileSystem(ChainedFileSystem):
+     """
+
+     protocol: ClassVar[str | tuple[str, ...]] = ("blockcache", "cached")
++    _strip_tokenize_options = ("fo",)
+
+     def __init__(
+         self,
+@@ -160,6 +164,11 @@ class CachingFileSystem(ChainedFileSystem):
+                 same_names if same_names is not None else False
+             )
+
++        # Wrap the mapper with normalization logic to handle cache bloat
++        # from fragments, relative paths, and query parameters.
++        self._raw_mapper = self._mapper
++        self._mapper = self._mapped_normalize
++
+         self.target_protocol = (
+             target_protocol
+             if isinstance(target_protocol, str)
+@@ -175,6 +184,58 @@ class CachingFileSystem(ChainedFileSystem):
+
+         self._strip_protocol: Callable = _strip_protocol
+
++    def _normalize_path(self, path):
++        """
++        Normalize URL for cache key generation.
++
++        1. Strip fragments.
++        2. Normalize relative paths (remove . and ..).
++        3. Filter and sort query parameters based on configuration.
++        """
++        cache_options = self.kwargs.get("cache_options", {})
++        same_file_keys = cache_options.get("same_file_keys", ["version", "dataset"])
++        # Case-insensitive matching for allowed keys
++        same_file_keys = {k.lower() for k in same_file_keys}
++
++        parsed = urlparse(path)
++        path_part = parsed.path
++
++        # Path normalization
++        if path_part:
++            # Use posixpath to ensure URL-style forward slash handling
++            path_part = posixpath.normpath(path_part)
++            if path_part == ".":
++                path_part = ""
++
++        # Query sorting/filtering
++        query_part = parsed.query
++        if query_part:
++            qs = parse_qsl(query_part, keep_blank_values=True)
++            filtered_qs = []
++            for k, v in qs:
++                if k.lower() in same_file_keys:
++                    filtered_qs.append((k, v))
++
++            # Sort to ensure stability
++            filtered_qs.sort(key=lambda x: x[0])
++            query_part = urlencode(filtered_qs)
++        else:
++            query_part = ""
++
++        return urlunparse(
++            (
++                parsed.scheme,
++                parsed.netloc,
++                path_part,
++                parsed.params,
++                query_part,
++                "",  # Fragment stripped
++            )
++        )
++
++    def _mapped_normalize(self, path):
++        return self._raw_mapper(self._normalize_path(path))
++
+     @staticmethod
+     def _remove_tempdir(tempdir):
+         try:
+@@ -468,6 +529,8 @@ class CachingFileSystem(ChainedFileSystem):
+             "pipe",
+             "start_transaction",
+             "end_transaction",
++            "_normalize_path",
++            "_mapped_normalize",
+         }:
+             # all the methods defined in this class. Note `open` here, since
+             # it calls `_open`, but is actually in superclass
+@@ -999,3 +1062,4 @@ class LocalTempFile:
+
+     def __getattr__(self, item):
+         return getattr(self.fh, item)
++
+\ No newline at end of file

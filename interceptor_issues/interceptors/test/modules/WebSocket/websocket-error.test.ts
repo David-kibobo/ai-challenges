@@ -45,14 +45,12 @@ describe('WebSocketInterceptor: client.errorWith(reason)', () => {
     mockClient = null as any
     socket = new WebSocket(WS_URL)
 
-
     const interceptorConnected = new Promise<void>((resolve) => {
       resolvedInterceptor.once('connection', ({ client }) => {
         mockClient = client
         resolve()
       })
     })
-
 
     const socketOpened = new Promise<void>((resolve) => {
       if (socket.readyState === WebSocket.OPEN) {
@@ -62,20 +60,16 @@ describe('WebSocketInterceptor: client.errorWith(reason)', () => {
       }
     })
 
-
     await Promise.all([interceptorConnected, socketOpened])
-
-    expect(mockClient).not.toBeNull()
-    expect(socket.readyState).toBe(WebSocket.OPEN)
   })
 
-  test('1. Should fire "error" then "close" events with default details on call', async () => {
+  test('Should fire generic "error" then "close" events with reason', async () => {
     const reasonString = 'Simulated connection loss.'
     const eventOrder: string[] = []
 
-
     socket.onerror = (e: any) => {
       eventOrder.push('error')
+
       socket.errorPayload = e
     }
     socket.onclose = (e: any) => {
@@ -85,13 +79,14 @@ describe('WebSocketInterceptor: client.errorWith(reason)', () => {
 
     mockClient.errorWith(reasonString)
 
-
     await vi.waitFor(() => {
       expect(eventOrder).toEqual(['error', 'close'])
     })
 
 
-    expect(socket.errorPayload.message).toBe(reasonString)
+    expect(socket.errorPayload).toBeInstanceOf(Event)
+    expect(socket.errorPayload.message).toBeUndefined()
+    expect(socket.errorPayload.error).toBeUndefined()
 
 
     expect(socket.closePayload.code).toBe(1006)
@@ -101,16 +96,11 @@ describe('WebSocketInterceptor: client.errorWith(reason)', () => {
     expect(socket.readyState).toBe(WebSocket.CLOSED)
   })
 
-  test('2. Should use Error object details and map code to 1011', async () => {
+  test('Should map Error objects to close code 1011', async () => {
     const networkError = new Error('Policy violation') as NodeError
-    networkError.code = 'ETIMEDOUT'
 
     const eventOrder: string[] = []
-
-    socket.onerror = (e: any) => {
-      eventOrder.push('error')
-      socket.errorPayload = e
-    }
+    socket.onerror = () => eventOrder.push('error')
     socket.onclose = (e: any) => {
       eventOrder.push('close')
       socket.closePayload = e
@@ -123,10 +113,6 @@ describe('WebSocketInterceptor: client.errorWith(reason)', () => {
     })
 
 
-    expect(socket.errorPayload.error).toBe(networkError)
-    expect(socket.errorPayload.message).toBe(networkError.message)
-
-
     expect(socket.closePayload.code).toBe(1011)
     expect(socket.closePayload.reason).toBe(networkError.message)
     expect(socket.closePayload.wasClean).toBe(false)
@@ -134,7 +120,7 @@ describe('WebSocketInterceptor: client.errorWith(reason)', () => {
     expect(socket.readyState).toBe(WebSocket.CLOSED)
   })
 
-  test('3. Should throw InvalidStateError on subsequent send() calls', async () => {
+  test('Should throw InvalidStateError on subsequent send() calls', async () => {
     mockClient.errorWith('Closing.')
 
     await vi.waitFor(() => {

@@ -1,5 +1,5 @@
 diff --git a/src/interceptors/WebSocket/WebSocketClientConnection.ts b/src/interceptors/WebSocket/WebSocketClientConnection.ts
-index 60dfe12..6710d5f 100644
+index 60dfe12..6076cee 100644
 --- a/src/interceptors/WebSocket/WebSocketClientConnection.ts
 +++ b/src/interceptors/WebSocket/WebSocketClientConnection.ts
 @@ -1,15 +1,16 @@
@@ -9,25 +9,25 @@ index 60dfe12..6710d5f 100644
 -import { CancelableMessageEvent, CloseEvent } from './utils/events'
 +import * as Events from './utils/events'
  import { createRequestId } from '../../createRequestId'
-
+ 
  const kEmitter = Symbol('kEmitter')
  const kBoundListener = Symbol('kBoundListener')
-
+ 
  export interface WebSocketClientEventMap {
 -  message: MessageEvent<WebSocketData>
 -  close: CloseEvent
 +  message: Events.CancelableMessageEvent<WebSocketData>
 +  close: Events.CloseEvent
-+  error: Events.ErrorEvent
++  error: Event
  }
-
+ 
  export abstract class WebSocketClientConnectionProtocol {
 @@ -17,6 +18,7 @@ export abstract class WebSocketClientConnectionProtocol {
    abstract url: URL
    public abstract send(data: WebSocketData): void
    public abstract close(code?: number, reason?: string): void
 +  public abstract errorWith(reason: string | Error): void
-
+ 
    public abstract addEventListener<
      EventType extends keyof WebSocketClientEventMap
 @@ -61,7 +63,7 @@ export class WebSocketClientConnection
@@ -48,7 +48,7 @@ index 60dfe12..6710d5f 100644
        )
      })
    }
-@@ -151,4 +153,53 @@ export class WebSocketClientConnection
+@@ -151,4 +153,52 @@ export class WebSocketClientConnection
    public close(code?: number, reason?: string): void {
      this.transport.close(code, reason)
    }
@@ -57,9 +57,11 @@ index 60dfe12..6710d5f 100644
 +   * Closes the connection immediately, first dispatching an error event
 +   * followed by a close event.
 +   *
++   * Events are dispatched directly to the socket because the internal emitter
++   * is for observation only and does not propagate to user listeners.
++   *
 +   * @param {string | Error} reason The reason for the error.
 +   */
-+
 +  public errorWith(reason: string | Error): void {
 +    const error: Error = typeof reason === 'string' ? new Error(reason) : reason
 +    const reasonMessage = error.message
@@ -67,19 +69,17 @@ index 60dfe12..6710d5f 100644
 +    const closeCode: number =
 +      typeof reason === 'object' && reason instanceof Error ? 1011 : 1006
 +
-+    this.socket.dispatchEvent(
-+      new Events.ErrorEvent('error', {
-+        message: reasonMessage,
-+        error: error,
-+      })
-+    )
++    this.socket.dispatchEvent(bindEvent(this.socket, new Event('error')))
 +
 +    this.socket.dispatchEvent(
-+      new Events.CloseEvent('close', {
-+        code: closeCode,
-+        reason: reasonMessage,
-+        wasClean: false,
-+      })
++      bindEvent(
++        this.socket,
++        new Events.CloseEvent('close', {
++          code: closeCode,
++          reason: reasonMessage,
++          wasClean: false,
++        })
++      )
 +    )
 +
 +    Object.defineProperty(this.socket, 'readyState', {
@@ -101,33 +101,3 @@ index 60dfe12..6710d5f 100644
 +    })
 +  }
  }
-+
-diff --git a/src/interceptors/WebSocket/utils/events.ts b/src/interceptors/WebSocket/utils/events.ts
-index cb4c059..b9dfc56 100644
---- a/src/interceptors/WebSocket/utils/events.ts
-+++ b/src/interceptors/WebSocket/utils/events.ts
-@@ -92,3 +92,24 @@ export class CancelableCloseEvent extends CloseEvent {
-     }
-   }
- }
-+
-+/**
-+ * Custom ErrorEvent to carry message and a reference to the original Error object.
-+ * Complies with the error event shape expected by WebSocket clients.
-+ */
-+export class ErrorEvent extends Event {
-+  public message: string
-+  public error: Error
-+
-+  constructor(
-+    type: string,
-+    eventInit: {
-+      message: string
-+      error: Error
-+    }
-+  ) {
-+    super(type)
-+    this.message = eventInit.message
-+    this.error = eventInit.error
-+  }
-+}

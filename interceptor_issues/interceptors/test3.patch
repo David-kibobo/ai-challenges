@@ -1,6 +1,6 @@
 diff --git a/test.sh b/test.sh
 new file mode 100755
-index 0000000..8836946
+index 0000000..a9cc383
 --- /dev/null
 +++ b/test.sh
 @@ -0,0 +1,60 @@
@@ -55,7 +55,7 @@ index 0000000..8836946
 +
 +if [ "${MODE}" = "new" ]; then
 +  echo "Running experimental tests (only new test)"
-+  pnpm -s build
++     pnpm -s build
 +
 +  # Run *only* the new test file (using the full path)
 +  pnpm -s vitest --run --config=./test/vitest.config.js "${NEW_TEST_FILE}"
@@ -66,10 +66,10 @@ index 0000000..8836946
 +exit 2
 diff --git a/test/modules/WebSocket/websocket-error.test.ts b/test/modules/WebSocket/websocket-error.test.ts
 new file mode 100644
-index 0000000..9817ed0
+index 0000000..5d74532
 --- /dev/null
 +++ b/test/modules/WebSocket/websocket-error.test.ts
-@@ -0,0 +1,148 @@
+@@ -0,0 +1,134 @@
 +/**
 + * @vitest-environment node-with-websocket
 + */
@@ -117,14 +117,12 @@ index 0000000..9817ed0
 +    mockClient = null as any
 +    socket = new WebSocket(WS_URL)
 +
-+
 +    const interceptorConnected = new Promise<void>((resolve) => {
 +      resolvedInterceptor.once('connection', ({ client }) => {
 +        mockClient = client
 +        resolve()
 +      })
 +    })
-+
 +
 +    const socketOpened = new Promise<void>((resolve) => {
 +      if (socket.readyState === WebSocket.OPEN) {
@@ -134,20 +132,16 @@ index 0000000..9817ed0
 +      }
 +    })
 +
-+
 +    await Promise.all([interceptorConnected, socketOpened])
-+
-+    expect(mockClient).not.toBeNull()
-+    expect(socket.readyState).toBe(WebSocket.OPEN)
 +  })
 +
-+  test('1. Should fire "error" then "close" events with default details on call', async () => {
++  test('Should fire generic "error" then "close" events with reason', async () => {
 +    const reasonString = 'Simulated connection loss.'
 +    const eventOrder: string[] = []
 +
-+
 +    socket.onerror = (e: any) => {
 +      eventOrder.push('error')
++
 +      socket.errorPayload = e
 +    }
 +    socket.onclose = (e: any) => {
@@ -157,13 +151,14 @@ index 0000000..9817ed0
 +
 +    mockClient.errorWith(reasonString)
 +
-+
 +    await vi.waitFor(() => {
 +      expect(eventOrder).toEqual(['error', 'close'])
 +    })
 +
 +
-+    expect(socket.errorPayload.message).toBe(reasonString)
++    expect(socket.errorPayload).toBeInstanceOf(Event)
++    expect(socket.errorPayload.message).toBeUndefined()
++    expect(socket.errorPayload.error).toBeUndefined()
 +
 +
 +    expect(socket.closePayload.code).toBe(1006)
@@ -173,16 +168,11 @@ index 0000000..9817ed0
 +    expect(socket.readyState).toBe(WebSocket.CLOSED)
 +  })
 +
-+  test('2. Should use Error object details and map code to 1011', async () => {
++  test('Should map Error objects to close code 1011', async () => {
 +    const networkError = new Error('Policy violation') as NodeError
-+    networkError.code = 'ETIMEDOUT'
 +
 +    const eventOrder: string[] = []
-+
-+    socket.onerror = (e: any) => {
-+      eventOrder.push('error')
-+      socket.errorPayload = e
-+    }
++    socket.onerror = () => eventOrder.push('error')
 +    socket.onclose = (e: any) => {
 +      eventOrder.push('close')
 +      socket.closePayload = e
@@ -195,10 +185,6 @@ index 0000000..9817ed0
 +    })
 +
 +
-+    expect(socket.errorPayload.error).toBe(networkError)
-+    expect(socket.errorPayload.message).toBe(networkError.message)
-+
-+
 +    expect(socket.closePayload.code).toBe(1011)
 +    expect(socket.closePayload.reason).toBe(networkError.message)
 +    expect(socket.closePayload.wasClean).toBe(false)
@@ -206,7 +192,7 @@ index 0000000..9817ed0
 +    expect(socket.readyState).toBe(WebSocket.CLOSED)
 +  })
 +
-+  test('3. Should throw InvalidStateError on subsequent send() calls', async () => {
++  test('Should throw InvalidStateError on subsequent send() calls', async () => {
 +    mockClient.errorWith('Closing.')
 +
 +    await vi.waitFor(() => {

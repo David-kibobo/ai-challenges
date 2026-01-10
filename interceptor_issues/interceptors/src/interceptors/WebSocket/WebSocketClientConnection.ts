@@ -1,16 +1,16 @@
 import type { WebSocketData, WebSocketTransport } from './WebSocketTransport'
 import type { WebSocketEventListener } from './WebSocketOverride'
 import { bindEvent } from './utils/bindEvent'
-import * as Events from './utils/events'
+import { CancelableMessageEvent, CloseEvent } from './utils/events'
 import { createRequestId } from '../../createRequestId'
 
 const kEmitter = Symbol('kEmitter')
 const kBoundListener = Symbol('kBoundListener')
 
 export interface WebSocketClientEventMap {
-  message: Events.CancelableMessageEvent<WebSocketData>
-  close: Events.CloseEvent
-  error: Events.ErrorEvent
+  message: CancelableMessageEvent<WebSocketData>
+  close: CloseEvent
+  error: Event
 }
 
 export abstract class WebSocketClientConnectionProtocol {
@@ -63,7 +63,7 @@ export class WebSocketClientConnection
     this.transport.addEventListener('outgoing', (event) => {
       const message = bindEvent(
         this.socket,
-        new Events.CancelableMessageEvent('message', {
+        new CancelableMessageEvent('message', {
           data: event.data,
           origin: event.origin,
           cancelable: true,
@@ -91,7 +91,7 @@ export class WebSocketClientConnection
      */
     this.transport.addEventListener('close', (event) => {
       this[kEmitter].dispatchEvent(
-        bindEvent(this.socket, new Events.CloseEvent('close', event))
+        bindEvent(this.socket, new CloseEvent('close', event))
       )
     })
   }
@@ -158,9 +158,11 @@ export class WebSocketClientConnection
    * Closes the connection immediately, first dispatching an error event
    * followed by a close event.
    *
+   * Events are dispatched directly to the socket because the internal emitter
+   * is for observation only and does not propagate to user listeners.
+   *
    * @param {string | Error} reason The reason for the error.
    */
-  
   public errorWith(reason: string | Error): void {
     const error: Error = typeof reason === 'string' ? new Error(reason) : reason
     const reasonMessage = error.message
@@ -168,19 +170,17 @@ export class WebSocketClientConnection
     const closeCode: number =
       typeof reason === 'object' && reason instanceof Error ? 1011 : 1006
 
-    this.socket.dispatchEvent(
-      new Events.ErrorEvent('error', {
-        message: reasonMessage,
-        error: error,
-      })
-    )
+    this.socket.dispatchEvent(bindEvent(this.socket, new Event('error')))
 
     this.socket.dispatchEvent(
-      new Events.CloseEvent('close', {
-        code: closeCode,
-        reason: reasonMessage,
-        wasClean: false,
-      })
+      bindEvent(
+        this.socket,
+        new CloseEvent('close', {
+          code: closeCode,
+          reason: reasonMessage,
+          wasClean: false,
+        })
+      )
     )
 
     Object.defineProperty(this.socket, 'readyState', {
@@ -202,4 +202,3 @@ export class WebSocketClientConnection
     })
   }
 }
-

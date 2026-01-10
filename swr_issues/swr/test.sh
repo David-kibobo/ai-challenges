@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-NEW_TEST_FILE="test/use-swr-infinite-isolation.test.tsx"
+NEW_TEST_FILE="test/use-swr-subscription-suspense.test.tsx"
 
 # 1. NEW_TEST_FILE: Excluded during 'base' mode.
 # 2. EXCLUDED BASELINE TESTS: Omitted to bypass already failing baseline tests due to environmental instability.
@@ -9,9 +9,6 @@ NEW_TEST_FILE="test/use-swr-infinite-isolation.test.tsx"
 EXCLUDE_TESTS=(
   "${NEW_TEST_FILE}"
   "test/use-swr-focus.test.tsx"
-  "test/use-swr-subscription.test.tsx"
-  "test/use-swr-fallback-cache.test.tsx"
-
    "e2e/"
 )
 

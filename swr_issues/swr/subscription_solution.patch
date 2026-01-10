@@ -1,0 +1,185 @@
+diff --git a/src/subscription/index.ts b/src/subscription/index.ts
+index 41ab886..dd4dd6e 100644
+--- a/src/subscription/index.ts
++++ b/src/subscription/index.ts
+@@ -19,8 +19,12 @@ import {
+   createCacheHelper
+ } from '../_internal'
+
+-// [subscription count, disposer]
+-type SubscriptionStates = [Map<string, number>, Map<string, () => void>]
++// [subscription count, disposer, promise]
++type SubscriptionStates = [
++  Map<string, number>,
++  Map<string, () => void>,
++  Map<string, { p: Promise<any>; r: (v: any) => void }>
++]
+ const subscriptionStorage = new WeakMap<object, SubscriptionStates>()
+
+ const SUBSCRIPTION_PREFIX = '$sub$'
+@@ -35,7 +39,13 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
+
+     // Prefix the key to avoid conflicts with other SWR resources.
+     const subscriptionKey = key ? SUBSCRIPTION_PREFIX + key : undefined
+-    const swr = useSWRNext(subscriptionKey, null, config)
++
++    // Disable internal suspense to prevent deadlock; we handle it manually.
++    const swr = useSWRNext(
++      subscriptionKey,
++      null,
++      config.suspense ? { ...config, suspense: false } : config
++    )
+
+     const { cache } = config
+
+@@ -44,17 +54,16 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
+     if (!subscriptionStorage.has(cache)) {
+       subscriptionStorage.set(cache, [
+         new Map<string, number>(),
+-        new Map<string, () => void>()
++        new Map<string, () => void>(),
++        new Map<string, { p: Promise<any>; r: (v: any) => void }>()
+       ])
+     }
+
+-    const [subscriptions, disposers] = subscriptionStorage.get(cache)!
++    const [subscriptions, disposers, promises] = subscriptionStorage.get(cache)!
+
+-    useIsomorphicLayoutEffect(() => {
++    const startSubscription = () => {
+       if (!subscriptionKey) return
+-
+       const [, set] = createCacheHelper<Data>(cache, subscriptionKey)
+-      const refCount = subscriptions.get(subscriptionKey) || 0
+
+       const next: SWRSubscriptionOptions<Data, Error>['next'] = (
+         error,
+@@ -62,16 +71,52 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
+       ) => {
+         if (error !== null && typeof error !== 'undefined') {
+           set({ error })
++
++          // Resolve suspense promise if pending
++          const pending = promises.get(subscriptionKey)
++          if (pending) {
++            pending.r(error)
++            promises.delete(subscriptionKey)
++          }
++
++          // Safe mutate: ignore race condition on unmount
++          try {
++            swr
++              .mutate(
++                () => {
++                  throw error
++                },
++                { revalidate: false }
++              )
++              .catch(() => {
++                // Ignore async errors when component is unmounted
++              })
++          } catch {
++            // Ignore sync errors when component is unmounted
++          }
+         } else {
+           set({ error: undefined })
+-          swr.mutate(data, false)
++
++          // Resolve suspense promise if pending
++          const pending = promises.get(subscriptionKey)
++          if (pending) {
++            pending.r(data)
++            promises.delete(subscriptionKey)
++          }
++
++          // Safe mutate: ignore race condition on unmount
++          try {
++            swr.mutate(data, false).catch(() => {
++              // Ignore async errors when component is unmounted
++            })
++          } catch {
++            // Ignore sync errors when component is unmounted
++          }
+         }
+       }
+
+-      // Increment the ref count.
+-      subscriptions.set(subscriptionKey, refCount + 1)
+-
+-      if (!refCount) {
++      // Check if already subscribed to deduplicate.
++      if (!disposers.has(subscriptionKey)) {
+         const dispose = subscribe(args, { next })
+         if (typeof dispose !== 'function') {
+           throw new Error(
+@@ -80,6 +125,46 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
+         }
+         disposers.set(subscriptionKey, dispose)
+       }
++    }
++
++    // Manual Suspense Logic
++    if (config.suspense && subscriptionKey) {
++      const cached = cache.get(subscriptionKey)
++      if (cached?.error) throw cached.error
++
++      if (cached?.data === undefined && swr.data === undefined) {
++        startSubscription()
++        const postCached = cache.get(subscriptionKey)
++
++        if (postCached?.error) throw postCached.error
++        if (postCached?.data === undefined) {
++          let pending = promises.get(subscriptionKey)
++          if (!pending) {
++            let resolve: any
++            const p = new Promise(r => (resolve = r))
++            pending = { p, r: resolve }
++            promises.set(subscriptionKey, pending)
++          }
++          throw pending.p
++        }
++      }
++    }
++
++    useIsomorphicLayoutEffect(() => {
++      if (!subscriptionKey) return
++
++      const refCount = subscriptions.get(subscriptionKey) || 0
++
++      // Increment the ref count.
++      subscriptions.set(subscriptionKey, refCount + 1)
++
++      try {
++        startSubscription()
++      } catch (error) {
++        // Reset ref count and throw so the Error Boundary catches it.
++        subscriptions.set(subscriptionKey, refCount)
++        throw error
++      }
+
+       return () => {
+         const count = subscriptions.get(subscriptionKey)! - 1
+@@ -90,6 +175,8 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
+         if (!count) {
+           const dispose = disposers.get(subscriptionKey)
+           dispose?.()
++          disposers.delete(subscriptionKey)
++          promises.delete(subscriptionKey)
+         }
+       }
+     }, [subscriptionKey])
+@@ -112,10 +199,10 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
+  * import useSWRSubscription from 'swr/subscription'
+  *
+  * const { data, error } = useSWRSubscription(key, (key, { next }) => {
+- *   const unsubscribe = dataSource.subscribe(key, (err, data) => {
+- *     next(err, data)
+- *   })
+- *   return unsubscribe
++ * const unsubscribe = dataSource.subscribe(key, (err, data) => {
++ * next(err, data)
++ * })
++ * return unsubscribe
+  * })
+  * ```
+  */

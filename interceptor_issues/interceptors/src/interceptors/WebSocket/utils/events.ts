@@ -92,24 +92,3 @@ export class CancelableCloseEvent extends CloseEvent {
     }
   }
 }
-
-/**
- * Custom ErrorEvent to carry message and a reference to the original Error object.
- * Complies with the error event shape expected by WebSocket clients.
- */
-export class ErrorEvent extends Event {
-  public message: string
-  public error: Error
-
-  constructor(
-    type: string,
-    eventInit: {
-      message: string
-      error: Error
-    }
-  ) {
-    super(type)
-    this.message = eventInit.message
-    this.error = eventInit.error
-  }
-}

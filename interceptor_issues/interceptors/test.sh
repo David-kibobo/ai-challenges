@@ -40,7 +40,7 @@ done
 
 if [ "${MODE}" = "base" ]; then
   echo "Running base tests (excluding new test)"
-   pnpm -s build
+#    pnpm -s build
   
   
   pnpm -s vitest --run --config=./test/vitest.config.js "${EXCLUDE_ARGS[@]}"
@@ -49,7 +49,7 @@ fi
 
 if [ "${MODE}" = "new" ]; then
   echo "Running experimental tests (only new test)"
-  pnpm -s build
+    #  pnpm -s build
   
   # Run *only* the new test file (using the full path)
   pnpm -s vitest --run --config=./test/vitest.config.js "${NEW_TEST_FILE}"

@@ -1,0 +1,76 @@
+diff --git a/src/interceptors/WebSocket/WebSocketClientConnection.ts b/src/interceptors/WebSocket/WebSocketClientConnection.ts
+index 60dfe12..9bfd39a 100644
+--- a/src/interceptors/WebSocket/WebSocketClientConnection.ts
++++ b/src/interceptors/WebSocket/WebSocketClientConnection.ts
+@@ -8,8 +8,9 @@ const kEmitter = Symbol('kEmitter')
+ const kBoundListener = Symbol('kBoundListener')
+
+ export interface WebSocketClientEventMap {
+-  message: MessageEvent<WebSocketData>
++  message: CancelableMessageEvent<WebSocketData>
+   close: CloseEvent
++  error: Event
+ }
+
+ export abstract class WebSocketClientConnectionProtocol {
+@@ -17,6 +18,7 @@ export abstract class WebSocketClientConnectionProtocol {
+   abstract url: URL
+   public abstract send(data: WebSocketData): void
+   public abstract close(code?: number, reason?: string): void
++  public abstract errorWith(reason: string | Error): void
+
+   public abstract addEventListener<
+     EventType extends keyof WebSocketClientEventMap
+@@ -151,4 +153,52 @@ export class WebSocketClientConnection
+   public close(code?: number, reason?: string): void {
+     this.transport.close(code, reason)
+   }
++
++  /**
++   * Closes the connection immediately, first dispatching an error event
++   * followed by a close event.
++   *
++   * Events are dispatched directly to the socket because the internal emitter
++   * is for observation only and does not propagate to user listeners.
++   *
++   * @param {string | Error} reason The reason for the error.
++   */
++  public errorWith(reason: string | Error): void {
++    const error: Error = typeof reason === 'string' ? new Error(reason) : reason
++    const reasonMessage = error.message
++
++    const closeCode: number =
++      typeof reason === 'object' && reason instanceof Error ? 1011 : 1006
++
++    this.socket.dispatchEvent(bindEvent(this.socket, new Event('error')))
++
++    this.socket.dispatchEvent(
++      bindEvent(
++        this.socket,
++        new CloseEvent('close', {
++          code: closeCode,
++          reason: reasonMessage,
++          wasClean: false,
++        })
++      )
++    )
++
++    Object.defineProperty(this.socket, 'readyState', {
++      value: this.socket.CLOSED,
++      writable: true,
++      configurable: true,
++    })
++
++    Object.defineProperty(this.socket, 'send', {
++      value: () => {
++        const sendError = new Error(
++          `Failed to execute 'send' on 'WebSocket': The connection is not open. The connection's readyState is ${this.socket.CLOSED}.`
++        )
++        sendError.name = 'InvalidStateError'
++        throw sendError
++      },
++      writable: true,
++      configurable: true,
++    })
++  }
+ }
